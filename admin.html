@@ -503,23 +503,18 @@
 </div><!-- /admin-panel -->
 
 <script>
-const SESSION_KEY = 'gp_admin_token';
+const SESSION_KEY = 'gp_admin_logged_in';
+const USER_KEY = 'gp_admin_user';
 let sessionTimer = null, sessionSeconds = 0;
 const secLog = [];
 
-// ── AUTH ──
-(async function init(){
-  const token = sessionStorage.getItem(SESSION_KEY);
-  if(!token) return; // stay on login screen
-  try {
-    const res = await fetch('/api/verify-session', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ token })
-    });
-    const data = await res.json();
-    if(data.valid) enterPanel(data.user);
-    else sessionStorage.removeItem(SESSION_KEY);
-  } catch(e) { sessionStorage.removeItem(SESSION_KEY); }
+// ── AUTH (SIMPLIFIED - NO TOKEN VERIFICATION) ──
+(function init(){
+  const isLoggedIn = sessionStorage.getItem(SESSION_KEY);
+  const user = sessionStorage.getItem(USER_KEY);
+  if(isLoggedIn === 'true' && user) {
+    enterPanel(user);
+  }
 })();
 
 async function doLogin(){
@@ -528,30 +523,64 @@ async function doLogin(){
   const pass = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
   const attEl = document.getElementById('attempts-left');
-  if(!user||!pass){ errEl.textContent='// ERROR: ALL FIELDS REQUIRED'; return; }
-  btn.disabled=true; btn.textContent='AUTHENTICATING...'; errEl.textContent='';
+  
+  if(!user||!pass){ 
+    errEl.textContent='// ERROR: ALL FIELDS REQUIRED'; 
+    return; 
+  }
+  
+  btn.disabled=true; 
+  btn.textContent='AUTHENTICATING...'; 
+  errEl.textContent='';
+  
   try {
     const res = await fetch('/api/login', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', 
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({username:user, password:pass})
     });
+    
+    // Check if API endpoint exists
+    if(res.status === 404){
+      errEl.textContent='// ERROR: API NOT DEPLOYED - CHECK VERCEL';
+      console.error('API endpoint /api/login not found. Make sure api/login.js is deployed to Vercel.');
+      btn.disabled=false; 
+      btn.textContent='AUTHENTICATE';
+      return;
+    }
+    
     const data = await res.json();
+    
     if(res.ok && data.success){
-      sessionStorage.setItem(SESSION_KEY, data.token);
+      // Store login state in sessionStorage (no token needed)
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      sessionStorage.setItem(USER_KEY, data.user || user);
       logSec('Login success — user: '+user, 'SUCCESS');
-      enterPanel(user);
+      enterPanel(data.user || user);
     } else if(res.status===429){
       let t = data.lockedFor||30;
-      errEl.textContent='// ACCOUNT LOCKED'; attEl.textContent='0';
+      errEl.textContent='// ACCOUNT LOCKED'; 
+      attEl.textContent='0';
       document.getElementById('lockout-timer').textContent=`LOCKED: ${t}s`;
       document.getElementById('login-box').classList.add('shake');
       setTimeout(()=>document.getElementById('login-box').classList.remove('shake'),500);
       logSec('Rate limited — user: '+user,'FAILED');
       const ti=setInterval(()=>{
-        t--; document.getElementById('lockout-timer').textContent=`LOCKED: ${t}s`;
-        if(t<=0){ clearInterval(ti); attEl.textContent='5'; document.getElementById('lockout-timer').textContent=''; errEl.textContent=''; btn.disabled=false; btn.textContent='AUTHENTICATE'; }
+        t--; 
+        document.getElementById('lockout-timer').textContent=`LOCKED: ${t}s`;
+        if(t<=0){ 
+          clearInterval(ti); 
+          attEl.textContent='5'; 
+          document.getElementById('lockout-timer').textContent=''; 
+          errEl.textContent=''; 
+          btn.disabled=false; 
+          btn.textContent='AUTHENTICATE'; 
+        }
       },1000);
       return;
+    } else if(res.status===500){
+      errEl.textContent='// SERVER ERROR - CHECK ENV VARIABLES IN VERCEL';
+      logSec('Server error — missing ADMIN_PASSWORD','FAILED');
     } else {
       attEl.textContent = data.attemptsLeft??'?';
       errEl.textContent='// ACCESS DENIED — INVALID CREDENTIALS';
@@ -559,8 +588,13 @@ async function doLogin(){
       setTimeout(()=>document.getElementById('login-box').classList.remove('shake'),500);
       logSec('Failed attempt — user: '+user,'FAILED');
     }
-  } catch(e){ errEl.textContent='// NETWORK ERROR — CHECK CONNECTION'; }
-  btn.disabled=false; btn.textContent='AUTHENTICATE';
+  } catch(e){ 
+    console.error('Login error:', e);
+    errEl.textContent='// NETWORK ERROR — CHECK API DEPLOYMENT'; 
+  }
+  
+  btn.disabled=false; 
+  btn.textContent='AUTHENTICATE';
 }
 
 function enterPanel(user){
@@ -582,11 +616,13 @@ function enterPanel(user){
 function doLogout(){
   logSec('Logout','SUCCESS');
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(USER_KEY);
   if(sessionTimer) clearInterval(sessionTimer);
   document.getElementById('admin-panel').classList.remove('visible');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').textContent='';
+  document.getElementById('attempts-left').textContent='5';
 }
 
 // ── NAVIGATION ──
@@ -699,7 +735,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     z.addEventListener('drop',e=>{ e.preventDefault(); z.classList.remove('drag-over'); });
   });
   // Focus username on login load
-  document.getElementById('login-user').focus();
+  const userInput = document.getElementById('login-user');
+  if(userInput) userInput.focus();
 });
 </script>
 </body>
