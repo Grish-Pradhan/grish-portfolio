@@ -1,25 +1,20 @@
 // api/login.js
-// Vercel Serverless Function for Authentication
+// Simple Authentication - Username & Password Only (No Tokens)
 // 
 // SETUP INSTRUCTIONS:
-// 1. Place this file at: /api/login.js (in your project root)
-// 2. Set these Environment Variables in Vercel Dashboard:
-//    - ADMIN_USERNAME (your username, e.g., "grish")
+// 1. Place this file at: /api/login.js
+// 2. Set Environment Variables in Vercel:
+//    - ADMIN_USERNAME (e.g., "grish")
 //    - ADMIN_PASSWORD (your secure password)
-//    - SESSION_SECRET (long random string from .env file)
 // 3. Deploy to Vercel
-// 4. Test at: https://your-project.vercel.app/api/login
 
 const crypto = require("crypto");
 
-// In-memory rate limiting (resets on new serverless instance)
+// In-memory rate limiting
 const RATE_LIMIT = {};
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30 * 1000; // 30 seconds
 
-/**
- * Get client IP address from request headers
- */
 function getClientIP(req) {
   return (
     req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
@@ -29,19 +24,6 @@ function getClientIP(req) {
   );
 }
 
-/**
- * Sign token with HMAC-SHA256
- */
-function signToken(payload) {
-  const secret = process.env.SESSION_SECRET || "fallback-secret-change-me";
-  const data = JSON.stringify(payload);
-  const sig = crypto.createHmac("sha256", secret).update(data).digest("hex");
-  return Buffer.from(data).toString("base64") + "." + sig;
-}
-
-/**
- * Set CORS headers for cross-origin requests
- */
 function corsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -49,9 +31,6 @@ function corsHeaders(res) {
   res.setHeader("Content-Type", "application/json");
 }
 
-/**
- * Main handler function
- */
 module.exports = async function handler(req, res) {
   corsHeaders(res);
 
@@ -67,16 +46,17 @@ module.exports = async function handler(req, res) {
   const ip = getClientIP(req);
   const now = Date.now();
 
-  // Initialize rate limiting for this IP
+  // Initialize rate limiting
   if (!RATE_LIMIT[ip]) {
     RATE_LIMIT[ip] = { attempts: 0, lockedUntil: 0 };
   }
   const record = RATE_LIMIT[ip];
 
-  // Check if IP is currently locked out
+  // Check if locked out
   if (record.lockedUntil > now) {
     const remaining = Math.ceil((record.lockedUntil - now) / 1000);
     return res.status(429).json({
+      success: false,
       error: `Too many attempts. Try again in ${remaining}s.`,
       lockedFor: remaining,
     });
@@ -86,29 +66,30 @@ module.exports = async function handler(req, res) {
   const body = req.body || {};
   const { username, password } = body;
 
-  // Get credentials from environment variables
+  // Get credentials from environment
   const validUser = process.env.ADMIN_USERNAME || "grish";
   const validPass = process.env.ADMIN_PASSWORD;
 
-  // Verify environment is configured
+  // Check if password is configured
   if (!validPass) {
     console.error("ADMIN_PASSWORD environment variable not set!");
     return res.status(500).json({
-      error: "Server misconfigured: ADMIN_PASSWORD env var not set.",
+      success: false,
+      error: "Server misconfigured",
     });
   }
 
-  // Ensure input exists
+  // Validate input
   if (!username || !password) {
     record.attempts++;
     return res.status(400).json({
+      success: false,
       error: "Username and password are required",
       attemptsLeft: MAX_ATTEMPTS - record.attempts,
     });
   }
 
   // Constant-time comparison to prevent timing attacks
-  // Pad buffers to same length
   const maxUserLen = Math.max(username.length, validUser.length);
   const maxPassLen = Math.max(password.length, validPass.length);
 
@@ -125,38 +106,39 @@ module.exports = async function handler(req, res) {
   const userMatch = crypto.timingSafeEqual(userBuf, validUserBuf);
   const passMatch = crypto.timingSafeEqual(passBuf, validPassBuf);
 
-  // Handle failed authentication
+  // Handle failed login
   if (!userMatch || !passMatch) {
     record.attempts++;
-    
-    // Lock out after max attempts
+
     if (record.attempts >= MAX_ATTEMPTS) {
       record.lockedUntil = now + LOCKOUT_MS;
       record.attempts = 0;
       console.log(`IP ${ip} locked out for 30 seconds`);
       return res.status(429).json({
+        success: false,
         error: "Too many failed attempts. Locked for 30 seconds.",
         lockedFor: 30,
       });
     }
 
-    console.log(`Failed login attempt from ${ip}. Attempts: ${record.attempts}`);
+    console.log(`Failed login from ${ip}. Attempts: ${record.attempts}`);
     return res.status(401).json({
+      success: false,
       error: "Invalid credentials",
       attemptsLeft: MAX_ATTEMPTS - record.attempts,
     });
   }
 
-  // Success — reset rate limit, issue token
+  // Success - reset attempts
   record.attempts = 0;
   record.lockedUntil = 0;
 
-  const token = signToken({
-    user: validUser,
-    exp: now + 3600 * 1000, // 1 hour expiry
-    iat: now,
-  });
-
   console.log(`Successful login from ${ip} for user: ${validUser}`);
-  return res.status(200).json({ success: true, token });
+  
+  // Return success without token
+  return res.status(200).json({
+    success: true,
+    message: "Login successful",
+    user: validUser,
+  });
 };
