@@ -1,13 +1,3 @@
-// api/login.js
-// Simple Authentication - Username & Password Only (No Tokens)
-// 
-// SETUP INSTRUCTIONS:
-// 1. Place this file at: /api/login.js
-// 2. Set Environment Variables in Vercel:
-//    - ADMIN_USERNAME (e.g., "grish")
-//    - ADMIN_PASSWORD (your secure password)
-// 3. Deploy to Vercel
-
 const crypto = require("crypto");
 
 // In-memory rate limiting
