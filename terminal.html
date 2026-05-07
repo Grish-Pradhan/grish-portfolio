@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>THREAT TERMINAL — GRISH PRADHAN</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020409;--accent:#00f5d4;--accent2:#ff3e6c;--accent3:#7b2fff;
+  --warn:#ffcc00;--green:#39ff14;--dim:#1a2a3a;
+  --font-mono:'Share Tech Mono',monospace;--font-orb:'Orbitron',monospace;--font-vt:'VT323',monospace;
+  --topbar-h:48px;--bottom-h:36px;--term-h:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--accent);font-family:var(--font-mono);overflow:hidden;}
+body{cursor:crosshair;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,245,212,0.007) 3px,rgba(0,245,212,0.007) 4px);}
+
+/* ════════════════════════════
+   LAYOUT — DESKTOP (≥1024px)
+════════════════════════════ */
+#app{
+  display:grid;
+  grid-template-columns:260px 1fr 260px;
+  grid-template-rows:var(--topbar-h) 1fr auto auto;
+  height:100vh;
+  max-height:100vh;
+  gap:2px;padding:2px;background:#000a14;
+  overflow:hidden;
+}
+
+/* ════════════════════════════
+   LAYOUT — TABLET (768–1023px)
+════════════════════════════ */
+@media(max-width:1023px)and(min-width:768px){
+  :root{--topbar-h:44px;--bottom-h:32px;--term-h:240px;}
+  #app{
+    grid-template-columns:200px 1fr 200px;
+    grid-template-rows:var(--topbar-h) 1fr auto auto;
+  }
+  .topbar-center{gap:14px;}
+  .topbar-stat-val{font-size:.75rem;}
+  .topbar-logo{font-size:.8rem;letter-spacing:3px;}
+}
+
+/* ════════════════════════════
+   LAYOUT — MOBILE (< 768px)
+════════════════════════════ */
+@media(max-width:767px){
+  :root{--topbar-h:42px;--bottom-h:0px;--term-h:220px;}
+  html,body{overflow:hidden;}
+  #app{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:var(--topbar-h) 1fr auto;
+    height:100dvh;
+    max-height:100dvh;
+    gap:2px;padding:2px;
+    overflow:hidden;
+  }
+  #topbar{grid-column:1/-1;grid-row:1;}
+  #main-body{grid-column:1/-1;grid-row:2;display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden;}
+  #terminal-wrap{grid-column:1/-1;grid-row:3;height:var(--term-h);flex-shrink:0;}
+  #left,#right{display:none !important;}
+  #center{display:flex;flex-direction:column;flex:1;min-height:0;}
+  #globe-panel{flex:1;min-height:0;}
+  #radar-row{flex-shrink:0;}
+  #bottom-strip{display:none !important;}
+
+  /* mobile topbar compression */
+  .topbar-logo span.sub{display:none;}
+  .topbar-center{gap:10px;}
+  .topbar-stat-val{font-size:.7rem;}
+  .topbar-stat-lbl{font-size:.42rem;}
+  .sys-clock{font-size:1rem;}
+  .status-dot-wrap{display:none;}
+  #terminal-output{font-size:.65rem;}
+  #t-input{font-size:.65rem;}
+  #prompt-display{font-size:.65rem;}
+}
+
+/* Intermediate wrapper for non-mobile */
+@media(min-width:768px){
+  #main-body{display:contents;}
+}
+#left,#center,#right{min-height:0;overflow:hidden;}
+
+/* ── TOP BAR ── */
+#topbar{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,245,212,0.04);border:1px solid rgba(0,245,212,0.18);
+  padding:0 12px;font-size:.65rem;letter-spacing:2px;overflow:hidden;
+}
+.topbar-logo{font-family:var(--font-orb);font-size:.88rem;font-weight:900;color:#fff;letter-spacing:4px;white-space:nowrap;}
+.topbar-logo span{color:var(--accent2);}
+.topbar-center{display:flex;gap:20px;align-items:center;flex-shrink:0;}
+.topbar-stat{text-align:center;}
+.topbar-stat-val{font-family:var(--font-orb);font-size:.8rem;color:var(--accent2);line-height:1;}
+.topbar-stat-lbl{font-size:.45rem;color:rgba(0,245,212,.4);letter-spacing:2px;}
+.sys-clock{font-family:var(--font-vt);font-size:1.15rem;color:var(--accent);}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pdot 1.5s ease-in-out infinite;}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.3);}}
+
+/* ── PANELS ── */
+#left{display:flex;flex-direction:column;gap:2px;}
+#center{display:flex;flex-direction:column;gap:2px;}
+#right{display:flex;flex-direction:column;gap:2px;}
+.panel{background:rgba(0,10,20,.88);border:1px solid rgba(0,245,212,.13);overflow:hidden;position:relative;}
+.panel-hdr{display:flex;align-items:center;gap:8px;padding:5px 12px;border-bottom:1px solid rgba(0,245,212,.08);
+  font-size:.55rem;letter-spacing:3px;color:rgba(0,245,212,.45);background:rgba(0,245,212,.025);flex-shrink:0;}
+.phd{width:5px;height:5px;border-radius:50%;background:var(--accent2);box-shadow:0 0 5px var(--accent2);animation:pdot 2s ease-in-out infinite;}
+.corner-tl,.corner-tr,.corner-bl,.corner-br{position:absolute;width:9px;height:9px;pointer-events:none;}
+.corner-tl{top:0;left:0;border-top:1.5px solid rgba(0,245,212,.35);border-left:1.5px solid rgba(0,245,212,.35);}
+.corner-tr{top:0;right:0;border-top:1.5px solid rgba(0,245,212,.35);border-right:1.5px solid rgba(0,245,212,.35);}
+.corner-bl{bottom:0;left:0;border-bottom:1.5px solid rgba(0,245,212,.35);border-left:1.5px solid rgba(0,245,212,.35);}
+.corner-br{bottom:0;right:0;border-bottom:1.5px solid rgba(0,245,212,.35);border-right:1.5px solid rgba(0,245,212,.35);}
+
+/* LOG */
+#log-feed{padding:6px;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:1px;min-height:0;}
+.log-line{font-size:.56rem;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;animation:lf .3s ease forwards;}
+@keyframes lf{to{opacity:1;}}
+.log-line.crit{color:var(--accent2);}
+.log-line.warn{color:var(--warn);}
+.log-line.ok{color:var(--green);}
+.log-line.info{color:rgba(0,245,212,.6);}
+
+/* SESSIONS */
+#session-list{padding:6px 10px;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
+.sess{display:flex;justify-content:space-between;align-items:center;padding:3px 7px;border:1px solid rgba(0,245,212,.07);background:rgba(0,245,212,.015);}
+.sess-ip{font-size:.54rem;color:var(--accent);}
+.sess-type{font-size:.48rem;padding:2px 4px;letter-spacing:1px;}
+.sess-type.brute{background:rgba(255,62,108,.12);color:var(--accent2);border:1px solid rgba(255,62,108,.25);}
+.sess-type.scan{background:rgba(0,245,212,.07);color:var(--accent);border:1px solid rgba(0,245,212,.18);}
+.sess-type.exfil{background:rgba(123,47,255,.12);color:#b47fff;border:1px solid rgba(123,47,255,.25);}
+.sess-bar-w{width:44px;height:2px;background:rgba(255,255,255,.04);}
+.sess-bar{height:100%;background:var(--accent2);animation:sb 2s linear infinite;}
+@keyframes sb{0%{width:0%}100%{width:100%}}
+
+/* GLOBE */
+#globe-panel{position:relative;overflow:hidden;min-height:0;}
+#globe-canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;}
+.globe-overlay{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 55% at 50% 50%,transparent 52%,rgba(2,4,9,.92) 100%);}
+.globe-label{position:absolute;font-family:var(--font-orb);font-size:.55rem;letter-spacing:2px;color:rgba(0,245,212,.45);text-transform:uppercase;z-index:2;}
+.globe-label.tl{top:12px;left:12px;}.globe-label.tr{top:12px;right:12px;text-align:right;}
+.globe-label.bl{bottom:12px;left:12px;}.globe-label.br{bottom:12px;right:12px;text-align:right;}
+.attack-counter{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:2;}
+.attack-counter-num{font-family:var(--font-orb);font-size:clamp(1.5rem,4vw,3rem);font-weight:900;color:#fff;
+  text-shadow:0 0 40px rgba(0,245,212,.8),0 0 80px rgba(0,245,212,.3);animation:ng 2s ease-in-out infinite;}
+@keyframes ng{0%,100%{text-shadow:0 0 40px rgba(0,245,212,.8);}50%{text-shadow:0 0 80px rgba(0,245,212,1),0 0 120px rgba(0,245,212,.6);}}
+.attack-counter-lbl{font-size:.5rem;letter-spacing:4px;color:rgba(0,245,212,.35);}
+
+/* RADAR ROW */
+#radar-row{height:56px;display:flex;align-items:center;gap:12px;padding:0 12px;flex-shrink:0;}
+#radar-canvas{width:42px;height:42px;flex-shrink:0;}
+.radar-info{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.ri{text-align:center;}
+.ri-v{font-family:var(--font-orb);font-size:clamp(.6rem,.8vw,.82rem);font-weight:700;}
+.ri-l{font-size:.42rem;letter-spacing:2px;color:rgba(0,245,212,.3);}
+
+/* CIPHER */
+#cipher-wall{padding:6px 10px;font-family:var(--font-vt);font-size:.95rem;line-height:1.4;flex:1;overflow:hidden;word-break:break-all;color:rgba(0,245,212,.22);}
+.ch{color:var(--accent);text-shadow:0 0 5px var(--accent);}
+.cr{color:var(--accent2);text-shadow:0 0 5px var(--accent2);}
+
+/* HASH */
+#hash-body{padding:8px 10px;display:flex;flex-direction:column;gap:6px;}
+.hash-display{font-size:.52rem;word-break:break-all;color:rgba(0,245,212,.38);
+  background:rgba(0,245,212,.02);border:1px solid rgba(0,245,212,.07);padding:4px 8px;line-height:1.7;height:48px;overflow:hidden;}
+.hash-progress{height:2px;background:rgba(255,255,255,.04);overflow:hidden;}
+.hash-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent3),var(--accent2));animation:hp 3s linear infinite;}
+@keyframes hp{0%{width:0%}70%{width:100%}71%{width:0%}100%{width:0%}}
+.hash-status{font-size:.54rem;display:flex;justify-content:space-between;}
+.hash-cracked{color:var(--green);}
+.hash-attempts{color:rgba(0,245,212,.3);}
+.hash-candidates{display:flex;flex-direction:column;gap:3px;}
+.hc{font-size:.53rem;display:flex;justify-content:space-between;padding:2px 6px;border:1px solid rgba(255,255,255,.035);}
+.hc.hit{border-color:rgba(57,255,20,.28);background:rgba(57,255,20,.035);color:var(--green);}
+
+/* ── BOTTOM STRIP ── */
+#bottom-strip{
+  grid-column:1/-1;height:var(--bottom-h);min-height:var(--bottom-h);
+  display:flex;align-items:center;gap:16px;padding:0 14px;
+  background:rgba(0,245,212,.025);border:1px solid rgba(0,245,212,.1);font-size:.54rem;
+  overflow:hidden;flex-shrink:0;
+}
+.bs-item{display:flex;gap:6px;align-items:center;white-space:nowrap;}
+.bs-label{color:rgba(0,245,212,.35);letter-spacing:2px;}
+.bs-val{color:var(--accent);font-family:var(--font-orb);font-size:.65rem;}
+.bs-sep{width:1px;height:20px;background:rgba(0,245,212,.08);flex-shrink:0;}
+
+/* hide some bottom items on tablet */
+@media(max-width:1023px)and(min-width:768px){
+  .bs-hide-tablet{display:none;}
+}
+
+/* ════════════════════════════════════
+   LINUX TERMINAL
+   ════════════════════════════════════ */
+#terminal-wrap{
+  grid-column:1/-1;
+  height:var(--term-h);
+  min-height:var(--term-h);
+  max-height:var(--term-h);
+  display:flex;flex-direction:column;
+  background:#000d1a;border:1px solid rgba(0,245,212,.2);
+  position:relative;overflow:hidden;
+  flex-shrink:0;
+}
+#terminal-titlebar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;height:28px;border-bottom:1px solid rgba(0,245,212,.12);
+  background:rgba(0,245,212,.03);flex-shrink:0;
+}
+.tbar-left{display:flex;align-items:center;gap:6px;}
+.tbar-dot{width:9px;height:9px;border-radius:50%;}
+.tbar-dot.red{background:#ff5f56;box-shadow:0 0 6px #ff5f56;}
+.tbar-dot.yellow{background:#ffbd2e;box-shadow:0 0 6px #ffbd2e;}
+.tbar-dot.green{background:#27c93f;box-shadow:0 0 6px #27c93f;}
+.tbar-title{font-family:var(--font-orb);font-size:.55rem;letter-spacing:3px;color:rgba(0,245,212,.5);margin-left:6px;}
+.tbar-right{font-size:.5rem;color:rgba(0,245,212,.25);letter-spacing:2px;}
+@media(max-width:500px){.tbar-right{display:none;}}
+
+#terminal-output{
+  flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 14px;
+  font-size:.68rem;line-height:1.6;font-family:var(--font-mono);
+}
+#terminal-output::-webkit-scrollbar{width:3px;}
+#terminal-output::-webkit-scrollbar-thumb{background:rgba(0,245,212,.2);border-radius:2px;}
+#terminal-output::-webkit-scrollbar-track{background:transparent;}
+
+.t-line{margin:0;white-space:pre-wrap;word-break:break-all;}
+.t-line.prompt-line{color:rgba(0,245,212,.5);}
+.t-line.cmd-echo{color:#fff;}
+.t-line.output{color:rgba(0,245,212,.75);}
+.t-line.error{color:var(--accent2);}
+.t-line.success{color:var(--green);}
+.t-line.warn{color:var(--warn);}
+.t-line.dim{color:rgba(0,245,212,.35);}
+.t-line.white{color:#ddeeff;}
+.t-line.purple{color:#b47fff;}
+.t-line.bold{color:#fff;font-weight:bold;}
+
+#terminal-input-row{
+  display:flex;align-items:center;padding:5px 14px 6px;
+  border-top:1px solid rgba(0,245,212,.1);flex-shrink:0;
+}
+#prompt-display{font-size:.68rem;white-space:nowrap;flex-shrink:0;}
+.prompt-user{color:var(--green);}
+.prompt-at{color:rgba(0,245,212,.4);}
+.prompt-host{color:var(--accent);}
+.prompt-colon{color:rgba(0,245,212,.4);}
+.prompt-path{color:#5faeff;}
+.prompt-dollar{color:rgba(0,245,212,.6);margin-right:6px;}
+#t-input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:#fff;font-family:var(--font-mono);font-size:.68rem;
+  caret-color:var(--accent);min-width:0;
+}
+#tab-hint{font-size:.54rem;color:rgba(0,245,212,.3);padding:1px 14px;min-height:14px;flex-shrink:0;font-family:var(--font-mono);}
+
+/* BOOT */
+#boot-overlay{position:fixed;inset:0;background:var(--bg);z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--font-vt);font-size:1rem;letter-spacing:2px;transition:opacity .5s ease;pointer-events:none;}
+.boot-bar-wrap{width:min(280px,80vw);height:2px;background:rgba(0,245,212,.1);overflow:hidden;margin-top:8px;}
+.boot-bar{height:100%;background:var(--accent);animation:bootbar 2.2s ease forwards;}
+@keyframes bootbar{0%{width:0%}100%{width:100%}}
+#boot-lines{display:flex;flex-direction:column;gap:3px;max-height:200px;overflow:hidden;width:min(400px,90vw);}
+.bl{font-size:.68rem;color:rgba(0,245,212,.6);}
+.bl.ok{color:rgba(57,255,20,.65);}
+
+.nav-back{position:fixed;top:6px;right:6px;z-index:1000;font-family:var(--font-mono);font-size:.55rem;
+  letter-spacing:2px;padding:4px 12px;border:1px solid rgba(0,245,212,.25);color:rgba(0,245,212,.4);
+  text-decoration:none;transition:all .3s;background:rgba(0,10,20,.8);}
+.nav-back:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 16px rgba(0,245,212,.15);}
+
+/* Mobile: touch-friendly input */
+@media(max-width:767px){
+  #t-input{font-size:16px !important;} /* prevents zoom on iOS */
+  body{cursor:default;}
+  #terminal-input-row{padding:6px 10px 8px;}
+  .tbar-title{font-size:.48rem;}
+}
+
+/* Fluid left/right panels on desktop */
+@media(min-width:1024px){
+  #left .panel:first-child{display:flex;flex-direction:column;}
+  #log-feed{height:auto;}
+}
+
+/* Resize handle visual on narrow desktops */
+@media(max-width:1280px)and(min-width:1024px){
+  #app{grid-template-columns:220px 1fr 220px;}
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div id="boot-overlay">
+  <div id="boot-lines"></div>
+  <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
+  <div style="font-size:.58rem;color:rgba(0,245,212,.25);letter-spacing:3px;margin-top:4px;text-align:center;">THREAT TERMINAL v3.1 — GRISH PRADHAN</div>
+</div>
+
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="topbar-logo">GR<span>IS</span>H <span class="sub" style="color:rgba(0,245,212,.2);font-size:.5rem;letter-spacing:4px;">// THREAT TERMINAL</span></div>
+    <div class="topbar-center">
+      <div class="topbar-stat"><div class="topbar-stat-val" id="stat-attacks">0</div><div class="topbar-stat-lbl">ATK/MIN</div></div>
+      <div style="width:1px;height:22px;background:rgba(0,245,212,.08)"></div>
+      <div class="topbar-stat"><div class="topbar-stat-val" id="stat-countries">0</div><div class="topbar-stat-lbl">ORIGINS</div></div>
+      <div style="width:1px;height:22px;background:rgba(0,245,212,.08)"></div>
+      <div class="topbar-stat"><div class="topbar-stat-val" id="stat-blocked" style="color:var(--green)">0</div><div class="topbar-stat-lbl">BLOCKED</div></div>
+      <div style="width:1px;height:22px;background:rgba(0,245,212,.08)"></div>
+      <div class="topbar-stat"><div class="topbar-stat-val" id="stat-crit" style="color:var(--accent2)">0</div><div class="topbar-stat-lbl">CRITICAL</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;" class="status-dot-wrap">
+      <span class="status-dot"></span>
+      <span style="font-size:.5rem;letter-spacing:2px;color:rgba(0,245,212,.35)">LIVE</span>
+      <div class="sys-clock" id="clock">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- MAIN BODY WRAPPER (mobile flex container) -->
+  <div id="main-body">
+
+  <!-- LEFT -->
+  <div id="left">
+    <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+      <div class="panel-hdr"><div class="phd"></div>LIVE ATTACK LOG</div>
+      <div id="log-feed"></div>
+      <div class="corner-tl"></div><div class="corner-br"></div>
+    </div>
+    <div class="panel" style="height:148px;flex-shrink:0;overflow:hidden;">
+      <div class="panel-hdr"><div class="phd"></div>ACTIVE SESSIONS</div>
+      <div id="session-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div class="panel" id="globe-panel" style="flex:1;">
+      <canvas id="globe-canvas"></canvas>
+      <div class="globe-overlay"></div>
+      <div class="globe-label tl">LAT 27.7°N</div>
+      <div class="globe-label tr">THREAT MAP</div>
+      <div class="globe-label bl">LALITPUR, NP</div>
+      <div class="globe-label br" id="globe-br">ORIGIN: —</div>
+      <div class="attack-counter">
+        <div class="attack-counter-num" id="global-count">0</div>
+        <div class="attack-counter-lbl">TOTAL THREATS</div>
+      </div>
+      <div class="corner-tl"></div><div class="corner-br"></div>
+    </div>
+    <div class="panel" id="radar-row">
+      <canvas id="radar-canvas" width="42" height="42"></canvas>
+      <div class="radar-info">
+        <div class="ri"><div class="ri-v" id="ri1" style="color:var(--accent)">—</div><div class="ri-l">BANDWIDTH</div></div>
+        <div class="ri"><div class="ri-v" id="ri2" style="color:var(--accent2)">—</div><div class="ri-l">MALWARE</div></div>
+        <div class="ri"><div class="ri-v" id="ri3" style="color:var(--warn)">—</div><div class="ri-l">EXPLOIT</div></div>
+        <div class="ri"><div class="ri-v" id="ri4" style="color:var(--green)">—</div><div class="ri-l">UPTIME</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right">
+    <div class="panel" style="flex:1;display:flex;flex-direction:column;">
+      <div class="panel-hdr"><div class="phd" style="background:var(--accent3);box-shadow:0 0 5px var(--accent3)"></div>ENCRYPTED STREAM</div>
+      <div id="cipher-wall"></div>
+    </div>
+    <div class="panel" style="height:190px;flex-shrink:0;">
+      <div class="panel-hdr"><div class="phd" style="background:var(--warn);box-shadow:0 0 5px var(--warn)"></div>HASH CRACKER</div>
+      <div id="hash-body">
+        <div class="hash-display"><span style="color:rgba(255,62,108,.6)">TARGET: </span><span id="hash-target">d41d8cd98f00b204e9800998ecf8427e</span></div>
+        <div class="hash-progress"><div class="hash-progress-bar"></div></div>
+        <div class="hash-status"><span class="hash-cracked" id="hash-cracked">● CRACKING...</span><span class="hash-attempts" id="hash-attempts">0 attempts</span></div>
+        <div class="hash-candidates" id="hash-candidates">
+          <div class="hc"><span>—</span><span>—</span></div>
+          <div class="hc"><span>—</span><span>—</span></div>
+          <div class="hc"><span>—</span><span>—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /main-body -->
+
+  <!-- STATUS STRIP -->
+  <div id="bottom-strip">
+    <div class="bs-item"><span class="bs-label">CPU</span><span class="bs-val" id="bs-cpu">—</span></div>
+    <div class="bs-sep"></div>
+    <div class="bs-item"><span class="bs-label">MEM</span><span class="bs-val" id="bs-mem">—</span></div>
+    <div class="bs-sep"></div>
+    <div class="bs-item bs-hide-tablet"><span class="bs-label">DISK</span><span class="bs-val" id="bs-disk">—</span></div>
+    <div class="bs-sep bs-hide-tablet"></div>
+    <div class="bs-item"><span class="bs-label">NET RX</span><span class="bs-val" id="bs-rx">—</span></div>
+    <div class="bs-sep"></div>
+    <div class="bs-item"><span class="bs-label">NET TX</span><span class="bs-val" id="bs-tx">—</span></div>
+    <div class="bs-sep bs-hide-tablet"></div>
+    <div class="bs-item bs-hide-tablet"><span class="bs-label">PROCS</span><span class="bs-val" id="bs-procs">—</span></div>
+    <div class="bs-sep" style="margin-left:auto"></div>
+    <div class="bs-item"><span class="bs-label">KERNEL</span><span class="bs-val" style="color:rgba(0,245,212,.5)">6.8.0-kali1</span></div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div id="terminal-wrap">
+    <div id="terminal-titlebar">
+      <div class="tbar-left">
+        <div class="tbar-dot red"></div>
+        <div class="tbar-dot yellow"></div>
+        <div class="tbar-dot green"></div>
+        <div class="tbar-title">BASH — grish@kali: ~</div>
+      </div>
+      <div class="tbar-right">bash 5.2.21 &nbsp;|&nbsp; type 'help' for commands</div>
+    </div>
+    <div id="terminal-output"></div>
+    <div id="tab-hint"></div>
+    <div id="terminal-input-row">
+      <div id="prompt-display">
+        <span class="prompt-user">grish</span><span class="prompt-at">@</span><span class="prompt-host">kali</span><span class="prompt-colon">:</span><span class="prompt-path" id="prompt-path">~</span><span class="prompt-dollar"> $ </span>
+      </div>
+      <input id="t-input" type="text" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" enterkeyhint="send"/>
+    </div>
+  </div>
+
+</div>
+
+<a href="index.html" class="nav-back">← BACK</a>
+
+<script>
+/* ══════════════════════════════════════════════════
+   BOOT SEQUENCE
+══════════════════════════════════════════════════ */
+const bootMsgs=[
+  ['BIOS v3.1.4 ... OK','ok'],['Loading kernel 6.8.0-kali1 ... OK','ok'],
+  ['Mounting /dev/sda1 ... OK','ok'],['Starting NetworkManager ... OK','ok'],
+  ['Loading iptables rules ... OK','ok'],['Initializing threat feeds ... OK','ok'],
+  ['Starting SSH daemon ... OK','ok'],['Loading exploit DB [47,291 CVEs] ... OK','ok'],
+  ['SYSTEM READY.','ok'],
+];
+let bi=0;
+const bootEl=document.getElementById('boot-lines');
+function bootStep(){
+  if(bi>=bootMsgs.length){setTimeout(()=>{document.getElementById('boot-overlay').style.opacity='0';},300);return;}
+  const d=document.createElement('div');d.className='bl '+(bootMsgs[bi][1]);
+  d.textContent=bootMsgs[bi][0];bootEl.appendChild(d);bi++;
+  setTimeout(bootStep,180);
+}
+setTimeout(bootStep,200);
+
+/* ══════════════════════════════════════════════════
+   CLOCK & STATUS BAR
+══════════════════════════════════════════════════ */
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock,1000);updateClock();
+function rn(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+setInterval(()=>{
+  document.getElementById('bs-cpu').textContent=rn(8,94)+'%';
+  document.getElementById('bs-mem').textContent=rn(2,14)+'.'+rn(0,9)+' GB';
+  document.getElementById('bs-disk').textContent=rn(20,89)+'%';
+  document.getElementById('bs-rx').textContent=rn(10,980)+' KB/s';
+  document.getElementById('bs-tx').textContent=rn(5,300)+' KB/s';
+  document.getElementById('bs-procs').textContent=rn(140,320);
+},1800);
+
+/* ══════════════════════════════════════════════════
+   ATTACK LOG
+══════════════════════════════════════════════════ */
+let totalThreats=0,blocked=0,critical=0,attacksMin=0;
+const origins=['CN','RU','US','IR','KP','BR','DE','UA','NG','IN','FR','VN','PK','TR','RO'];
+const originNames={CN:'BEIJING',RU:'MOSCOW',US:'VIRGINIA',IR:'TEHRAN',KP:'PYONGYANG',BR:'SAO PAULO',DE:'BERLIN',UA:'KYIV',NG:'LAGOS',IN:'MUMBAI',FR:'PARIS',VN:'HANOI',PK:'KARACHI',TR:'ISTANBUL',RO:'BUCHAREST'};
+const originCounts={};
+const atkTypes=['BRUTE_FORCE','SQL_INJECT','XSS_PAYLOAD','RCE_ATTEMPT','PORT_SCAN','DDoS_FLOOD','PHISHING','CRED_STUFF','RANSOMWARE','ZERO_DAY'];
+const randIp=()=>`${rn(1,254)}.${rn(1,254)}.${rn(1,254)}.${rn(1,254)}`;
+const feed=document.getElementById('log-feed');
+setInterval(()=>{attacksMin=0;},60000);
+function addLog(){
+  const type=atkTypes[rn(0,atkTypes.length-1)];
+  const org=origins[rn(0,origins.length-1)];
+  const isBlocked=Math.random()>.35,isCrit=Math.random()>.86;
+  const ts=new Date().toISOString().split('T')[1].split('.')[0];
+  const line=document.createElement('div');
+  line.className='log-line '+(isCrit?'crit':isBlocked?'ok':'warn');
+  line.textContent=`[${ts}] ${isBlocked?'✓':'✗'} ${type} ${randIp()} ← ${org} ${isBlocked?'BLOCKED':'ALERT'}`;
+  feed.appendChild(line);
+  if(feed.children.length>30)feed.removeChild(feed.children[0]);
+  totalThreats++;attacksMin++;
+  if(isBlocked)blocked++;if(isCrit)critical++;
+  if(!originCounts[org])originCounts[org]=0;originCounts[org]++;
+  document.getElementById('global-count').textContent=totalThreats.toLocaleString();
+  document.getElementById('stat-attacks').textContent=attacksMin;
+  document.getElementById('stat-countries').textContent=Object.keys(originCounts).length;
+  document.getElementById('stat-blocked').textContent=blocked;
+  document.getElementById('stat-crit').textContent=critical;
+  document.getElementById('globe-br').textContent='ORIGIN: '+(originNames[org]||org);
+  addGlobeAttack(org);
+}
+setInterval(addLog,750+Math.random()*500);
+
+/* SESSIONS */
+const sessTypes=['brute','scan','exfil'];
+function genSessions(){
+  const sl=document.getElementById('session-list');sl.innerHTML='';
+  for(let i=0;i<4;i++){
+    const t=sessTypes[rn(0,2)];
+    const d=document.createElement('div');d.className='sess';
+    d.innerHTML=`<span class="sess-ip">${randIp()}</span><span class="sess-type ${t}">${t.toUpperCase()}</span><div class="sess-bar-w"><div class="sess-bar" style="animation-duration:${(1+Math.random()*3).toFixed(1)}s"></div></div>`;
+    sl.appendChild(d);
+  }
+}
+genSessions();setInterval(genSessions,3500);
+
+/* ══════════════════════════════════════════════════
+   3D GLOBE
+══════════════════════════════════════════════════ */
+const gc=document.getElementById('globe-canvas'),gctx=gc.getContext('2d');
+let gW,gH,gCX,gCY,gR;
+function resizeGlobe(){
+  const p=document.getElementById('globe-panel');
+  const rect=p.getBoundingClientRect();
+  gW=rect.width;gH=rect.height;
+  gc.width=Math.round(gW);gc.height=Math.round(gH);
+  gCX=gW/2;gCY=gH/2;
+  gR=Math.min(gW,gH)*0.38;
+}
+resizeGlobe();
+const globeDots=[];
+for(let i=0;i<2400;i++){globeDots.push({lat:(Math.random()-.5)*Math.PI,lon:Math.random()*Math.PI*2,size:Math.random()>.95?1.8:.7,bright:Math.random()>.95});}
+const arcs=[];
+const coords={CN:[35,105],RU:[60,100],US:[40,-100],IR:[32,53],KP:[40,127],BR:[-10,-55],DE:[51,10],UA:[49,32],NG:[10,8],IN:[20,78],FR:[46,2],VN:[16,108],PK:[30,70],TR:[39,35],RO:[45,25]};
+function ll3d(lat,lon,r){const phi=(90-lat)*Math.PI/180,theta=(lon+180)*Math.PI/180;return{x:r*Math.sin(phi)*Math.cos(theta),y:r*Math.cos(phi),z:r*Math.sin(phi)*Math.sin(theta)};}
+let globeRot=0;
+function addGlobeAttack(org){const co=coords[org]||[rn(-60,60),rn(-180,180)];if(arcs.length<60)arcs.push({lat:co[0],lon:co[1],toLat:27.7,toLon:85.3,t:0,dur:80+rn(0,40),color:Math.random()>.7?'255,62,108':'0,245,212'});}
+let _globeRAF=null;
+function drawGlobe(ts){
+  _globeRAF=requestAnimationFrame(drawGlobe);
+  gctx.clearRect(0,0,gW,gH);globeRot+=.002;
+  const grad=gctx.createRadialGradient(gCX,gCY,0,gCX,gCY,gR*1.2);
+  grad.addColorStop(0,'rgba(0,245,212,0.04)');grad.addColorStop(1,'transparent');
+  gctx.fillStyle=grad;gctx.fillRect(0,0,gW,gH);
+  gctx.strokeStyle='rgba(0,245,212,0.05)';gctx.lineWidth=1;
+  gctx.beginPath();gctx.arc(gCX,gCY,gR,0,Math.PI*2);gctx.stroke();
+  /* batch dot rendering */
+  gctx.beginPath();
+  for(const d of globeDots){
+    const lon=d.lon+globeRot,p=ll3d(d.lat*180/Math.PI,lon*180/Math.PI,gR);
+    if(p.z<0)continue;
+    const x=gCX+p.x,y=gCY-p.y,alpha=.08+.5*(p.z/gR);
+    gctx.beginPath();gctx.arc(x,y,d.size*(p.z/gR+.3),0,Math.PI*2);
+    gctx.fillStyle=d.bright?`rgba(0,245,212,${alpha+.3})`:`rgba(0,245,212,${alpha})`;gctx.fill();
+  }
+  for(let i=arcs.length-1;i>=0;i--){
+    const a=arcs[i];a.t++;const pct=a.t/a.dur;if(pct>=1){arcs.splice(i,1);continue;}
+    gctx.beginPath();let first=true;
+    for(let s=0;s<=40*pct;s++){
+      const sp=s/40,lat=a.lat+(a.toLat-a.lat)*sp,lon=a.lon+(a.toLon-a.lon)*sp+globeRot*180/Math.PI;
+      const p3=ll3d(lat,lon,gR*1.01);if(p3.z<-gR*.3)continue;
+      const x=gCX+p3.x,y=gCY-p3.y;if(first){gctx.moveTo(x,y);first=false;}else gctx.lineTo(x,y);
+    }
+    gctx.strokeStyle=`rgba(${a.color},${.6*(1-pct*.3)})`;gctx.lineWidth=1.5;gctx.stroke();
+    const sp2=Math.min(pct,.99),lat2=a.lat+(a.toLat-a.lat)*sp2,lon2=a.lon+(a.toLon-a.lon)*sp2+globeRot*180/Math.PI;
+    const p2=ll3d(lat2,lon2,gR*1.01);
+    if(p2.z>-gR*.3){gctx.beginPath();gctx.arc(gCX+p2.x,gCY-p2.y,3,0,Math.PI*2);gctx.fillStyle=`rgba(${a.color},0.9)`;gctx.fill();}
+  }
+  const np=ll3d(27.7,85.3+globeRot*180/Math.PI,gR*1.01);
+  if(np.z>0){const nx=gCX+np.x,ny=gCY-np.y;
+    gctx.beginPath();gctx.arc(nx,ny,4,0,Math.PI*2);gctx.fillStyle='rgba(255,62,108,0.9)';gctx.fill();
+    gctx.beginPath();gctx.arc(nx,ny,8+4*Math.sin(Date.now()/300),0,Math.PI*2);
+    gctx.strokeStyle='rgba(255,62,108,0.4)';gctx.lineWidth=1;gctx.stroke();}
+}
+drawGlobe();
+
+/* Debounced resize */
+let resizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{resizeGlobe();},100);
+});
+
+/* ResizeObserver for globe panel */
+if(typeof ResizeObserver!=='undefined'){
+  new ResizeObserver(()=>resizeGlobe()).observe(document.getElementById('globe-panel'));
+}
+
+/* RADAR */
+const rc=document.getElementById('radar-canvas'),rctx=rc.getContext('2d');let radarAngle=0;
+function drawRadar(){
+  rctx.clearRect(0,0,42,42);rctx.strokeStyle='rgba(0,245,212,0.14)';rctx.lineWidth=.5;
+  for(let r=7;r<=21;r+=7){rctx.beginPath();rctx.arc(21,21,r,0,Math.PI*2);rctx.stroke();}
+  rctx.beginPath();rctx.moveTo(21,2);rctx.lineTo(21,40);rctx.stroke();
+  rctx.beginPath();rctx.moveTo(2,21);rctx.lineTo(40,21);rctx.stroke();
+  rctx.save();rctx.translate(21,21);rctx.rotate(radarAngle);
+  rctx.beginPath();rctx.moveTo(0,0);rctx.arc(0,0,19,0,Math.PI/2);rctx.fillStyle='rgba(0,245,212,0.06)';rctx.fill();
+  rctx.beginPath();rctx.moveTo(0,0);rctx.lineTo(19,0);rctx.strokeStyle='rgba(0,245,212,0.65)';rctx.lineWidth=1.5;rctx.stroke();
+  rctx.restore();radarAngle+=.05;
+  if(Math.random()>.72){const bx=21+(Math.random()-.5)*34,by=21+(Math.random()-.5)*34;if(Math.hypot(bx-21,by-21)<19){rctx.beginPath();rctx.arc(bx,by,1.5,0,Math.PI*2);rctx.fillStyle='rgba(255,62,108,0.9)';rctx.fill();}}
+  requestAnimationFrame(drawRadar);
+}
+drawRadar();
+setInterval(()=>{document.getElementById('ri1').textContent=rn(200,980)+' MB/s';document.getElementById('ri2').textContent=rn(0,47);document.getElementById('ri3').textContent=rn(0,12);document.getElementById('ri4').textContent='99.'+rn(10,99)+'%';},2000);
+
+/* CIPHER WALL */
+const cwall=document.getElementById('cipher-wall');
+const hx='0123456789ABCDEF',b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+function updateCipher(){
+  let html='';
+  for(let i=0;i<12;i++){
+    const set=Math.random()>.5?hx:b64,len=rn(55,80);let s='';
+    for(let j=0;j<len;j++){const c=set[Math.floor(Math.random()*set.length)],r=Math.random();s+=r>.97?`<span class="cr">${c}</span>`:r>.92?`<span class="ch">${c}</span>`:c;}
+    html+=s+'\n';
+  }
+  cwall.innerHTML=html;
+}
+updateCipher();setInterval(updateCipher,280);
+
+/* HASH CRACKER */
+const hashSamples=['e10adc3949ba59abbe56e057f20f883e','5f4dcc3b5aa765d61d8327deb882cf99','098f6bcd4621d373cade4e832627b4f6','d8578edf8458ce06fbc5bb76a58c5ca4'];
+const wordlist=['password','123456','admin','letmein','qwerty','dragon','monkey','master','football','shadow'];
+let hashAttempts=0;
+setInterval(()=>{
+  hashAttempts+=rn(800,3000);
+  document.getElementById('hash-attempts').textContent=hashAttempts.toLocaleString()+' attempts';
+  document.getElementById('hash-target').textContent=hashSamples[rn(0,hashSamples.length-1)];
+  document.querySelectorAll('.hc').forEach(c=>{
+    const w=wordlist[rn(0,wordlist.length-1)],h=hashSamples[rn(0,hashSamples.length-1)].slice(0,16)+'...',hit=Math.random()>.7;
+    c.className='hc'+(hit?' hit':'');
+    c.innerHTML=`<span>${w}</span><span>${hit?'✓ MATCH':'→ '+h}</span>`;
+  });
+},1200);
+
+/* ══════════════════════════════════════════════════
+   LINUX TERMINAL SIMULATION
+══════════════════════════════════════════════════ */
+
+const FS = {
+  '/': {type:'dir', children:['home','etc','var','usr','tmp','opt','proc','dev','root','bin']},
+  '/home': {type:'dir', children:['grish']},
+  '/home/grish': {type:'dir', children:['Desktop','Documents','Downloads','tools','projects','.bashrc','.bash_history','.ssh','notes.txt','targets.txt']},
+  '/home/grish/Desktop': {type:'dir', children:['recon.sh','report.pdf']},
+  '/home/grish/Documents': {type:'dir', children:['pentest-notes.md','osint-guide.txt','ctf-writeups']},
+  '/home/grish/Documents/ctf-writeups': {type:'dir', children:['thm-rootme.md','htb-lame.md','picoctf-2024.md']},
+  '/home/grish/Downloads': {type:'dir', children:['wordlists','tools.zip','nmap-7.95.tar.gz']},
+  '/home/grish/Downloads/wordlists': {type:'dir', children:['rockyou.txt','common-passwords.txt','subdomains.txt']},
+  '/home/grish/tools': {type:'dir', children:['keylogger.py','dns-finder.py','password-gen.py','tls-sniffer.py','outbound-tester.py']},
+  '/home/grish/projects': {type:'dir', children:['portfolio','web-scanner','exploit-dev']},
+  '/home/grish/projects/portfolio': {type:'dir', children:['index.html','threat-terminal.html','admin.html','assets']},
+  '/home/grish/projects/portfolio/assets': {type:'dir', children:['style.css','app.js','certs']},
+  '/home/grish/projects/web-scanner': {type:'dir', children:['scanner.py','README.md','requirements.txt']},
+  '/home/grish/projects/exploit-dev': {type:'dir', children:['bof.py','shellcode.asm','notes.txt']},
+  '/home/grish/.ssh': {type:'dir', children:['id_rsa','id_rsa.pub','known_hosts','authorized_keys']},
+  '/home/grish/.ssh/id_rsa': {type:'file', content:'-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA...[REDACTED]\n-----END OPENSSH PRIVATE KEY-----'},
+  '/home/grish/.ssh/id_rsa.pub': {type:'file', content:'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB...grish@kali'},
+  '/home/grish/.ssh/known_hosts': {type:'file', content:'192.168.1.1 ssh-rsa AAAAB3NzaC1yc2E...\n10.10.10.1 ssh-rsa AAAAB3NzaC1y...'},
+  '/home/grish/.bashrc': {type:'file', content:'# ~/.bashrc\nexport PATH="$PATH:/home/grish/tools"\nexport EDITOR=nano\nalias ll="ls -la"\nalias nmap="nmap -v"\nalias py="python3"\nexport PS1="\\[\\033[01;32m\\]grish@kali\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ "\nalias myip="curl -s ifconfig.me"\nalias ports="netstat -tulanp"\nalias update="sudo apt update && sudo apt upgrade -y"'},
+  '/home/grish/.bash_history': {type:'file', content:'nmap -sV -sC 10.10.10.1\nsudo netstat -tulanp\npython3 tools/dns-finder.py target.com\nhydra -l admin -P wordlists/rockyou.txt ssh://10.10.10.1\nburpsuite &\nsudo wireshark &\ngobuster dir -u http://target.com -w wordlists/common.txt\nsqlmap -u "http://target.com?id=1" --dbs\nmsfconsole\nsetoolkit'},
+  '/home/grish/notes.txt': {type:'file', content:'=== PENTEST NOTES ===\nDate: 2026-05-07\n\nTarget: 192.168.1.0/24\nScope: Full internal network\n\nFindings:\n[CRITICAL] SQL Injection on /login.php\n[HIGH]     Default creds on router (admin:admin)\n[MEDIUM]   Outdated Apache 2.4.49\n[LOW]      Directory listing enabled\n\nTools: nmap, burpsuite, sqlmap, nikto\nStatus: REPORT IN PROGRESS'},
+  '/home/grish/targets.txt': {type:'file', content:'# Authorized targets (CTF/Labs only)\n10.10.10.0/24   # HTB Network\n10.50.97.0/24   # THM Network\n192.168.56.0/24 # Local lab\n\n# DO NOT attack without written permission'},
+  '/home/grish/Desktop/recon.sh': {type:'file', content:'#!/bin/bash\n# Recon automation script\nTARGET=$1\n[ -z "$TARGET" ] && echo "Usage: ./recon.sh <target>" && exit 1\necho "[*] Starting recon on $TARGET"\nnmap -sV -sC -O $TARGET -oN nmap_$TARGET.txt\ngobuster dir -u http://$TARGET -w /usr/share/wordlists/dirbuster/medium.txt\necho "[+] Recon complete!"'},
+  '/home/grish/tools/keylogger.py': {type:'file', content:'#!/usr/bin/env python3\n"""\nKeylogger - Security Research Tool\nAuthor: Grish Pradhan | Softwarica/Coventry\nFor authorized security research only.\n"""\nfrom pynput import keyboard\nimport logging, datetime\nlogging.basicConfig(filename="keylog.txt", level=logging.DEBUG)\ndef on_press(key):\n    try:\n        logging.info(f"{datetime.datetime.now()} - {key.char}")\n    except AttributeError:\n        logging.info(f"{datetime.datetime.now()} - [{key}]")\nwith keyboard.Listener(on_press=on_press) as listener:\n    listener.join()'},
+  '/home/grish/tools/dns-finder.py': {type:'file', content:'#!/usr/bin/env python3\n"""\nDNS Finder - OSINT/Recon Tool\nAuthor: Grish Pradhan\n"""\nimport dns.resolver, sys\ndef enumerate_dns(domain):\n    for r in ["A","AAAA","MX","NS","TXT","CNAME","SOA"]:\n        try:\n            for rdata in dns.resolver.resolve(domain, r):\n                print(f"[{r}] {rdata}")\n        except: pass\nif __name__ == "__main__":\n    enumerate_dns(sys.argv[1])'},
+  '/home/grish/tools/password-gen.py': {type:'file', content:'#!/usr/bin/env python3\nimport secrets, string\ndef generate(length=16):\n    chars = string.ascii_letters + string.digits + string.punctuation\n    return "".join(secrets.choice(chars) for _ in range(length))\nprint(generate(24))'},
+  '/home/grish/Documents/pentest-notes.md': {type:'file', content:'# Penetration Testing Notes\n\n## Methodology\n1. Reconnaissance\n2. Scanning & Enumeration\n3. Exploitation\n4. Post-Exploitation\n5. Reporting\n\n## Tools\n- Nmap, Burp Suite, Metasploit, Gobuster, SQLMap, Hydra\n\n## THM Rank: TOP 1%\n## Certifications: 8+'},
+  '/etc': {type:'dir', children:['passwd','shadow','hosts','hostname','fstab','crontab','ssh','apt']},
+  '/etc/passwd': {type:'file', content:'root:x:0:0:root:/root:/bin/bash\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\ngrish:x:1000:1000:Grish Pradhan,,,:/home/grish:/bin/bash'},
+  '/etc/hosts': {type:'file', content:'127.0.0.1       localhost\n127.0.1.1       kali\n\n# Custom\n10.10.10.1      target.htb\n10.50.97.1      thm-lab.local'},
+  '/etc/hostname': {type:'file', content:'kali'},
+  '/etc/shadow': {type:'file', content:'Permission denied: /etc/shadow (requires root)'},
+  '/etc/crontab': {type:'file', content:'# /etc/crontab\n*/5  * * * *  grish /home/grish/Desktop/recon.sh --auto\n0 2  * * *  root  /usr/bin/updatedb'},
+  '/var': {type:'dir', children:['log','www','lib']},
+  '/var/log': {type:'dir', children:['auth.log','syslog','dpkg.log','kern.log']},
+  '/var/log/auth.log': {type:'file', content:'May  7 14:22:01 kali sshd[1337]: Accepted publickey for grish from 192.168.1.5\nMay  7 14:23:44 kali sshd[1338]: Failed password for root from 185.220.101.34\nMay  7 14:24:01 kali sudo[1402]: grish : TTY=pts/0 ; USER=root ; COMMAND=/bin/bash'},
+  '/var/log/syslog': {type:'file', content:'May  7 14:20:01 kali kernel: [UFW BLOCK] IN=eth0 SRC=185.220.101.34 DST=192.168.1.100 PROTO=TCP DPT=22\nMay  7 14:21:15 kali NetworkManager: eth0: carrier is ON\nMay  7 14:22:01 kali kernel: iptables: DROP IN=eth0 SRC=95.215.44.12 DPT=3389'},
+  '/tmp': {type:'dir', children:['nmap_scan.xml','linpeas.sh','shell.php','pspy64']},
+  '/tmp/shell.php': {type:'file', content:'<?php system($_GET["cmd"]); ?>\n<!-- Web shell for authorized CTF lab use only -->'},
+  '/tmp/linpeas.sh': {type:'file', content:'#!/bin/bash\n# LinPEAS - Linux Privilege Escalation Awesome Script\necho "Starting LinPEAS..."'},
+  '/root': {type:'dir', children:['.bashrc','root.txt','flag.txt']},
+  '/root/flag.txt': {type:'file', content:'THM{gr1sh_1s_t0p_1_p3rc3nt_h4ck3r}\n\nCongratulations! You are root!'},
+  '/proc': {type:'dir', children:['cpuinfo','meminfo','version']},
+  '/proc/version': {type:'file', content:'Linux version 6.8.0-kali1-amd64 (devel@kali.org) (gcc version 13.2.0)'},
+  '/proc/cpuinfo': {type:'file', content:'processor    : 0\nmodel name   : AMD Ryzen 7 5800X 8-Core Processor\ncpu MHz      : 3800.000'},
+  '/proc/meminfo': {type:'file', content:'MemTotal:       16384000 kB\nMemFree:         4201848 kB\nMemAvailable:    8394752 kB'},
+  '/bin': {type:'dir', children:['bash','sh','ls','cat','grep','find','python3','nmap','curl','wget']},
+  '/opt': {type:'dir', children:['metasploit','burpsuite','ghidra']},
+  '/dev': {type:'dir', children:['sda','sda1','null','random','tty','eth0']},
+  '/usr': {type:'dir', children:['bin','lib','share','local']},
+  '/usr/share': {type:'dir', children:['wordlists','metasploit-framework','nmap']},
+};
+
+let cwd='/home/grish';
+let cmdHistory=[];
+let histIdx=-1;
+let env={USER:'grish',HOME:'/home/grish',SHELL:'/bin/bash',PATH:'/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/grish/tools',TERM:'xterm-256color',EDITOR:'nano',LANG:'en_US.UTF-8',PWD:'/home/grish',HOSTNAME:'kali',LOGNAME:'grish'};
+let aliases={ll:'ls -la',py:'python3',myip:'curl ifconfig.me',ports:'netstat -tulanp'};
+
+const output=document.getElementById('terminal-output');
+const tinput=document.getElementById('t-input');
+const tabHint=document.getElementById('tab-hint');
+
+function resolvePath(p){if(!p||p==='~')return env.HOME;if(p.startsWith('~/'))return env.HOME+p.slice(1);if(p.startsWith('/'))return normPath(p);return normPath(cwd+'/'+p);}
+function normPath(p){const parts=p.split('/').filter(Boolean),res=[];for(const part of parts){if(part==='..')res.pop();else if(part!=='.')res.push(part);}return'/'+res.join('/');}
+function getNode(p){const path=resolvePath(p);if(path==='/')return FS['/'];return FS[path]||null;}
+function displayPath(p){if(p===env.HOME||p.startsWith(env.HOME))return'~'+p.slice(env.HOME.length);return p;}
+
+function println(text,cls='output'){const d=document.createElement('div');d.className='t-line '+cls;d.textContent=text;output.appendChild(d);}
+function printHTML(html,cls='output'){const d=document.createElement('div');d.className='t-line '+cls;d.innerHTML=html;output.appendChild(d);}
+function printBlank(){println('');}
+function scrollBottom(){output.scrollTop=output.scrollHeight;}
+function updatePrompt(){document.getElementById('prompt-path').textContent=displayPath(cwd);document.querySelector('.tbar-title').textContent=`BASH — grish@kali: ${displayPath(cwd)}`;}
+
+function runCommand(raw){
+  const trimmed=raw.trim();if(!trimmed)return;
+  printHTML(`<span style="color:var(--green)">grish</span><span style="color:rgba(0,245,212,.4)">@</span><span style="color:var(--accent)">kali</span><span style="color:rgba(0,245,212,.4)">:</span><span style="color:#5faeff">${displayPath(cwd)}</span><span style="color:rgba(0,245,212,.5)"> $ </span><span style="color:#fff">${escHtml(trimmed)}</span>`,'prompt-line');
+  let line=trimmed;const firstWord=line.split(' ')[0];
+  if(aliases[firstWord])line=aliases[firstWord]+line.slice(firstWord.length);
+  if(line.includes(' | ')){const parts=line.split(' | ');let result=execPipe(parts);if(result)result.split('\n').forEach(l=>println(l));scrollBottom();return;}
+  const chainSep=line.includes(' && ')?' && ':(line.includes('; ')?'; ':null);
+  if(chainSep){line.split(chainSep).forEach(cmd=>{if(cmd.trim())execSingle(cmd.trim());});scrollBottom();return;}
+  execSingle(line);scrollBottom();
+}
+
+function execPipe(parts){const firstCmd=parts[0].trim();const tokens=parseTokens(firstCmd);const firstOutput=captureOutput(tokens[0],tokens.slice(1));let result=firstOutput;for(let i=1;i<parts.length;i++){const t2=parseTokens(parts[i].trim());result=pipeTo(t2[0],t2.slice(1),result);}return result;}
+function pipeTo(cmd,args,input){const lines=input?input.split('\n'):[];switch(cmd){case'grep':{const pat=args.find(a=>!a.startsWith('-'))||'';const ci=args.includes('-i');return lines.filter(l=>ci?l.toLowerCase().includes(pat.toLowerCase()):l.includes(pat)).join('\n');}case'wc':return args.includes('-l')?String(lines.filter(l=>l).length):`${lines.filter(l=>l).length} ${input.split(/\s+/).filter(Boolean).length} ${input.length}`;case'wc -l':return String(lines.filter(l=>l).length);case'sort':return[...lines].sort().join('\n');case'head':{const n=parseInt(args.find(a=>!isNaN(parseInt(a)))||10);return lines.slice(0,n).join('\n');}case'tail':{const n=parseInt(args.find(a=>!isNaN(parseInt(a)))||10);return lines.slice(-n).join('\n');}default:return input;}}
+function captureOutput(cmd,args){const lines=[];execCmdCapture(cmd,args,t=>lines.push(t));return lines.join('\n');}
+function execCmdCapture(cmd,args,emit){switch(cmd){case'ls':{const target=args.find(a=>!a.startsWith('-'))||cwd;const node=getNode(target);if(node&&node.type==='dir')(node.children||[]).forEach(c=>emit(c));break;}case'cat':{args.filter(a=>!a.startsWith('-')).forEach(f=>{const node=getNode(f);if(node&&node.type==='file')emit(node.content||'');});break;}case'echo':emit(args.join(' '));break;case'ps':emit('USER  PID %CPU %MEM CMD\nroot  1   0.0  0.1  /sbin/init\ngrish 847 0.0  0.2  bash\ngrish 1337 1.2 0.4  python3');break;case'env':Object.entries(env).forEach(([k,v])=>emit(`${k}=${v}`));break;case'history':cmdHistory.forEach((h,i)=>emit(`  ${i+1}  ${h}`));break;default:emit('');}}
+function parseTokens(line){const tokens=[];let cur='',inQ=false,qChar='';for(const ch of line){if(inQ){if(ch===qChar)inQ=false;else cur+=ch;}else if(ch==='"'||ch==="'"){inQ=true;qChar=ch;}else if(ch===' '){if(cur){tokens.push(cur);cur='';}}else cur+=ch;}if(cur)tokens.push(cur);return tokens;}
+function execSingle(line){if(/^\w+=/.test(line)&&!line.includes(' ')){const[k,v]=line.split('=');env[k]=v;return;}const tokens=parseTokens(line);if(!tokens.length)return;dispatch(tokens[0],tokens.slice(1),line);}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function dispatch(cmd,args,rawLine){
+  switch(cmd.toLowerCase()){
+    case'cd':{const target=args[0]||env.HOME;const resolved=resolvePath(target);const node=getNode(resolved);if(!node){println(`bash: cd: ${target}: No such file or directory`,'error');}else if(node.type!=='dir'){println(`bash: cd: ${target}: Not a directory`,'error');}else{cwd=resolved;env.PWD=cwd;updatePrompt();}break;}
+    case'pwd':println(cwd);break;
+    case'ls':{const flags=args.filter(a=>a.startsWith('-')).join('');const target=args.find(a=>!a.startsWith('-'))||cwd;const resolved=resolvePath(target);const node=getNode(resolved);if(!node){println(`ls: cannot access '${target}': No such file or directory`,'error');break;}if(node.type==='file'){println(target);break;}const items=node.children||[];const longMode=flags.includes('l');const allMode=flags.includes('a');const showItems=allMode?['.','..', ...items]:items.filter(i=>!i.startsWith('.'));if(longMode){println(`total ${showItems.length*4}`);for(const item of showItems){if(item==='.'||item==='..')continue;const childPath=resolved==='/'?'/'+item:resolved+'/'+item;const child=FS[childPath];const isDir=child&&child.type==='dir';const isExe=item.endsWith('.sh')||item.endsWith('.py');const perm=isDir?'drwxr-xr-x':'rw-r--r--';const size=isDir?'4096':String(rn(100,9999));const color=isDir?'#5faeff':isExe?'var(--green)':'rgba(0,245,212,.8)';printHTML(`<span style="color:rgba(0,245,212,.35)">${perm}  1 grish grish ${size.padStart(5)} May  7 14:${rn(10,59)} </span><span style="color:${color}">${escHtml(item)}${isDir?'/':''}</span>`);}}else{let html='<span>';for(const item of showItems){if(item==='.'||item==='..')continue;const childPath=resolved==='/'?'/'+item:resolved+'/'+item;const child=FS[childPath];const isDir=child&&child.type==='dir';const isExe=item.endsWith('.sh')||item.endsWith('.py');const color=isDir?'#5faeff':isExe?'var(--green)':'rgba(0,245,212,.8)';html+=`<span style="color:${color};display:inline-block;min-width:140px;padding-right:12px">${escHtml(item)}${isDir?'/':''}</span>`;}html+='</span>';printHTML(html);}break;}
+    case'cat':{if(!args.length){println('cat: missing operand','error');break;}for(const f of args.filter(a=>!a.startsWith('-'))){const node=getNode(f);if(!node){println(`cat: ${f}: No such file or directory`,'error');}else if(node.type==='dir'){println(`cat: ${f}: Is a directory`,'error');}else{(node.content||'').split('\n').forEach(l=>println(l,'white'));}}break;}
+    case'echo':{let txt=args.join(' ');txt=txt.replace(/\$(\w+)/g,(m,v)=>env[v]!==undefined?env[v]:m);println(txt);break;}
+    case'whoami':println('grish');break;
+    case'id':println('uid=1000(grish) gid=1000(grish) groups=1000(grish),4(adm),27(sudo),46(plugdev)');break;
+    case'hostname':println('kali');break;
+    case'uname':{if(args.includes('-a'))println('Linux kali 6.8.0-kali1-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.8.11-1kali2 x86_64 GNU/Linux');else if(args.includes('-r'))println('6.8.0-kali1-amd64');else if(args.includes('-m'))println('x86_64');else println('Linux');break;}
+    case'uptime':{const h=rn(1,72),m=rn(0,59);println(` ${new Date().toLocaleTimeString()} up ${h}:${String(m).padStart(2,'0')},  1 user,  load average: ${(Math.random()*2).toFixed(2)}, ${(Math.random()*2).toFixed(2)}, ${(Math.random()*2).toFixed(2)}`);break;}
+    case'mkdir':{if(!args.length){println('mkdir: missing operand','error');break;}const name=args.find(a=>!a.startsWith('-'));const resolved=resolvePath(name);const parent=resolved.split('/').slice(0,-1).join('/')||'/';const baseName=resolved.split('/').pop();if(FS[resolved]){println(`mkdir: cannot create directory '${name}': File exists`,'error');break;}FS[resolved]={type:'dir',children:[]};const parentNode=FS[parent];if(parentNode&&parentNode.children)parentNode.children.push(baseName);break;}
+    case'touch':{if(!args.length){println('touch: missing file operand','error');break;}for(const f of args){const resolved=resolvePath(f);if(!FS[resolved]){FS[resolved]={type:'file',content:''};const parent=resolved.split('/').slice(0,-1).join('/')||'/';const base=resolved.split('/').pop();if(FS[parent]&&FS[parent].children)FS[parent].children.push(base);}}break;}
+    case'rm':{const target=args.find(a=>!a.startsWith('-'));if(!target){println('rm: missing operand','error');break;}const resolved=resolvePath(target);const node=FS[resolved];if(!node){println(`rm: cannot remove '${target}': No such file or directory`,'error');break;}if(node.type==='dir'&&!args.includes('-r')&&!args.includes('-rf')){println(`rm: cannot remove '${target}': Is a directory`,'error');break;}delete FS[resolved];println(`removed '${target}'`,'success');break;}
+    case'cp':{if(args.length<2){println('cp: missing destination file operand','error');break;}const src=resolvePath(args[0]),dst=resolvePath(args[1]);const srcNode=FS[src];if(!srcNode){println(`cp: '${args[0]}': No such file or directory`,'error');break;}FS[dst]=JSON.parse(JSON.stringify(srcNode));break;}
+    case'mv':{if(args.length<2){println('mv: missing destination file operand','error');break;}const src=resolvePath(args[0]),dst=resolvePath(args[1]);const srcNode=FS[src];if(!srcNode){println(`mv: '${args[0]}': No such file or directory`,'error');break;}FS[dst]=srcNode;delete FS[src];break;}
+    case'grep':{const ci=args.includes('-i'),inv=args.includes('-v'),showLine=args.includes('-n');const patterns=args.filter(a=>!a.startsWith('-'));const pattern=patterns[0],files=patterns.slice(1);if(!pattern){println('grep: missing pattern','error');break;}const regex=ci?new RegExp(pattern,'i'):new RegExp(pattern);if(!files.length){println('grep: input file(s) required','warn');break;}for(const f of files){const node=getNode(f);if(!node||node.type!=='file'){println(`grep: ${f}: No such file or directory`,'error');continue;}node.content.split('\n').forEach((line,i)=>{const match=regex.test(line);if(inv?!match:match){const lineNum=showLine?`${i+1}:`:'';println(`${lineNum}${line}`);}});}break;}
+    case'find':{const startPath=args[0]&&!args[0].startsWith('-')?resolvePath(args[0]):cwd;const nameArg=args.indexOf('-name');const pattern=nameArg>=0?args[nameArg+1]:null;const regex=pattern?new RegExp('^'+pattern.replace(/\*/g,'.*').replace(/\?/g,'.')+'$'):null;Object.keys(FS).filter(k=>k.startsWith(startPath)).forEach(k=>{const name=k.split('/').pop()||'/';if(regex&&!regex.test(name))return;println(k);});break;}
+    case'wget':case'curl':{const url=args.find(a=>!a.startsWith('-'))||'';if(!url){println(`${cmd}: missing URL`,'error');break;}println(`Connecting to ${url}...`,'warn');setTimeout(()=>{println(`HTTP/1.1 200 OK`,'success');println(`[=====================================] 100% Done!`,'success');scrollBottom();},800+rn(0,600));break;}
+    case'ping':{const host=args.find(a=>!a.startsWith('-'))||'localhost';const ip=host==='localhost'?'127.0.0.1':host;println(`PING ${host} (${ip}): 56 data bytes`);const count=args.includes('-c')?parseInt(args[args.indexOf('-c')+1])||4:4;let sent=0;const timer=setInterval(()=>{const ms=(Math.random()*50+1).toFixed(3);println(`64 bytes from ${ip}: icmp_seq=${sent} ttl=64 time=${ms} ms`,'success');sent++;if(sent>=count){clearInterval(timer);println(`--- ${host} ping statistics ---`);println(`${count} packets transmitted, ${count} received, 0% packet loss`,'success');scrollBottom();}},400);break;}
+    case'nmap':{const target=args.find(a=>!a.startsWith('-'))||'192.168.1.1';const sFull=args.includes('-sV')||args.includes('-sC')||args.includes('-A');println(`Starting Nmap 7.95 at ${new Date().toLocaleString()}`,'warn');println(`Nmap scan report for ${target}`);println(`Host is up (${(Math.random()*0.05).toFixed(4)}s latency).`,'success');if(sFull){println(`PORT      STATE    SERVICE       VERSION`);[[21,'ftp','vsftpd 3.0.5'],[22,'ssh','OpenSSH 9.2p1'],[80,'http','Apache httpd 2.4.62'],[443,'https','nginx 1.24.0'],[3306,'mysql','MySQL 8.0.35']].forEach(([p,s,v])=>{if(Math.random()>.4)println(`${String(p+'/tcp').padEnd(10)}open     ${s.padEnd(14)}${v}`,'success');});}else{println(`PORT   STATE SERVICE`);[[22,'ssh'],[80,'http'],[443,'https']].forEach(([p,s])=>println(`${p}/tcp  open  ${s}`,'success'));}println(`\nNmap done: scanned in ${(Math.random()*15+2).toFixed(2)} seconds`);break;}
+    case'netstat':{println(`Proto Recv-Q Send-Q Local Address           Foreign Address         State`);[['tcp','0','0','0.0.0.0:22','0.0.0.0:*','LISTEN'],['tcp','0','52','192.168.1.100:22','192.168.1.5:54312','ESTABLISHED'],['tcp6','0','0',':::80',':::*','LISTEN']].forEach(c=>println(c.join('  ')));break;}
+    case'ifconfig':case'ip':println(`eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.100  netmask 255.255.255.0\n        ether 08:00:27:4e:66:a1\n\nlo: flags=73<UP,LOOPBACK,RUNNING>\n        inet 127.0.0.1  netmask 255.0.0.0`);break;
+    case'ss':println(`Netid  State   Local Address:Port\ntcp    LISTEN  0.0.0.0:22\ntcp    ESTAB   192.168.1.100:22\ntcp    LISTEN  *:80`,'success');break;
+    case'dig':case'nslookup':{const domain=args.find(a=>!a.startsWith('-'))||'google.com';println(`;; ANSWER SECTION:`);println(`${domain}.    300  IN  A  ${rn(1,254)}.${rn(1,254)}.${rn(1,254)}.${rn(1,254)}`,'success');break;}
+    case'whois':{const d=args[0]||'example.com';println(`Domain Name: ${d.toUpperCase()}\nRegistrar: GoDaddy.com, LLC\nCreation Date: ${rn(2010,2022)}-0${rn(1,9)}-${rn(10,28)}T00:00:00Z\nDNSSEC: unsigned`);break;}
+    case'traceroute':case'tracepath':{const host=args[0]||'8.8.8.8';println(`traceroute to ${host}, 30 hops max`);const hops=rn(6,12);for(let i=1;i<=hops;i++){const ip=i===hops?host:`${rn(1,254)}.${rn(1,254)}.${rn(1,254)}.${rn(1,254)}`;println(` ${String(i).padStart(2)}  ${ip.padEnd(18)}  ${(Math.random()*i*5+1).toFixed(3)} ms`);}break;}
+    case'ps':println(`  PID TTY          TIME CMD\n  847 pts/0   00:00:01 bash\n 1337 pts/0   00:01:23 python3\n 2048 pts/1   00:00:47 nmap`);break;
+    case'top':case'htop':{println(`top - ${new Date().toLocaleTimeString()} up ${rn(1,72)}:${rn(10,59)},  1 user`,'warn');println(`Tasks: ${rn(140,280)} total, 1 running`);println(`%Cpu(s): ${rn(5,50).toFixed(1)} us, ${rn(1,10).toFixed(1)} sy`);println(`\n  PID USER     %CPU  %MEM  COMMAND`,'warn');println(`  1337 grish   ${rn(10,90).toFixed(1)}   ${rn(1,5).toFixed(1)}   python3`,'success');println(`  2048 root    ${rn(5,45).toFixed(1)}   ${rn(1,3).toFixed(1)}   nmap`,'success');break;}
+    case'kill':{const pid=args.find(a=>!a.startsWith('-'));if(!pid){println('kill: usage: kill PID','error');break;}println(`Killed process ${pid}`,'warn');break;}
+    case'df':println(`Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1       237G   89G  136G  40% /\ntmpfs           7.8G  1.2M  7.8G   1% /dev/shm`,'success');break;
+    case'du':{const target=args.find(a=>!a.startsWith('-'))||'.';println(`2.4M\t${target}`,'success');break;}
+    case'free':println(`               total        used        free\nMem:        16384000     5242880     4718592\nSwap:        4194304           0     4194304`);break;
+    case'uname':println('Linux kali 6.8.0-kali1-amd64 x86_64 GNU/Linux');break;
+    case'lscpu':println(`Architecture: x86_64\nModel name: AMD Ryzen 7 5800X 8-Core Processor\nCPU(s): 16\nCPU MHz: 3800.0\nCache L3: 32 MiB`);break;
+    case'lsblk':println(`NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS\nsda      8:0    0 476.9G  0 disk\n├─sda1   8:1    0 237.0G  0 part /\n└─sda2   8:2    0 100.0G  0 part /home`,'success');break;
+    case'head':{const n=args.includes('-n')?parseInt(args[args.indexOf('-n')+1])||10:10;const f=args.find(a=>!a.startsWith('-'));if(!f){println('head: missing file operand','error');break;}const node=getNode(f);if(!node||node.type!=='file'){println(`head: cannot open '${f}'`,'error');break;}node.content.split('\n').slice(0,n).forEach(l=>println(l,'white'));break;}
+    case'tail':{const n=args.includes('-n')?parseInt(args[args.indexOf('-n')+1])||10:10;const f=args.find(a=>!a.startsWith('-'));if(!f){println('tail: missing file operand','error');break;}const node=getNode(f);if(!node||node.type!=='file'){println(`tail: cannot open '${f}'`,'error');break;}node.content.split('\n').slice(-n).forEach(l=>println(l,'white'));break;}
+    case'wc':{const f=args.find(a=>!a.startsWith('-'));if(!f){println('wc: missing file operand','error');break;}const node=getNode(f);if(!node){println(`wc: ${f}: No such file or directory`,'error');break;}const content=node.content||'';println(` ${content.split('\n').length}\t${content.split(/\s+/).filter(Boolean).length}\t${content.length} ${f}`);break;}
+    case'env':case'printenv':{const key=args[0];if(key)println(env[key]||'');else Object.entries(env).forEach(([k,v])=>println(`${k}=${v}`));break;}
+    case'export':{if(!args.length){println('declare -x '+Object.entries(env).map(([k,v])=>`${k}="${v}"`).join('\ndeclare -x '));break;}args.forEach(a=>{const[k,...v]=a.split('=');if(v!==undefined)env[k]=v.join('=');});break;}
+    case'alias':{if(!args.length){Object.entries(aliases).forEach(([k,v])=>println(`alias ${k}='${v}'`));}else{const[k,...v]=args[0].split('=');aliases[k]=v.join('=').replace(/^['"]|['"]$/g,'');}break;}
+    case'python3':case'python':{const script=args.find(a=>a.endsWith('.py'));if(script){const node=getNode(script);if(!node){println(`python3: can't open file '${script}'`,'error');break;}println(`[*] Running ${script}...`,'warn');setTimeout(()=>{println(`[+] Script executed successfully`,'success');scrollBottom();},600);}else{println(`Python 3.11.9 (main, Apr 24 2024)`,'success');println(`Type "help" for more information.`,'dim');println(`[interactive mode not supported — run scripts with python3 script.py]`,'warn');}break;}
+    case'hydra':{println(`Hydra v9.5 — use only for authorized testing!`,'warn');const target=args.find(a=>!a.startsWith('-'))||'192.168.1.1';println(`[DATA] attacking ${target}`);let tries=0;const atk=setInterval(()=>{tries+=rn(10,50);println(`[ATTEMPT] login: admin   password: ${wordlist[rn(0,wordlist.length-1)]}`,'dim');if(tries>150){clearInterval(atk);if(Math.random()>.4){println(`[${target}] login: admin   password: password123`,'success');}else println(`0 valid passwords found`,'error');scrollBottom();}},200);break;}
+    case'sqlmap':{println(`       __H__\n ___ ___[.]_____ ___ ___  {1.8.7#stable}\n|_ -| . [.]     | .'| . |\n|___|_  [)]_|_|_|__,|  _|\n      |_|V...       |_|`,'success');const url=args.find(a=>a.startsWith('http'))||'http://target.com?id=1';println(`[*] Testing: ${url}`,'warn');setTimeout(()=>{println(`[INFO] GET parameter 'id' is injectable`,'success');println(`[CRITICAL] 2 injection points identified`,'error');println(`[INFO] Database: cms_db | Tables: users, posts`,'success');scrollBottom();},1200);break;}
+    case'gobuster':{println(`Gobuster v3.6`,'success');const url=args.find(a=>a.startsWith('http'))||'http://target.com';println(`[+] Url: ${url}`,'success');const dirs=['admin','backup','config','uploads','login','dashboard','.git','api','phpmyadmin'];let i=0;const scan=setInterval(()=>{if(i>=dirs.length){clearInterval(scan);println(`Finished`,'success');scrollBottom();return;}const code=Math.random()>.5?200:Math.random()>.5?301:403;println(`/${dirs[i].padEnd(16)} (Status: ${code}) [Size: ${rn(100,9999)}]`,code===200?'success':code===301?'warn':'dim');i++;scrollBottom();},120);break;}
+    case'nikto':{println(`- Nikto v2.1.6`,'success');println(`+ /backup/: Backup directory found!`,'error');println(`+ /admin/: Admin panel found.`,'error');println(`+ Apache/2.4.62 appears outdated (CVE-2024-39884).`,'error');println(`+ 8909 requests: 5 item(s) reported`,'success');break;}
+    case'john':{println(`John the Ripper 1.9.0-jumbo-1`,'success');println(`Loaded 1 password hash (MD5)`,'warn');setTimeout(()=>{println(`password123      (admin)`,'success');scrollBottom();},1500);break;}
+    case'hashcat':{println(`hashcat (v6.2.6) — AMD Ryzen 7 5800X`,'warn');setTimeout(()=>{println(`Status: Cracked`,'success');println(`Recovered: 1/1 (100.00%)`,'success');scrollBottom();},1800);break;}
+    case'metasploit':case'msfconsole':println(`       =[ metasploit v6.4.0-dev ]\n+ -- --=[ 2415 exploits - 1246 auxiliary ]\n+ -- --=[ 1465 payloads - 47 encoders   ]`,'error');println(`[MSF console not fully interactive]`,'dim');break;
+    case'burpsuite':case'burp':println(`[*] Starting Burp Suite Community Edition v2024.11.1`,'warn');println(`[*] Proxy listener: 127.0.0.1:8080`,'success');break;
+    case'nc':case'netcat':{const listenMode=args.includes('-l')||args.includes('-lvnp');if(listenMode){const port=args[args.length-1];println(`listening on [any] ${port||4444} ...`,'warn');setTimeout(()=>{println(`connect from ${randIp()}`,'success');println(`id → uid=33(www-data)`,'success');scrollBottom();},1200);}else{println(`(UNKNOWN) open`,'success');}break;}
+    case'ssh':{const host=args.find(a=>!a.startsWith('-'))||'target.com';println(`Connecting to ${host}...`,'warn');setTimeout(()=>{println(`Permission denied (publickey,password).`,'error');scrollBottom();},800);break;}
+    case'sudo':{if(!args.length){println('sudo: a command is required','error');break;}println(`[sudo] password for grish:`,'warn');setTimeout(()=>{println(`executed as root: ${args.join(' ')}`,'success');scrollBottom();},400);break;}
+    case'tshark':{const iface=args.includes('-i')?args[args.indexOf('-i')+1]:'eth0';println(`Capturing on '${iface}'`,'warn');let pkt=0;const cap=setInterval(()=>{pkt++;const proto=['TCP','UDP','TLS','HTTP','DNS','ARP'][rn(0,5)];println(`${pkt}  ${(pkt*.001).toFixed(3)} ${randIp()} → ${randIp()} ${proto}`);scrollBottom();if(pkt>=8){clearInterval(cap);println(`8 packets captured`,'success');}},200);break;}
+    case'chmod':println(`mode changed`,'success');break;
+    case'chown':println(`ownership changed`,'success');break;
+    case'df':println(`/dev/sda1  237G  89G  136G  40%  /`,'success');break;
+    case'which':{const bins={bash:'/bin/bash',python3:'/usr/bin/python3',nmap:'/usr/bin/nmap',curl:'/usr/bin/curl',nc:'/usr/bin/nc',ssh:'/usr/bin/ssh',grep:'/usr/bin/grep',find:'/usr/bin/find',john:'/usr/sbin/john',hydra:'/usr/bin/hydra',gobuster:'/usr/bin/gobuster',sqlmap:'/usr/bin/sqlmap',nikto:'/usr/bin/nikto',hashcat:'/usr/bin/hashcat'};const b=bins[args[0]];if(b)println(b,'success');else println(`${args[0]}: not found`,'error');break;}
+    case'file':{const f=args[0];if(!f){println('file: missing operand','error');break;}const node=getNode(f);if(!node){println(`${f}: cannot open`,'error');break;}const types={'.py':'Python script, ASCII text executable','.sh':'Bourne-Again shell script, ASCII text executable','.md':'ASCII text','.txt':'ASCII text','.html':'HTML document'};const ext='.'+f.split('.').pop();println(`${f}: ${types[ext]||(node.type==='dir'?'directory':'ASCII text')}`,'success');break;}
+    case'stat':{const f=args[0]||'.';const node=getNode(f);if(!node){println(`stat: cannot statx '${f}'`,'error');break;}println(`  File: ${f}\n  Size: ${rn(100,99999)}\n  Access: (0644/-rw-r--r--)  Uid: (1000/grish)`,'white');break;}
+    case'man':{const cmd2=args[0]||'man';const manPages={nmap:`NMAP(1)\n\nNAME\n  nmap - Network exploration tool and port scanner\n\nOPTIONS\n  -sV    Probe open ports for service/version\n  -sC    Run default scripts\n  -A     Aggressive scan\n  -p-    Scan all 65535 ports`,grep:`GREP(1)\n\nNAME\n  grep - print lines matching a pattern\n\nOPTIONS\n  -i    Ignore case\n  -v    Invert match\n  -r    Recursive\n  -n    Show line numbers`,ls:`LS(1)\n\nOPTIONS\n  -l    Long listing format\n  -a    Include hidden files\n  -h    Human-readable sizes`};if(manPages[cmd2])manPages[cmd2].split('\n').forEach(l=>println(l,'white'));else println(`No manual entry for ${cmd2}`,'error');break;}
+    case'date':println(new Date().toString());break;
+    case'history':{const n=args[0]?parseInt(args[0]):null;const hist=n?cmdHistory.slice(-n):cmdHistory;hist.forEach((h,i)=>println(`  ${String(i+1).padStart(4)}  ${h}`));break;}
+    case'clear':case'reset':output.innerHTML='';printWelcome();break;
+    case'env':Object.entries(env).forEach(([k,v])=>println(`${k}=${v}`));break;
+    case'base64':{const inp=args.find(a=>!a.startsWith('-'))||'grish';if(args.includes('-d')){try{println(atob(inp),'success');}catch(e){println('Invalid base64','error');}}else println(btoa(inp),'success');break;}
+    case'apt':case'apt-get':{const sub=args[0];if(sub==='update')println(`Hit:1 http://http.kali.org/kali kali-rolling InRelease\nReading package lists... Done`,'success');else if(sub==='install')println(`Installing ${args[1]||'package'}...\nSetting up ${args[1]||'package'} ... OK`,'success');else println(`apt: try 'apt install <pkg>' or 'apt update'`,'warn');break;}
+    case'pip':case'pip3':{if(args[0]==='install')println(`Successfully installed ${args[1]||'package'}-1.0`,'success');break;}
+    case'service':case'systemctl':{const action=args[0],svc=args[1]||'ssh';println(`● ${svc}.service - Active: active (running)`,'success');break;}
+    case'neofetch':{printHTML(`<span style="color:var(--accent2)">      ████████     </span><span style="color:#fff">grish</span><span style="color:rgba(0,245,212,.4)">@</span><span style="color:var(--accent)">kali</span>`);printHTML(`<span style="color:var(--accent2)">    ██░░░░░░██   </span><span style="color:rgba(0,245,212,.4)">OS: </span><span style="color:#fff">Kali Linux x86_64</span>`);printHTML(`<span style="color:var(--accent2)">   ██░░░░░░░░██  </span><span style="color:rgba(0,245,212,.4)">Kernel: </span><span style="color:#fff">6.8.0-kali1-amd64</span>`);printHTML(`<span style="color:var(--accent2)">  ██░░░░░░░░░░██ </span><span style="color:rgba(0,245,212,.4)">Shell: </span><span style="color:#fff">bash 5.2.21</span>`);printHTML(`<span style="color:var(--accent2)">  ██░░  ██  ░░██ </span><span style="color:rgba(0,245,212,.4)">CPU: </span><span style="color:#fff">AMD Ryzen 7 5800X @ 3.8GHz</span>`);printHTML(`<span style="color:var(--accent2)">  ██░░░░░░░░░░██ </span><span style="color:rgba(0,245,212,.4)">Memory: </span><span style="color:#fff">5334MiB / 16384MiB</span>`);printHTML(`<span style="color:var(--accent2)">   ██░░░░░░░░██  </span><span style="color:rgba(0,245,212,.4)">Role: </span><span style="color:var(--green)">Ethical Hacker | TOP 1% THM</span>`);break;}
+    case'fortune':{const f=['The quieter you become, the more you can hear.','There is no patch for human stupidity.','Security is a process, not a product.','Hackers are the immune system of the internet.'];println(f[rn(0,f.length-1)],'success');break;}
+    case'cowsay':{const msg=args.join(' ')||'Hello from Grish!';println(` ${'_'.repeat(Math.min(msg.length+2,40))}`);println(`< ${msg} >`);println(` ${'-'.repeat(Math.min(msg.length+2,40))}`);println(`        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\ )\\/\\\n                ||----w |\n                ||     ||`,'success');break;}
+    case'figlet':case'banner':{const t=(args.join(' ')||'GRISH').toUpperCase().slice(0,8);println(`╔${'═'.repeat(t.length+6)}╗`,'success');println(`║   ${t}   ║`,'success');println(`╚${'═'.repeat(t.length+6)}╝`,'success');break;}
+    case'sl':println(`         ====        ________                ___________\n     _D _|  |_______/        \\__I_I_____===__|_________|\n      |(_)---  |   H\\________/ |   |        =|___ ___|\n          /     |  |   H  |   |         ||_| |_||`,'warn');break;
+    case'help':{printHTML(`<span style="color:var(--green)">╔══════════════════════════════════════════════╗\n║        THREAT TERMINAL — COMMAND REFERENCE  ║\n╠══════════════════════════════════════════════╣\n║  NAVIGATION  cd, pwd, ls, find               ║\n║  FILES       cat, head, tail, grep, wc       ║\n║              touch, rm, cp, mv               ║\n║  SYSTEM      ps, top, kill, df, du, free     ║\n║              uname, uptime, lscpu, lsblk     ║\n║  NETWORK     ping, nmap, netstat, ifconfig   ║\n║              ss, dig, whois, traceroute      ║\n║  TOOLS       wget, curl, ssh, nc, tshark     ║\n║  SECURITY    hydra, sqlmap, gobuster, nikto  ║\n║              john, hashcat, msfconsole       ║\n║  PACKAGES    apt install &lt;pkg&gt;  |  pip3      ║\n║  MISC        echo, env, alias, history, man  ║\n║  FUN         neofetch, fortune, cowsay, sl   ║\n╠══════════════════════════════════════════════╣\n║  PIPES:   cmd1 | grep pattern | wc -l        ║\n║  CHAIN:   cmd1 && cmd2  |  cmd1; cmd2        ║\n║  TAB:     autocomplete  |  ↑↓ history        ║\n╚══════════════════════════════════════════════╝</span>`);break;}
+    case'exit':case'logout':println(`logout\nBye, ${env.USER}. Stay safe out there.`,'warn');break;
+    default:{const localScript=getNode('./'+cmd)||getNode(cwd+'/'+cmd);if(localScript&&localScript.type==='file'){println(`[*] Executing ${cmd}...`,'warn');setTimeout(()=>{println(`[+] Done.`,'success');scrollBottom();},400);}else{println(`bash: ${cmd}: command not found`,'error');println(`Try 'help' for command list.`,'dim');}}}
+}
+
+function printWelcome(){
+  printHTML(`<span style="color:var(--accent2)">╔══════════════════════════════════════════════════════════╗</span>`);
+  printHTML(`<span style="color:var(--accent2)">║</span>  <span style="color:var(--accent);font-weight:bold">GRISH PRADHAN</span> — Ethical Hacker | Softwarica | TOP 1% THM  <span style="color:var(--accent2)">║</span>`);
+  printHTML(`<span style="color:var(--accent2)">║</span>  <span style="color:var(--green)">bash 5.2.21 on Linux 6.8.0-kali1-amd64 (Kali GNU/Linux)</span>  <span style="color:var(--accent2)">║</span>`);
+  printHTML(`<span style="color:var(--accent2)">╚══════════════════════════════════════════════════════════╝</span>`);
+  println(`Type 'help' for commands, Tab to autocomplete, ↑↓ for history.`,'dim');
+  printBlank();
+}
+printWelcome();
+
+/* ── INPUT ── */
+tinput.addEventListener('keydown',e=>{
+  tabHint.textContent='';
+  if(e.key==='Enter'){const val=tinput.value;tinput.value='';if(val.trim()){cmdHistory.push(val.trim());histIdx=cmdHistory.length;}runCommand(val);}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(histIdx>0){histIdx--;tinput.value=cmdHistory[histIdx]||'';}}
+  else if(e.key==='ArrowDown'){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;tinput.value=cmdHistory[histIdx]||'';}else{histIdx=cmdHistory.length;tinput.value='';}}
+  else if(e.key==='Tab'){e.preventDefault();handleTab();}
+  else if(e.key==='c'&&e.ctrlKey){printHTML(`<span style="color:rgba(0,245,212,.5)">^C</span>`);tinput.value='';scrollBottom();}
+  else if(e.key==='l'&&e.ctrlKey){e.preventDefault();output.innerHTML='';printWelcome();}
+  else if(e.key==='u'&&e.ctrlKey){e.preventDefault();tinput.value='';}
+});
+
+function handleTab(){
+  const val=tinput.value;const tokens=val.split(' ');const last=tokens[tokens.length-1];
+  if(tokens.length===1){const cmds=['ls','cd','cat','pwd','grep','find','echo','mkdir','touch','rm','cp','mv','ping','nmap','python3','wget','curl','ssh','nc','netstat','ifconfig','ss','dig','whois','traceroute','ps','top','kill','df','du','free','uname','uptime','lscpu','lsblk','stat','file','which','man','chmod','chown','sudo','apt','pip3','service','systemctl','tshark','hydra','sqlmap','gobuster','nikto','john','hashcat','msfconsole','burpsuite','history','env','export','alias','head','tail','wc','base64','date','neofetch','fortune','cowsay','figlet','help','clear','exit'];const matches=cmds.filter(c=>c.startsWith(last));if(matches.length===1){tinput.value=matches[0]+' ';}else if(matches.length>1){tabHint.textContent=matches.join('  ');}return;}
+  const partial=last;const dir=partial.includes('/')?resolvePath(partial.split('/').slice(0,-1).join('/')||'/'):cwd;const basename=partial.split('/').pop();const node=FS[dir];if(!node||node.type!=='dir')return;const matches=(node.children||[]).filter(c=>c.startsWith(basename));if(matches.length===1){const prefix=partial.includes('/')?(partial.split('/').slice(0,-1).join('/')+'/'):'';const full=prefix+matches[0];tokens[tokens.length-1]=full;tinput.value=tokens.join(' ');const childPath=(dir==='/'?'':dir)+'/'+matches[0];if(FS[childPath]&&FS[childPath].type==='dir')tinput.value+='/';}else if(matches.length>1){tabHint.textContent=matches.join('  ');}
+}
+
+/* Keep input focused, handle mobile tap */
+document.addEventListener('click',e=>{
+  if(e.target!==tinput)tinput.focus();
+});
+/* On mobile, tapping anywhere in terminal area focuses input */
+document.getElementById('terminal-output').addEventListener('click',()=>tinput.focus());
+
+tinput.focus();
+scrollBottom();
+</script>
+</body>
+</html>
