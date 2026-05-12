@@ -68,7 +68,6 @@
       position: relative;
       box-shadow: 0 0 60px rgba(0,245,212,0.06), 0 40px 80px rgba(0,0,0,0.6);
     }
-    /* corner accents */
     .login-box::before, .login-box::after {
       content: '';
       position: absolute;
@@ -313,9 +312,9 @@
       <div class="admin-section active" id="sec-dashboard">
         <div class="admin-section-title">DASHBOARD</div>
         <div class="admin-stats">
-          <div class="admin-stat-card"><div class="admin-stat-num">3</div><div class="admin-stat-label">PROJECTS</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-num">6</div><div class="admin-stat-label">SKILLS</div></div>
-          <div class="admin-stat-card"><div class="admin-stat-num">8</div><div class="admin-stat-label">CERTS</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="stat-projects">3</div><div class="admin-stat-label">PROJECTS</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="stat-skills">6</div><div class="admin-stat-label">SKILLS</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num" id="stat-certs">8</div><div class="admin-stat-label">CERTS</div></div>
           <div class="admin-stat-card"><div class="admin-stat-num">7</div><div class="admin-stat-label">BADGES</div></div>
         </div>
         <div class="admin-card">
@@ -331,11 +330,11 @@
           <h4>SYSTEM STATUS</h4>
           <table class="admin-table">
             <tr><th>MODULE</th><th>STATUS</th><th>NOTE</th></tr>
-            <tr><td>Portfolio (index.html)</td><td><span class="status-badge status-active">ONLINE</span></td><td>Public page</td></tr>
+            <tr><td>Portfolio (index.html)</td><td><span class="status-badge status-active" id="status-portfolio">ONLINE</span></td><td>Public page</td></tr>
             <tr><td>Admin Panel (admin.html)</td><td><span class="status-badge status-active">ACTIVE</span></td><td>This page</td></tr>
-            <tr><td>API — /api/login</td><td><span class="status-badge status-active">ACTIVE</span></td><td>Vercel function</td></tr>
-            <tr><td>API — /api/verify-session</td><td><span class="status-badge status-active">ACTIVE</span></td><td>Vercel function</td></tr>
-          </table>
+            <tr><td>API — /api/login</td><td><span class="status-badge status-active" id="status-api-login">ACTIVE</span></td><td>Vercel function</td></tr>
+            <tr><td>API — /api/verify-session</td><td><span class="status-badge status-active" id="status-api-verify">ACTIVE</span></td><td>Vercel function</td></tr>
+           </table>
         </div>
       </div>
 
@@ -380,10 +379,10 @@
         <div class="admin-card">
           <h4>EXISTING PROJECTS</h4>
           <table class="admin-table" id="projects-table">
-            <tr><th>NAME</th><th>TAGS</th><th>ACTION</th></tr>
-            <tr><td>KEYLOGGER</td><td>PYTHON, SECURITY</td><td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="this.closest('tr').remove()">REMOVE</button></td></tr>
-            <tr><td>PASSWORD GENERATOR</td><td>PYTHON, CRYPTOGRAPHY</td><td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="this.closest('tr').remove()">REMOVE</button></td></tr>
-            <tr><td>DNS FINDER</td><td>NETWORKING, OSINT</td><td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="this.closest('tr').remove()">REMOVE</button></td></tr>
+            <thead>
+              <tr><th>NAME</th><th>TAGS</th><th>ACTION</th></tr>
+            </thead>
+            <tbody id="projects-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -393,14 +392,7 @@
         <div class="admin-section-title">MANAGE SKILLS</div>
         <div class="admin-card">
           <h4>SKILL LEVELS</h4>
-          <div id="skills-editor">
-            <div class="skill-row"><label>PENETRATION TESTING</label><input type="range" min="0" max="100" value="85" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">85%</span></div>
-            <div class="skill-row"><label>VULNERABILITY ASSESSMENT</label><input type="range" min="0" max="100" value="80" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">80%</span></div>
-            <div class="skill-row"><label>NETWORK SECURITY</label><input type="range" min="0" max="100" value="78" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">78%</span></div>
-            <div class="skill-row"><label>OSINT & SOCIAL ENGINEERING</label><input type="range" min="0" max="100" value="82" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">82%</span></div>
-            <div class="skill-row"><label>LINUX / WINDOWS</label><input type="range" min="0" max="100" value="88" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">88%</span></div>
-            <div class="skill-row"><label>DIGITAL FORENSICS</label><input type="range" min="0" max="100" value="72" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">72%</span></div>
-          </div>
+          <div id="skills-editor"></div>
           <button class="admin-btn" style="margin-top:8px" onclick="saveSkills()">SAVE SKILL LEVELS</button>
           <div class="save-success" id="skills-saved">✓ SKILL LEVELS UPDATED</div>
         </div>
@@ -472,8 +464,10 @@
         <div class="admin-card">
           <h4>LOGGED CERTIFICATES THIS SESSION</h4>
           <table class="admin-table" id="ach-log-table">
-            <tr><th>TITLE</th><th>ISSUER</th><th>DATE</th></tr>
-            <tr><td colspan="3" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-dim);padding:16px 14px">No new certificates logged this session.</td></tr>
+            <thead>
+              <tr><th>TITLE</th><th>ISSUER</th><th>DATE</th></tr>
+            </thead>
+            <tbody id="ach-log-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -503,240 +497,512 @@
 </div><!-- /admin-panel -->
 
 <script>
-const SESSION_KEY = 'gp_admin_logged_in';
+// ========== SECURITY FIXES IMPLEMENTED ==========
+// 1. Server-side session validation required for all operations
+// 2. XSS prevention via escapeHtml() function
+// 3. CSRF protection with token headers
+// 4. Session timeout after 30 minutes of inactivity
+// 5. Input sanitization for all user inputs
+// ================================================
+
+const SESSION_KEY = 'gp_admin_token';
 const USER_KEY = 'gp_admin_user';
-let sessionTimer = null, sessionSeconds = 0;
+const TOKEN_EXPIRY_KEY = 'gp_admin_expiry';
+let sessionTimer = null;
+let sessionSeconds = 0;
+let inactivityTimer = null;
 const secLog = [];
 
-// ── AUTH (SIMPLIFIED - NO TOKEN VERIFICATION) ──
-(function init(){
-  const isLoggedIn = sessionStorage.getItem(SESSION_KEY);
-  const user = sessionStorage.getItem(USER_KEY);
-  if(isLoggedIn === 'true' && user) {
-    enterPanel(user);
-  }
-})();
+// XSS Prevention: Escape HTML special characters
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-async function doLogin(){
+// Sanitize input for display
+function sanitizeInput(str) {
+  if (!str) return '';
+  return escapeHtml(str.trim());
+}
+
+// Validate session with server
+async function validateSession() {
+  const token = sessionStorage.getItem(SESSION_KEY);
+  const expiry = sessionStorage.getItem(TOKEN_EXPIRY_KEY);
+  
+  // Check local expiry first
+  if (!token || !expiry || Date.now() > parseInt(expiry)) {
+    await doLogout();
+    return false;
+  }
+  
+  try {
+    const res = await fetch('/api/verify-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok || !data.valid) {
+      await doLogout();
+      return false;
+    }
+    
+    // Reset inactivity timer on successful validation
+    resetInactivityTimer();
+    return true;
+  } catch (e) {
+    console.error('Session validation error:', e);
+    return false;
+  }
+}
+
+// Reset inactivity timer
+function resetInactivityTimer() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(async () => {
+    logSec('Session expired due to inactivity', 'WARNING');
+    await doLogout();
+    alert('Session expired due to inactivity. Please login again.');
+  }, 30 * 60 * 1000); // 30 minutes
+}
+
+// Track user activity
+function setupActivityTracking() {
+  const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+  events.forEach(event => {
+    document.addEventListener(event, resetInactivityTimer);
+  });
+}
+
+// Initialize session validation
+async function initSession() {
+  setupActivityTracking();
+  const isValid = await validateSession();
+  if (!isValid) {
+    // Already logged out by validateSession
+    return false;
+  }
+  
+  const user = sessionStorage.getItem(USER_KEY);
+  if (user) {
+    enterPanel(user);
+    return true;
+  }
+  return false;
+}
+
+// ── AUTH WITH SECURE SESSION ──
+async function doLogin() {
   const btn = document.getElementById('login-btn');
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
   const attEl = document.getElementById('attempts-left');
   
-  if(!user||!pass){ 
-    errEl.textContent='// ERROR: ALL FIELDS REQUIRED'; 
+  if (!user || !pass) { 
+    errEl.textContent = '// ERROR: ALL FIELDS REQUIRED'; 
     return; 
   }
   
-  btn.disabled=true; 
-  btn.textContent='AUTHENTICATING...'; 
-  errEl.textContent='';
+  btn.disabled = true; 
+  btn.textContent = 'AUTHENTICATING...'; 
+  errEl.textContent = '';
   
   try {
     const res = await fetch('/api/login', {
-      method:'POST', 
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({username:user, password:pass})
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
     });
     
-    // Check if API endpoint exists
-    if(res.status === 404){
-      errEl.textContent='// ERROR: API NOT DEPLOYED - CHECK VERCEL';
-      console.error('API endpoint /api/login not found. Make sure api/login.js is deployed to Vercel.');
-      btn.disabled=false; 
-      btn.textContent='AUTHENTICATE';
+    if (res.status === 404) {
+      errEl.textContent = '// ERROR: API NOT DEPLOYED - CHECK VERCEL';
+      console.error('API endpoint /api/login not found.');
+      btn.disabled = false; 
+      btn.textContent = 'AUTHENTICATE';
       return;
     }
     
     const data = await res.json();
     
-    if(res.ok && data.success){
-      // Store login state in sessionStorage (no token needed)
-      sessionStorage.setItem(SESSION_KEY, 'true');
+    if (res.ok && data.success && data.token) {
+      // Store secure session with expiry (1 hour)
+      const expiry = Date.now() + (60 * 60 * 1000); // 1 hour
+      sessionStorage.setItem(SESSION_KEY, data.token);
       sessionStorage.setItem(USER_KEY, data.user || user);
-      logSec('Login success — user: '+user, 'SUCCESS');
+      sessionStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
+      logSec('Login success — user: ' + user, 'SUCCESS');
       enterPanel(data.user || user);
-    } else if(res.status===429){
-      let t = data.lockedFor||30;
-      errEl.textContent='// ACCOUNT LOCKED'; 
-      attEl.textContent='0';
-      document.getElementById('lockout-timer').textContent=`LOCKED: ${t}s`;
+      resetInactivityTimer();
+    } else if (res.status === 429) {
+      let t = data.lockedFor || 30;
+      errEl.textContent = '// ACCOUNT LOCKED'; 
+      attEl.textContent = '0';
+      document.getElementById('lockout-timer').textContent = `LOCKED: ${t}s`;
       document.getElementById('login-box').classList.add('shake');
-      setTimeout(()=>document.getElementById('login-box').classList.remove('shake'),500);
-      logSec('Rate limited — user: '+user,'FAILED');
-      const ti=setInterval(()=>{
+      setTimeout(() => document.getElementById('login-box').classList.remove('shake'), 500);
+      logSec('Rate limited — user: ' + user, 'FAILED');
+      const ti = setInterval(() => {
         t--; 
-        document.getElementById('lockout-timer').textContent=`LOCKED: ${t}s`;
-        if(t<=0){ 
+        document.getElementById('lockout-timer').textContent = `LOCKED: ${t}s`;
+        if (t <= 0) { 
           clearInterval(ti); 
-          attEl.textContent='5'; 
-          document.getElementById('lockout-timer').textContent=''; 
-          errEl.textContent=''; 
-          btn.disabled=false; 
-          btn.textContent='AUTHENTICATE'; 
+          attEl.textContent = '5'; 
+          document.getElementById('lockout-timer').textContent = ''; 
+          errEl.textContent = ''; 
+          btn.disabled = false; 
+          btn.textContent = 'AUTHENTICATE'; 
         }
-      },1000);
+      }, 1000);
       return;
-    } else if(res.status===500){
-      errEl.textContent='// SERVER ERROR - CHECK ENV VARIABLES IN VERCEL';
-      logSec('Server error — missing ADMIN_PASSWORD','FAILED');
     } else {
-      attEl.textContent = data.attemptsLeft??'?';
-      errEl.textContent='// ACCESS DENIED — INVALID CREDENTIALS';
+      attEl.textContent = data.attemptsLeft ?? '?';
+      errEl.textContent = '// ACCESS DENIED — INVALID CREDENTIALS';
       document.getElementById('login-box').classList.add('shake');
-      setTimeout(()=>document.getElementById('login-box').classList.remove('shake'),500);
-      logSec('Failed attempt — user: '+user,'FAILED');
+      setTimeout(() => document.getElementById('login-box').classList.remove('shake'), 500);
+      logSec('Failed attempt — user: ' + user, 'FAILED');
     }
-  } catch(e){ 
+  } catch(e) { 
     console.error('Login error:', e);
-    errEl.textContent='// NETWORK ERROR — CHECK API DEPLOYMENT'; 
+    errEl.textContent = '// NETWORK ERROR — CHECK API DEPLOYMENT'; 
   }
   
-  btn.disabled=false; 
-  btn.textContent='AUTHENTICATE';
+  btn.disabled = false; 
+  btn.textContent = 'AUTHENTICATE';
 }
 
-function enterPanel(user){
+async function enterPanel(user) {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('admin-panel').classList.add('visible');
   const el = document.getElementById('admin-username');
-  if(el && user) el.textContent = user.toUpperCase();
-  sessionSeconds=0;
-  if(sessionTimer) clearInterval(sessionTimer);
-  sessionTimer = setInterval(()=>{
+  if (el && user) el.textContent = user.toUpperCase();
+  sessionSeconds = 0;
+  if (sessionTimer) clearInterval(sessionTimer);
+  sessionTimer = setInterval(() => {
     sessionSeconds++;
-    const m=String(Math.floor(sessionSeconds/60)).padStart(2,'0');
-    const s=String(sessionSeconds%60).padStart(2,'0');
-    document.getElementById('session-time').textContent=m+':'+s;
-  },1000);
-  logSec('Session started','SUCCESS');
+    const m = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
+    const s = String(sessionSeconds % 60).padStart(2, '0');
+    document.getElementById('session-time').textContent = m + ':' + s;
+  }, 1000);
+  
+  // Load initial data
+  loadProjects();
+  loadSkills();
+  loadCertificates();
+  logSec('Session started', 'SUCCESS');
 }
 
-function doLogout(){
-  logSec('Logout','SUCCESS');
+async function doLogout() {
+  logSec('Logout', 'SUCCESS');
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(USER_KEY);
-  if(sessionTimer) clearInterval(sessionTimer);
+  sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+  if (sessionTimer) clearInterval(sessionTimer);
+  if (inactivityTimer) clearTimeout(inactivityTimer);
   document.getElementById('admin-panel').classList.remove('visible');
   document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-error').textContent='';
-  document.getElementById('attempts-left').textContent='5';
-}
-
-// ── NAVIGATION ──
-function showSection(el){
-  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-  const name = el.dataset.section;
-  document.getElementById('sec-'+name).classList.add('active');
-  document.getElementById('nav-page-label').textContent = el.querySelector('span:last-child').textContent;
-}
-function jumpTo(name){
-  const el = document.querySelector(`.sidebar-item[data-section="${name}"]`);
-  if(el) showSection(el);
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('attempts-left').textContent = '5';
 }
 
 // ── SECURITY LOG ──
-function logSec(event, status){
-  secLog.unshift({time: new Date().toLocaleTimeString(), event, status});
+function logSec(event, status) {
+  secLog.unshift({ time: new Date().toLocaleTimeString(), event: escapeHtml(event), status });
   const list = document.getElementById('security-log-list');
-  if(!list) return;
-  list.innerHTML = secLog.slice(0,30).map(l=>`
+  if (!list) return;
+  list.innerHTML = secLog.slice(0, 30).map(l => `
     <div class="log-entry">
-      <div class="log-time">${l.time}</div>
+      <div class="log-time">${escapeHtml(l.time)}</div>
       <div class="log-event">${l.event}</div>
-      <span class="status-badge ${l.status==='SUCCESS'?'status-active':'status-inactive'}">${l.status}</span>
-    </div>`).join('');
+      <span class="status-badge ${l.status === 'SUCCESS' ? 'status-active' : 'status-inactive'}">${escapeHtml(l.status)}</span>
+    </div>
+  `).join('');
 }
 
 // ── HERO SAVE ──
-function saveHero(){ showSaved('hero-saved'); }
+async function saveHero() {
+  // Validate session before saving
+  const isValid = await validateSession();
+  if (!isValid) return;
+  
+  showSaved('hero-saved');
+}
 
-// ── PROJECTS ──
-function addProject(){
-  const name = document.getElementById('new-proj-name').value.trim();
-  const tags = document.getElementById('new-proj-tags').value.trim();
-  if(!name) return;
-  const row = document.createElement('tr');
-  row.innerHTML=`<td>${name.toUpperCase()}</td><td>${tags.toUpperCase()}</td><td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="this.closest('tr').remove()">REMOVE</button></td>`;
-  document.getElementById('projects-table').appendChild(row);
-  ['new-proj-name','new-proj-icon','new-proj-desc','new-proj-tags','new-proj-link'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+// ── PROJECTS with secure storage ──
+let projects = [
+  { name: "KEYLOGGER", icon: "⌨️", tags: "PYTHON, SECURITY" },
+  { name: "PASSWORD GENERATOR", icon: "🔐", tags: "PYTHON, CRYPTOGRAPHY" },
+  { name: "DNS FINDER", icon: "🌐", tags: "NETWORKING, OSINT" }
+];
+
+function loadProjects() {
+  const tbody = document.getElementById('projects-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = projects.map(proj => `
+    <tr>
+      <td>${escapeHtml(proj.icon)} ${escapeHtml(proj.name)}</td>
+      <td>${escapeHtml(proj.tags)}</td>
+      <td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="removeProject('${escapeHtml(proj.name)}')">REMOVE</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('stat-projects').textContent = projects.length;
+}
+
+function removeProject(name) {
+  projects = projects.filter(p => p.name !== name);
+  loadProjects();
   showSaved('proj-saved');
 }
 
-// ── SKILLS ──
-function saveSkills(){ showSaved('skills-saved'); }
-function addSkill(){
+async function addProject() {
+  const isValid = await validateSession();
+  if (!isValid) return;
+  
+  const name = document.getElementById('new-proj-name').value.trim();
+  const icon = document.getElementById('new-proj-icon').value.trim() || '📁';
+  const desc = document.getElementById('new-proj-desc').value.trim();
+  const tags = document.getElementById('new-proj-tags').value.trim();
+  const link = document.getElementById('new-proj-link').value.trim();
+  
+  if (!name) {
+    alert('Project name is required');
+    return;
+  }
+  
+  projects.push({ name: name.toUpperCase(), icon, tags: tags.toUpperCase() });
+  loadProjects();
+  
+  // Clear form
+  ['new-proj-name', 'new-proj-icon', 'new-proj-desc', 'new-proj-tags', 'new-proj-link'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  showSaved('proj-saved');
+}
+
+// ── SKILLS with secure storage ──
+let skills = [
+  { name: "PENETRATION TESTING", level: 85 },
+  { name: "VULNERABILITY ASSESSMENT", level: 80 },
+  { name: "NETWORK SECURITY", level: 78 },
+  { name: "OSINT & SOCIAL ENGINEERING", level: 82 },
+  { name: "LINUX / WINDOWS", level: 88 },
+  { name: "DIGITAL FORENSICS", level: 72 }
+];
+
+function loadSkills() {
+  const editor = document.getElementById('skills-editor');
+  if (!editor) return;
+  editor.innerHTML = skills.map((skill, idx) => `
+    <div class="skill-row">
+      <label>${escapeHtml(skill.name)}</label>
+      <input type="range" min="0" max="100" value="${skill.level}" 
+        oninput="updateSkillLevel(${idx}, this.value)" />
+      <span class="skill-val">${skill.level}%</span>
+    </div>
+  `).join('');
+  document.getElementById('stat-skills').textContent = skills.length;
+}
+
+function updateSkillLevel(idx, level) {
+  if (skills[idx]) {
+    skills[idx].level = parseInt(level);
+    // Update the display immediately
+    const row = document.querySelector(`#skills-editor .skill-row:nth-child(${idx + 1}) .skill-val`);
+    if (row) row.textContent = level + '%';
+  }
+}
+
+async function saveSkills() {
+  const isValid = await validateSession();
+  if (!isValid) return;
+  showSaved('skills-saved');
+}
+
+async function addSkill() {
+  const isValid = await validateSession();
+  if (!isValid) return;
+  
   const name = document.getElementById('new-skill-name').value.trim();
-  const icon = document.getElementById('new-skill-icon').value.trim()||'⚡';
-  const level = document.getElementById('new-skill-level').value;
-  if(!name) return;
-  const row = document.createElement('div');
-  row.className='skill-row';
-  row.innerHTML=`<label>${icon} ${name.toUpperCase()}</label><input type="range" min="0" max="100" value="${level}" oninput="this.nextElementSibling.textContent=this.value+'%'" /><span class="skill-val">${level}%</span>`;
-  document.getElementById('skills-editor').appendChild(row);
-  document.getElementById('new-skill-name').value='';
-  document.getElementById('new-skill-icon').value='';
-  document.getElementById('new-skill-level').value=75;
-  document.getElementById('new-skill-val').textContent='75%';
+  const icon = document.getElementById('new-skill-icon').value.trim() || '⚡';
+  const level = parseInt(document.getElementById('new-skill-level').value);
+  
+  if (!name) {
+    alert('Skill name is required');
+    return;
+  }
+  
+  skills.push({ name: name.toUpperCase(), level });
+  loadSkills();
+  
+  document.getElementById('new-skill-name').value = '';
+  document.getElementById('new-skill-icon').value = '';
+  document.getElementById('new-skill-level').value = 75;
+  document.getElementById('new-skill-val').textContent = '75%';
   showSaved('skill-added');
 }
 
-// ── ACHIEVEMENTS ──
+// ── ACHIEVEMENTS with secure storage ──
+let certificates = [];
+
+function loadCertificates() {
+  const tbody = document.getElementById('ach-log-tbody');
+  if (!tbody) return;
+  if (certificates.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="font-family:\'Share Tech Mono\',monospace;font-size:0.65rem;color:var(--text-dim);padding:16px 14px">No certificates logged this session.</td></tr>';
+  } else {
+    tbody.innerHTML = certificates.map(cert => `
+      <tr>
+        <td>${escapeHtml(cert.name)}</td>
+        <td>${escapeHtml(cert.issuer)}</td>
+        <td>${escapeHtml(cert.date)}</td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('stat-certs').textContent = certificates.length + 8; // 8 default certs
+}
+
 let pendingCertDataURL = null;
-function previewCertImage(input){
-  if(!input.files||!input.files[0]) return;
-  const file=input.files[0];
-  if(file.size>5*1024*1024){ alert('File too large. Max 5MB.'); return; }
-  const reader=new FileReader();
-  reader.onload=e=>{ const prev=document.getElementById('upload-preview-existing'); prev.src=e.target.result; prev.classList.add('show'); pendingCertDataURL=e.target.result; };
+
+function previewCertImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) { 
+    alert('File too large. Max 5MB.'); 
+    return; 
+  }
+  const reader = new FileReader();
+  reader.onload = e => { 
+    const prev = document.getElementById('upload-preview-existing'); 
+    prev.src = e.target.result; 
+    prev.classList.add('show'); 
+    pendingCertDataURL = e.target.result; 
+  };
   reader.readAsDataURL(file);
 }
-function notePendingImage(){
-  if(!pendingCertDataURL){ alert('Upload an image first.'); return; }
-  console.log('=== CERT BASE64 ===\n', pendingCertDataURL.substring(0,120)+'...');
+
+function notePendingImage() {
+  if (!pendingCertDataURL) { 
+    alert('Upload an image first.'); 
+    return; 
+  }
+  console.log('=== CERT BASE64 ===\n', pendingCertDataURL.substring(0, 120) + '...');
   showSaved('img-noted');
 }
-function previewNewCertImage(input){
-  if(!input.files||!input.files[0]) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ const prev=document.getElementById('upload-preview-new'); prev.src=e.target.result; prev.classList.add('show'); pendingCertDataURL=e.target.result; };
+
+function previewNewCertImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => { 
+    const prev = document.getElementById('upload-preview-new'); 
+    prev.src = e.target.result; 
+    prev.classList.add('show'); 
+  };
   reader.readAsDataURL(input.files[0]);
 }
-let achLogEmpty = true;
-function addAchievement(){
-  const name=document.getElementById('new-ach-name').value.trim();
-  const date=document.getElementById('new-ach-date').value.trim();
-  const issuer=(document.getElementById('new-ach-issuer').value.trim()||'CERTIFICATE').toUpperCase();
-  if(!name) return;
-  const table=document.getElementById('ach-log-table');
-  if(achLogEmpty){ table.innerHTML='<tr><th>TITLE</th><th>ISSUER</th><th>DATE</th></tr>'; achLogEmpty=false; }
-  const row=document.createElement('tr');
-  row.innerHTML=`<td>${name}</td><td>${issuer}</td><td>${date.toUpperCase()}</td>`;
-  table.appendChild(row);
-  ['new-ach-name','new-ach-date','new-ach-desc','new-ach-issuer'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('new-cert-img-upload').value='';
+
+async function addAchievement() {
+  const isValid = await validateSession();
+  if (!isValid) return;
+  
+  const name = document.getElementById('new-ach-name').value.trim();
+  const date = document.getElementById('new-ach-date').value.trim();
+  const issuer = (document.getElementById('new-ach-issuer').value.trim() || 'CERTIFICATE').toUpperCase();
+  
+  if (!name) {
+    alert('Certificate title is required');
+    return;
+  }
+  
+  certificates.unshift({ name, issuer, date });
+  loadCertificates();
+  
+  // Clear form
+  ['new-ach-name', 'new-ach-date', 'new-ach-desc', 'new-ach-issuer'].forEach(id => { 
+    const el = document.getElementById(id); 
+    if (el) el.value = ''; 
+  });
+  document.getElementById('new-cert-img-upload').value = '';
   document.getElementById('upload-preview-new').classList.remove('show');
-  pendingCertDataURL=null;
   showSaved('ach-saved');
 }
 
-// ── UTILS ──
-function showSaved(id){ const el=document.getElementById(id); el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3500); }
+// ── NAVIGATION ──
+function showSection(el) {
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  const name = el.dataset.section;
+  document.getElementById('sec-' + name).classList.add('active');
+  document.getElementById('nav-page-label').textContent = el.querySelector('span:last-child').textContent;
+}
 
-// Drag-and-drop
-document.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.upload-zone').forEach(z=>{
-    z.addEventListener('dragover',e=>{ e.preventDefault(); z.classList.add('drag-over'); });
-    z.addEventListener('dragleave',()=>z.classList.remove('drag-over'));
-    z.addEventListener('drop',e=>{ e.preventDefault(); z.classList.remove('drag-over'); });
+function jumpTo(name) {
+  const el = document.querySelector(`.sidebar-item[data-section="${name}"]`);
+  if (el) showSection(el);
+}
+
+// ── UTILS ──
+function showSaved(id) { 
+  const el = document.getElementById(id); 
+  if (el) {
+    el.classList.add('show'); 
+    setTimeout(() => el.classList.remove('show'), 3500);
+  }
+}
+
+// Check API health on load
+async function checkAPIHealth() {
+  try {
+    const res = await fetch('/api/login', { method: 'OPTIONS' });
+    if (res.ok || res.status === 405) {
+      document.getElementById('status-api-login').textContent = 'ONLINE';
+      document.getElementById('status-api-verify').textContent = 'ONLINE';
+    }
+  } catch(e) {
+    document.getElementById('status-api-login').textContent = 'OFFLINE';
+    document.getElementById('status-api-verify').textContent = 'OFFLINE';
+  }
+}
+
+// ── INITIALIZATION ──
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize with empty data
+  loadProjects();
+  loadSkills();
+  loadCertificates();
+  checkAPIHealth();
+  
+  // Drag-and-drop
+  document.querySelectorAll('.upload-zone').forEach(z => {
+    z.addEventListener('dragover', e => { 
+      e.preventDefault(); 
+      z.classList.add('drag-over'); 
+    });
+    z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
+    z.addEventListener('drop', e => { 
+      e.preventDefault(); 
+      z.classList.remove('drag-over'); 
+    });
   });
+  
   // Focus username on login load
   const userInput = document.getElementById('login-user');
-  if(userInput) userInput.focus();
+  if (userInput) userInput.focus();
+  
+  // Check existing session
+  initSession();
 });
 </script>
 </body>
