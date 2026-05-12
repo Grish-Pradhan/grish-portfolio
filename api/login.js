@@ -1,9 +1,13 @@
 const crypto = require("crypto");
 
-// In-memory rate limiting
 const RATE_LIMIT = {};
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30 * 1000; // 30 seconds
+
+const SESSIONS = {};
+
+// Session expiration: 1 hour
+const SESSION_TTL_MS = 60 * 60 * 1000;
 
 function getClientIP(req) {
   return (
@@ -19,6 +23,15 @@ function corsHeaders(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Content-Type", "application/json");
+}
+
+// Generate a secure session token
+function generateSessionToken(username, ip) {
+  const timestamp = Date.now();
+  const randomBytes = crypto.randomBytes(32).toString('hex');
+  const data = `${username}|${ip}|${timestamp}|${randomBytes}`;
+  const hash = crypto.createHash('sha256').update(data).digest('hex');
+  return hash;
 }
 
 module.exports = async function handler(req, res) {
@@ -123,12 +136,26 @@ module.exports = async function handler(req, res) {
   record.attempts = 0;
   record.lockedUntil = 0;
 
-  console.log(`Successful login from ${ip} for user: ${validUser}`);
+  // Generate session token
+  const sessionToken = generateSessionToken(validUser, ip);
   
-  // Return success without token
+  // Store session
+  SESSIONS[sessionToken] = {
+    username: validUser,
+    ip: ip,
+    createdAt: now,
+    expiresAt: now + SESSION_TTL_MS
+  };
+
+  console.log(`Successful login from ${ip} for user: ${validUser}`);
+  console.log(`Session created. Active sessions: ${Object.keys(SESSIONS).length}`);
+  
+  // Return success with token
   return res.status(200).json({
     success: true,
     message: "Login successful",
     user: validUser,
+    token: sessionToken,
+    expiresAt: now + SESSION_TTL_MS
   });
 };
