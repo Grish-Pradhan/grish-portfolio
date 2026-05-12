@@ -1,13 +1,10 @@
 const crypto = require("crypto");
+const jwt = require('jsonwebtoken'); // Add this at the top
 
+// In-memory rate limiting
 const RATE_LIMIT = {};
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30 * 1000; // 30 seconds
-
-const SESSIONS = {};
-
-// Session expiration: 1 hour
-const SESSION_TTL_MS = 60 * 60 * 1000;
 
 function getClientIP(req) {
   return (
@@ -23,15 +20,6 @@ function corsHeaders(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Content-Type", "application/json");
-}
-
-// Generate a secure session token
-function generateSessionToken(username, ip) {
-  const timestamp = Date.now();
-  const randomBytes = crypto.randomBytes(32).toString('hex');
-  const data = `${username}|${ip}|${timestamp}|${randomBytes}`;
-  const hash = crypto.createHash('sha256').update(data).digest('hex');
-  return hash;
 }
 
 module.exports = async function handler(req, res) {
@@ -136,26 +124,22 @@ module.exports = async function handler(req, res) {
   record.attempts = 0;
   record.lockedUntil = 0;
 
-  // Generate session token
-  const sessionToken = generateSessionToken(validUser, ip);
-  
-  // Store session
-  SESSIONS[sessionToken] = {
-    username: validUser,
-    ip: ip,
-    createdAt: now,
-    expiresAt: now + SESSION_TTL_MS
-  };
+  // ========== JWT TOKEN GENERATION ==========
+  // Generate JWT token for session management
+  const token = jwt.sign(
+    { username: validUser, ip: ip },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' } // Token expires in 1 hour
+  );
 
   console.log(`Successful login from ${ip} for user: ${validUser}`);
-  console.log(`Session created. Active sessions: ${Object.keys(SESSIONS).length}`);
   
-  // Return success with token
+  // Return success with JWT token
   return res.status(200).json({
     success: true,
     message: "Login successful",
     user: validUser,
-    token: sessionToken,
-    expiresAt: now + SESSION_TTL_MS
+    token: token,  // ← Send token to frontend
+    expiresAt: Date.now() + (60 * 60 * 1000) // 1 hour from now
   });
 };
