@@ -141,6 +141,17 @@ async function getMessages() {
   return data || [];
 }
 
+async function getVisits() {
+  const { data, error } = await supabase
+    .from("visits")
+    .select("id, path, referrer_host, consent_version, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
 // Public portfolio data
 app.get("/api/site-data", async (req, res) => {
   try {
@@ -206,6 +217,27 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
+app.post("/api/analytics/visit", async (req, res) => {
+  try {
+    const { path: pagePath, referrerHost = "", consentVersion } = req.body || {};
+    if (consentVersion !== "2026-10-02" || typeof pagePath !== "string" ||
+        !pagePath.startsWith("/") || pagePath.length > 200 || /[?#]/.test(pagePath) ||
+        typeof referrerHost !== "string" || referrerHost.length > 253 ||
+        (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost))) {
+      return res.status(400).json({ error: "Invalid consented page view" });
+    }
+    const { error } = await supabase.from("visits").insert([{
+      path: pagePath,
+      referrer_host: referrerHost.toLowerCase(),
+      consent_version: consentVersion
+    }]);
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(202).json({ accepted: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Admin routes
 app.get("/api/admin/messages", checkAdminToken, async (req, res) => {
   try {
@@ -215,11 +247,42 @@ app.get("/api/admin/messages", checkAdminToken, async (req, res) => {
   }
 });
 
+app.put("/api/admin/messages/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+    if (typeof name !== "string" || typeof email !== "string" || typeof message !== "string" ||
+      !name.trim() || !email.trim() || !message.trim()) {
+      return res.status(400).json({ error: "Name, email and message required" });
+    }
+    const { data, error } = await supabase
+      .from("messages")
+      .update({ name: name.trim(), email: email.trim(), message: message.trim() })
+      .eq("id", req.params.id)
+      .select("id, name, email, message, created_at")
+      .maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Message not found" });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/admin/messages/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { error } = await supabase.from("messages").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/admin/dashboard", checkAdminToken, async (req, res) => {
   try {
-    const [projects, messages, profile] = await Promise.all([getProjects(), getMessages(), getProfile()]);
+    const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
     res.set("Cache-Control", "no-store");
-    res.json({ projects, messages, profile });
+    res.json({ projects, messages, profile, visits });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

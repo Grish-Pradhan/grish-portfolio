@@ -134,7 +134,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   to { opacity: 1; transform: translateY(0); }
 }
 
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 
 .stat {
   display: flex;
@@ -218,6 +218,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 #projectForm input[type="checkbox"] { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
 .modal-actions { display: flex; align-items: center; justify-content: end; gap: 9px; padding-top: 8px; border-top: 1px solid var(--line); }
 .modal-actions .status { margin-right: auto; }
+#messageForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+#messageForm label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+#messageForm input, #messageForm textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 0; outline: 0; background: #0b0d10; color: var(--text); }
+#messageForm input:focus, #messageForm textarea:focus { border-color: var(--accent); }
+#messageForm textarea { min-height: 130px; resize: vertical; }
+#messageForm .modal-full { grid-column: 1 / -1; }
 
 @media (max-width: 900px) {
   .sidebar { position: relative; inset: auto; width: 100%; min-height: auto; flex-direction: row; align-items: center; gap: 24px; padding: 15px 20px; border-right: 0; border-bottom: 1px solid var(--line); }
@@ -227,6 +233,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .nav-item:hover, .nav-item.active { border-bottom-color: var(--accent); }
   .side-bottom { margin: 0; padding: 0 0 0 16px; border-top: 0; border-left: 1px solid var(--line); }
   .main { width: 100%; margin: 0; padding: 34px 5vw 60px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 600px) {
@@ -239,6 +246,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .topbar { align-items: start; margin-bottom: 24px; padding-bottom: 18px; }
   .topbar h2 { font-size: 30px; }
   .stats { gap: 8px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat { min-height: 112px; padding: 14px 12px; }
   .stat small { font-size: 9px; letter-spacing: .08em; }
   .stat strong { font-size: 32px; }
@@ -256,6 +264,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .modal-panel { max-height: calc(100vh - 24px); padding: 20px 16px; }
   #projectForm { grid-template-columns: 1fr; }
   #projectForm .modal-full { grid-column: auto; }
+  #messageForm { grid-template-columns: 1fr; }
+  #messageForm .modal-full { grid-column: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

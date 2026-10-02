@@ -16,6 +16,8 @@ function PortfolioApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [analyticsConsent, setAnalyticsConsent] = useState(() => window.localStorage.getItem("portfolioAnalyticsConsent") || "unknown");
+  const [privacyOpen, setPrivacyOpen] = useState(() => window.localStorage.getItem("portfolioAnalyticsConsent") === null);
 
   useEffect(() => {
     let active = true;
@@ -56,6 +58,30 @@ function PortfolioApp() {
   }, []);
 
   useEffect(() => {
+    if (analyticsConsent !== "accepted") return;
+    const sessionKey = `portfolioVisit:${window.location.pathname}`;
+    if (window.sessionStorage.getItem(sessionKey)) return;
+    window.sessionStorage.setItem(sessionKey, "recorded");
+
+    let referrerHost = "";
+    try {
+      referrerHost = document.referrer ? new URL(document.referrer).hostname : "";
+    } catch {
+      referrerHost = "";
+    }
+
+    window.portfolioApi("/api/analytics/visit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: window.location.pathname,
+        referrerHost,
+        consentVersion: "2026-10-02"
+      })
+    }).catch((error) => console.warn("Could not record consented visit:", error));
+  }, [analyticsConsent]);
+
+  useEffect(() => {
     if (profile?.name) document.title = `${profile.name} | Portfolio`;
   }, [profile]);
 
@@ -78,6 +104,12 @@ function PortfolioApp() {
     } catch (error) {
       setFormStatus(error.message);
     }
+  }
+
+  function chooseAnalyticsConsent(choice) {
+    window.localStorage.setItem("portfolioAnalyticsConsent", choice);
+    setAnalyticsConsent(choice);
+    setPrivacyOpen(false);
   }
 
   const sortedProjects = [...projects].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
@@ -184,8 +216,22 @@ function PortfolioApp() {
           {profile?.github && <a href={safeUrl(profile.github)} target="_blank" rel="noreferrer">GitHub ↗</a>}
           {profile?.linkedin && <a href={safeUrl(profile.linkedin)} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
           {profile?.website && <a href={safeUrl(profile.website)} target="_blank" rel="noreferrer">Website ↗</a>}
+          <button type="button" onClick={() => setPrivacyOpen(true)}>Privacy choices</button>
         </div>
       </footer>
+
+      {privacyOpen && (
+        <aside className="privacy-consent" role="dialog" aria-label="Privacy and analytics choices">
+          <div>
+            <h2>Privacy choices</h2>
+            <p>With your permission, we record the page path, visit time, and referring site hostname to show recent traffic in the admin dashboard. We do not store raw IP addresses, precise location, or device fingerprints. You can decline and still use the site.</p>
+          </div>
+          <div className="privacy-actions">
+            <button className="button ghost" type="button" onClick={() => chooseAnalyticsConsent("declined")}>Decline</button>
+            <button className="button primary" type="button" onClick={() => chooseAnalyticsConsent("accepted")}>Allow analytics</button>
+          </div>
+        </aside>
+      )}
     </>
   );
 }

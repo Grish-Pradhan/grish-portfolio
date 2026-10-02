@@ -16,6 +16,7 @@ async function api(path, token, options = {}) {
 }
 
 const emptyProject = () => ({ id: "", title: "", description: "", tech: "", image: "", url: "", github: "", featured: false });
+const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
 
 function AdminApp() {
@@ -25,6 +26,7 @@ function AdminApp() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [projects, setProjects] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [visits, setVisits] = useState([]);
   const [profile, setProfile] = useState({ name: "", role: "", bio: "", location: "", email: "", github: "", linkedin: "", website: "" });
   const [profileDirty, setProfileDirty] = useState(false);
   const [profileStatus, setProfileStatus] = useState("");
@@ -33,11 +35,15 @@ function AdminApp() {
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState(emptyProject);
   const [projectStatus, setProjectStatus] = useState("");
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [messageDraft, setMessageDraft] = useState(emptyMessage);
+  const [messageStatus, setMessageStatus] = useState("");
 
   async function refreshDashboard(currentToken = token) {
     const data = await api("/api/admin/dashboard", currentToken);
     setProjects(data.projects || []);
     setMessages(data.messages || []);
+    setVisits(data.visits || []);
     if (!profileDirty) setProfile(data.profile || {});
     setDashboardError("");
     setAuthenticated(true);
@@ -47,7 +53,7 @@ function AdminApp() {
     if (!token || !authenticated) return undefined;
     let active = true;
     const refresh = async () => {
-      if (!active || document.hidden || profileDirty || projectModalOpen) return;
+      if (!active || document.hidden || profileDirty || projectModalOpen || messageModalOpen) return;
       try {
         await refreshDashboard(token);
       } catch (error) {
@@ -67,7 +73,7 @@ function AdminApp() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [token, authenticated, profileDirty, projectModalOpen]);
+  }, [token, authenticated, profileDirty, projectModalOpen, messageModalOpen]);
 
   async function submitLogin(event) {
     event.preventDefault();
@@ -78,6 +84,7 @@ function AdminApp() {
       setToken(loginToken);
       setProjects(data.projects || []);
       setMessages(data.messages || []);
+      setVisits(data.visits || []);
       setProfile(data.profile || {});
       setAuthenticated(true);
     } catch (error) {
@@ -155,6 +162,43 @@ function AdminApp() {
     }
   }
 
+  function openMessage(message) {
+    setMessageDraft({ ...message });
+    setMessageStatus("");
+    setMessageModalOpen(true);
+  }
+
+  function updateMessage(event) {
+    const { name, value } = event.target;
+    setMessageDraft((current) => ({ ...current, [name]: value }));
+    setMessageStatus("");
+  }
+
+  async function saveMessage(event) {
+    event.preventDefault();
+    try {
+      await api(`/api/admin/messages/${messageDraft.id}`, token, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: messageDraft.name, email: messageDraft.email, message: messageDraft.message })
+      });
+      setMessageModalOpen(false);
+      await refreshDashboard(token);
+    } catch (error) {
+      setMessageStatus(error.message);
+    }
+  }
+
+  async function deleteMessage(id) {
+    if (!window.confirm("Delete this message?")) return;
+    try {
+      await api(`/api/admin/messages/${id}`, token, { method: "DELETE" });
+      await refreshDashboard(token);
+    } catch (error) {
+      setDashboardError(error.message);
+    }
+  }
+
   useEffect(() => {
     if (!token || authenticated) return;
     let active = true;
@@ -163,6 +207,7 @@ function AdminApp() {
         if (!active) return;
         setProjects(data.projects || []);
         setMessages(data.messages || []);
+        setVisits(data.visits || []);
         setProfile(data.profile || {});
         setAuthenticated(true);
       })
@@ -190,8 +235,8 @@ function AdminApp() {
     );
   }
 
-  const sections = ["dashboard", "projects", "messages", "profile"];
-  const pageTitles = { dashboard: "Dashboard", projects: "Projects", messages: "Messages", profile: "Profile" };
+  const sections = ["dashboard", "projects", "messages", "visits", "profile"];
+  const pageTitles = { dashboard: "Dashboard", projects: "Projects", messages: "Messages", visits: "Visitors", profile: "Profile" };
 
   return (
     <div className="app">
@@ -215,11 +260,12 @@ function AdminApp() {
         {dashboardError && <p className="status" role="alert">{dashboardError}</p>}
 
         {activeSection === "dashboard" && (
-          <section className="page active">
+          <section id="dashboard" className="page active">
             <div className="stats">
               <div className="stat"><small>Total Projects</small><strong>{projects.length}</strong></div>
               <div className="stat"><small>Messages</small><strong>{messages.length}</strong></div>
               <div className="stat"><small>Featured</small><strong>{projects.filter((project) => project.featured).length}</strong></div>
+              <div className="stat"><small>Recent Visits</small><strong>{visits.length}</strong></div>
             </div>
             <div className="intro">
               <div><div className="big-mark">◆</div><h3>Portfolio Overview</h3><p>Manage your projects, view visitor messages, and update your profile.</p></div>
@@ -229,7 +275,7 @@ function AdminApp() {
         )}
 
         {activeSection === "projects" && (
-          <section className="page active">
+          <section id="projects" className="page active">
             <div className="section-title"><h3>Projects Management</h3></div>
             <div className="project-list">
               {projects.length ? projects.map((project) => (
@@ -251,38 +297,56 @@ function AdminApp() {
         )}
 
         {activeSection === "messages" && (
-          <section className="page active">
+          <section id="messages" className="page active">
             <div className="section-title"><h3>Contact Messages</h3></div>
             <div className="messages">
               {messages.length ? messages.map((message) => (
                 <article className="message" key={message.id}>
                   <div><h4>{message.name}</h4><p>{message.message}</p></div>
                   <div className="meta">{message.email} · {message.created_at}</div>
+                  <div className="row-actions">
+                    <button className="small-btn" onClick={() => openMessage(message)}>Edit</button>
+                    <button className="small-btn delete" onClick={() => deleteMessage(message.id)}>Delete</button>
+                  </div>
                 </article>
               )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No messages yet.</div>}
             </div>
           </section>
         )}
 
+        {activeSection === "visits" && (
+          <section id="visits" className="page active">
+            <div className="section-title"><h3>Recent Consented Visits</h3></div>
+            <div className="messages">
+              {visits.length ? visits.map((visit) => (
+                <article className="message visit-row" key={visit.id}>
+                  <div><h4>{visit.path}</h4><p>{visit.referrer_host || "Direct visit"}</p></div>
+                  <div className="meta">{new Date(visit.created_at).toLocaleString()}</div>
+                </article>
+              )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No consented visits recorded yet.</div>}
+            </div>
+          </section>
+        )}
+
         {activeSection === "profile" && (
-          <section className="page active">
+          <section id="profile" className="page active">
             <div className="section-title"><h3>Profile Editing</h3></div>
             <div className="intro">
               <div className="big-mark">◆</div>
               <div>
                 <h3>Update Profile</h3>
                 <p>Modify your public profile information.</p>
-                <form id="profileForm" onSubmit={saveProfile} onChange={updateProfile}>
-                  <input type="hidden" name="id" value="1" readOnly />
-                  {profileFields.map((field) => field === "bio" ? (
-                    <textarea key={field} id="profileBio" name={field} value={profile[field] || ""} onChange={updateProfile} placeholder="Bio" required rows="4" />
-                  ) : (
-                    <input key={field} name={field} type={field === "email" ? "email" : ["github", "linkedin", "website"].includes(field) ? "url" : "text"} value={profile[field] || ""} onChange={updateProfile} placeholder={field[0].toUpperCase() + field.slice(1)} required={["name", "role"].includes(field)} />
-                  ))}
-                  <button type="submit" className="button primary">Save Changes</button>
-                  <p className="status" role="status">{profileStatus}</p>
-                </form>
               </div>
+              <form id="profileForm" onSubmit={saveProfile} onChange={updateProfile}>
+                <input type="hidden" name="id" value="1" readOnly />
+                {profileFields.map((field) => field === "bio" ? (
+                  <textarea key={field} id="profileBio" name={field} value={profile[field] || ""} onChange={updateProfile} placeholder="Bio" required rows="4" />
+                ) : (
+                  <input key={field} name={field} type={field === "email" ? "email" : ["github", "linkedin", "website"].includes(field) ? "url" : "text"} value={profile[field] || ""} onChange={updateProfile} placeholder={field[0].toUpperCase() + field.slice(1)} required={["name", "role"].includes(field)} />
+                ))}
+                <button type="submit" className="button primary">Save Changes</button>
+                <p className="status" role="status">{profileStatus}</p>
+              </form>
             </div>
           </section>
         )}
@@ -307,6 +371,27 @@ function AdminApp() {
               <div className="modal-actions modal-full">
                 <button className="small-btn" type="button" onClick={() => setProjectModalOpen(false)}>Cancel</button>
                 <button className="button primary" type="submit">Save project</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {messageModalOpen && (
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle" onMouseDown={(event) => { if (event.target === event.currentTarget) setMessageModalOpen(false); }}>
+          <section className="modal-panel">
+            <div className="modal-head">
+              <div><p className="eyebrow">MESSAGE EDITOR</p><h3 id="messageModalTitle">Edit message</h3></div>
+              <button className="modal-close" type="button" aria-label="Close message editor" onClick={() => setMessageModalOpen(false)}>×</button>
+            </div>
+            <form id="messageForm" onSubmit={saveMessage}>
+              <label>Name<input name="name" value={messageDraft.name} onChange={updateMessage} required /></label>
+              <label>Email<input name="email" type="email" value={messageDraft.email} onChange={updateMessage} required /></label>
+              <label className="modal-full">Message<textarea name="message" value={messageDraft.message} onChange={updateMessage} rows="5" required /></label>
+              <p className="status modal-full" role="status">{messageStatus}</p>
+              <div className="modal-actions modal-full">
+                <button className="small-btn" type="button" onClick={() => setMessageModalOpen(false)}>Cancel</button>
+                <button className="button primary" type="submit">Save message</button>
               </div>
             </form>
           </section>

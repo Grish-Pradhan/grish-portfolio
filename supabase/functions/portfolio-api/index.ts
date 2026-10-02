@@ -64,6 +64,16 @@ async function getMessages() {
   return data || [];
 }
 
+async function getVisits() {
+  const { data, error } = await supabase!.from("visits")
+    .select("id, path, referrer_host, consent_version, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -120,13 +130,53 @@ Deno.serve(async (request: Request) => {
       return json(data, 201);
     }
 
+    if (method === "POST" && path === "/api/analytics/visit") {
+      const body = await bodyJson(request);
+      const pagePath = typeof body?.path === "string" ? body.path : "";
+      const referrerHost = typeof body?.referrerHost === "string" ? body.referrerHost : "";
+      if (body?.consentVersion !== "2026-10-02" || !pagePath.startsWith("/") ||
+          pagePath.length > 200 || /[?#]/.test(pagePath) || referrerHost.length > 253 ||
+          (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost))) {
+        return json({ error: "Invalid consented page view" }, 400);
+      }
+      const { error } = await supabase.from("visits").insert([{
+        path: pagePath,
+        referrer_host: referrerHost.toLowerCase(),
+        consent_version: body.consentVersion
+      }]);
+      if (error) return json({ error: error.message }, 500);
+      return json({ accepted: true }, 202);
+    }
+
     if (method === "GET" && path === "/api/admin/dashboard") {
-      const [projects, messages, profile] = await Promise.all([getProjects(), getMessages(), getProfile()]);
-      return json({ projects, messages, profile });
+      const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
+      return json({ projects, messages, profile, visits });
     }
 
     if (method === "GET" && path === "/api/admin/messages") {
       return json(await getMessages());
+    }
+
+    const adminMessagePath = path.match(/^\/api\/admin\/messages\/(\d+)$/);
+    if (adminMessagePath && method === "PUT") {
+      const body = await bodyJson(request);
+      const name = String(body?.name || "").trim();
+      const email = String(body?.email || "").trim();
+      const message = String(body?.message || "").trim();
+      if (!name || !email || !message) return json({ error: "Name, email and message required" }, 400);
+      const { data, error } = await supabase.from("messages").update({ name, email, message })
+        .eq("id", adminMessagePath[1])
+        .select("id, name, email, message, created_at")
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (!data) return json({ error: "Message not found" }, 404);
+      return json(data);
+    }
+
+    if (adminMessagePath && method === "DELETE") {
+      const { error } = await supabase.from("messages").delete().eq("id", adminMessagePath[1]);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true });
     }
 
     if (method === "POST" && path === "/api/admin/projects") {

@@ -54,3 +54,7 @@ In Supabase Edge Function Secrets, set `PORTFOLIO_DB_SECRET_KEY` and `PORTFOLIO_
 - `public/style.css` and `public/admin/dashboard-theme.css` — page styles
 - `server.js` — Node.js API and production static server
 - `supabase/functions/portfolio-api/index.ts` — deployed Supabase API
+
+## Privacy analytics
+
+Visitor analytics are opt-in. With consent, the site records only the page path, visit timestamp, and referring hostname. It does not store raw IP addresses, precise location, or device fingerprints. Run `supabase/setup.sql` again to add the visits table to an existing project; visitors who decline are not tracked.
