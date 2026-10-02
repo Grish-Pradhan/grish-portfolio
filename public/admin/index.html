@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Grish Pradhan Portfolio Admin Dashboard">
   <title>Admin Dashboard | Grish Portfolio</title>
-  <link rel="stylesheet" href="/admin/admin.css">
+  <link rel="stylesheet" href="/admin/dashboard-theme.css">
 </head>
 <body>
   <!-- Login View -->
@@ -86,18 +86,18 @@
           <div class="section-title">
             <h3>Projects Management</h3>
           </div>
-          <div class="project-list">
+          <div id="projectsList" class="project-list">
             <!-- Projects will be rendered here -->
             <div style="padding:25px; color:#969ba7; text-align:center;">Loading projects...</div>
           </div>
-          <button class="button primary" style="margin-top:20px; width:100%" onclick="openProject()">Add New Project</button>
+          <button id="newProject" type="button" class="button primary" style="margin-top:20px; width:100%">Add New Project</button>
         </div>
 
         <div class="page" id="messages">
           <div class="section-title">
             <h3>Contact Messages</h3>
           </div>
-          <div class="messages">
+          <div id="messagesList" class="messages">
             <!-- Messages will be rendered here -->
             <div style="padding:25px; color:#969ba7; text-align:center;">No messages yet.</div>
           </div>
@@ -114,19 +114,47 @@
               <p class="intro p">Modify your public profile information.</p>
             </div>
             <form id="profileForm">
-              <input type="hidden" id="profileId" value="1">
-              <input type="text" id="profileName" placeholder="Name" required>
-              <input type="text" id="profileRole" placeholder="Role" required>
-              <input type="textarea" id="profileBio" placeholder="Bio" required rows="3">
-              <input type="text" id="profileLocation" placeholder="Location">
-              <input type="email" id="profileEmail" placeholder="Email">
-              <input type="text" id="profileGitHub" placeholder="GitHub URL">
-              <input type="text" id="profileLinkedIn" placeholder="LinkedIn URL">
-              <input type="text" id="profileWebsite" placeholder="Website">
-              <button type="submit" class="button primary" style="width:100% margin-top:15px">Save Changes</button>
+              <input type="hidden" id="profileId" name="id" value="1">
+              <input type="text" id="profileName" name="name" placeholder="Name" required>
+              <input type="text" id="profileRole" name="role" placeholder="Role" required>
+              <textarea id="profileBio" name="bio" placeholder="Bio" required rows="4"></textarea>
+              <input type="text" id="profileLocation" name="location" placeholder="Location">
+              <input type="email" id="profileEmail" name="email" placeholder="Email">
+              <input type="url" id="profileGitHub" name="github" placeholder="GitHub URL">
+              <input type="url" id="profileLinkedIn" name="linkedin" placeholder="LinkedIn URL">
+              <input type="url" id="profileWebsite" name="website" placeholder="Website URL">
+              <button type="submit" class="button primary">Save Changes</button>
               <p id="profileStatus" class="status" style="margin-top:15px;"></p>
             </form>
           </div>
+        </div>
+
+        <div id="projectModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+          <div class="modal-backdrop" data-close-modal></div>
+          <section class="modal-panel">
+            <div class="modal-head">
+              <div>
+                <p class="eyebrow">PROJECT EDITOR</p>
+                <h3 id="modalTitle">New project</h3>
+              </div>
+              <button id="closeModal" class="modal-close" type="button" aria-label="Close project editor">×</button>
+            </div>
+            <form id="projectForm">
+              <input type="hidden" name="id">
+              <label>Title<input name="title" required></label>
+              <label class="modal-full">Description<textarea name="description" rows="4" required></textarea></label>
+              <label>Technologies<input name="tech" placeholder="JavaScript, Node.js"></label>
+              <label>Image URL<input name="image" type="url"></label>
+              <label>Live project URL<input name="url" type="url"></label>
+              <label>GitHub URL<input name="github" type="url"></label>
+              <label class="featured-toggle"><input name="featured" type="checkbox" value="1"><span>Featured project</span></label>
+              <p id="projectStatus" class="status modal-full" role="status"></p>
+              <div class="modal-actions modal-full">
+                <button id="cancelModal" class="small-btn" type="button">Cancel</button>
+                <button class="button primary" type="submit">Save project</button>
+              </div>
+            </form>
+          </section>
         </div>
       </main>
     </div>

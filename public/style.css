@@ -62,11 +62,13 @@ h2 { font-size:clamp(42px, 5vw, 70px); }
 .projects { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
 .project { background:var(--panel); border:1px solid var(--line); padding:27px; min-height:300px; display:flex; flex-direction:column; transition:.25s; }
 .project:hover { transform:translateY(-6px); border-color:#454b57; }
+.project-image { width:100%; aspect-ratio:16/9; object-fit:cover; margin-bottom:20px; border:1px solid var(--line); background:var(--panel2); }
 .project .number { color:#555b66; font-size:12px; margin-bottom:45px; }
 .project h3 { font-size:24px; margin:0 0 10px; letter-spacing:-.03em; }
 .project p { color:var(--muted); font-size:14px; margin:0 0 22px; }
 .tags { display:flex; flex-wrap:wrap; gap:7px; margin-top:auto; }
 .tag { border:1px solid var(--line); padding:5px 8px; font-size:10px; color:#aaa; }
+.tag.featured { border-color:var(--accent); color:var(--accent); }
 .project-links { display:flex; gap:15px; margin-top:20px; font-size:12px; color:var(--accent); }
 .contact { border-top:1px solid var(--line); display:grid; grid-template-columns:1fr 1fr; gap:100px; }
 .contact .muted { color:var(--muted); max-width:450px; margin-top:25px; }

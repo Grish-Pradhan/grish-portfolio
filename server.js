@@ -10,9 +10,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Supabase configuration - connect to PostgreSQL via environment variables
-// Support both NEXT_PUBLIC_ prefixed and legacy variable names for flexibility
+// Prefer the server-only key; public keys remain supported for existing setups.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = supabaseSecretKey ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn("Supabase environment variables not set");
@@ -43,7 +47,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false
@@ -89,18 +93,126 @@ function checkAdminToken(req, res, next) {
   if (token !== adminToken) {
     return res.status(401).json({ error: "Admin token required" });
   }
+  if (!supabaseSecretKey) {
+    return res.status(503).json({ error: "Admin storage requires a server-side Supabase secret key" });
+  }
   next();
 }
+
+async function getProfile() {
+  const { data, error } = await supabase
+    .from("profile")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw error;
+  return data || {
+    id: 1,
+    name: "Grish Pradhan",
+    role: "Cybersecurity · Forensics · Systems",
+    bio: "I build practical tools and secure systems across cybersecurity, forensics, and software.",
+    location: "Lalitpur, Nepal",
+    email: "",
+    github: "https://github.com/Grish-Pradhan",
+    linkedin: "https://www.linkedin.com/in/grish-pradhan-bb60b2279/",
+    website: ""
+  };
+}
+
+async function getProjects() {
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getMessages() {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// Public portfolio data
+app.get("/api/site-data", async (req, res) => {
+  try {
+    const [profile, projects] = await Promise.all([getProfile(), getProjects()]);
+    res.set("Cache-Control", "no-store");
+    res.json({ profile, projects });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/profile", async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    res.json(await getProfile());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/projects", async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    res.json(await getProjects());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/projects/:id", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Project not found" });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/contact", async (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: "Name, email and message are required" });
+    }
+    const { data, error } = await supabase
+      .from("messages")
+      .insert([{ name, email, message }])
+      .select()
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // Admin routes
 app.get("/api/admin/messages", checkAdminToken, async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
+    res.json(await getMessages());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/admin/dashboard", checkAdminToken, async (req, res) => {
+  try {
+    const [projects, messages, profile] = await Promise.all([getProjects(), getMessages(), getProfile()]);
+    res.set("Cache-Control", "no-store");
+    res.json({ projects, messages, profile });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -153,8 +265,7 @@ app.put("/api/admin/profile", checkAdminToken, async (req, res) => {
     if (!name || !role || !bio) return res.status(400).json({ error: "Name, role and bio required" });
     const { data, error } = await supabase
       .from("profile")
-      .update({ name, role, bio, location, email, github, linkedin, website })
-      .eq("id", 1)
+      .upsert({ id: 1, name, role, bio, location, email, github, linkedin, website }, { onConflict: "id" })
       .select()
       .single();
     if (error) return res.status(500).json({ error: error.message });
@@ -179,6 +290,9 @@ app.get("/admin/admin.js", (req, res) => {
 app.use((req, res) => {
   if (req.path.startsWith("/admin")) {
     return res.status(404).send("Admin page not found");
+  }
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "API endpoint not found" });
   }
   res.sendFile("index.html", { root: "public" });
 });

@@ -88,7 +88,7 @@ The easiest files to edit:
 - `public/app.js` — frontend behavior
 - `server.js` — backend/API/database
 
-The initial profile and projects are seeded automatically into SQLite on first startup.
+The profile, projects, and contact messages are stored in Supabase. Apply the SQL files in `supabase/` in filename order before starting the app.
 
 ## Production notes
 
@@ -101,7 +101,7 @@ Open:
 
 http://localhost:3000/admin
 
-Use the `ADMIN_TOKEN` value from `docker-compose.yml`.
+Use the `ADMIN_TOKEN` value from `.env`.
 
 The dashboard provides:
 
@@ -114,6 +114,19 @@ The dashboard provides:
 The token is sent to protected API endpoints using the `x-admin-token` header.
 
 For public deployment, replace the example `ADMIN_TOKEN` with a long random secret and put the application behind HTTPS.
+
+### Supabase environment
+
+Set these values in the ignored `.env` file:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-server-only-secret-key
+ADMIN_TOKEN=your-long-random-admin-token
+```
+
+Keep `SUPABASE_SECRET_KEY` server-side only. Run the latest SQL migration to remove the old public policies for admin data. If a secret key has been shared, rotate it before adding its replacement to `.env`.
 
 
 ### If the browser shows an unstyled admin page

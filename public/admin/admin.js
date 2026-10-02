@@ -1,5 +1,8 @@
 let token = sessionStorage.getItem("adminToken") || "";
 const $ = s => document.querySelector(s);
+let refreshTimer = null;
+let profileDirty = false;
+let lastDashboardSnapshot = "";
 
 async function api(path, options={}) {
   options.headers = { ...(options.headers || {}), "x-admin-token": token };
@@ -14,6 +17,11 @@ function showApp() {
   $("#loginView").classList.add("hidden");
   $("#appView").classList.remove("hidden");
   loadAll();
+  if (!refreshTimer) {
+    refreshTimer = setInterval(() => {
+      if (!document.hidden && !profileDirty && $("#projectModal").classList.contains("hidden")) loadAll();
+    }, 30000);
+  }
 }
 
 $("#loginForm").addEventListener("submit", async e => {
@@ -21,16 +29,19 @@ $("#loginForm").addEventListener("submit", async e => {
   const t = $("#tokenInput").value;
   try {
     token = t;
-    await api("/api/admin/messages");
+    await api("/api/admin/dashboard");
     sessionStorage.setItem("adminToken", token);
     showApp();
-  } catch {
+  } catch (error) {
     token = "";
-    $("#loginStatus").textContent = "Invalid admin token.";
+    $("#loginStatus").textContent = error.message === "Admin token required"
+      ? "Invalid admin token."
+      : error.message;
   }
 });
 
-$("#logout").onclick = () => {
+$("#logout").onclick = event => {
+  event.preventDefault();
   sessionStorage.removeItem("adminToken");
   token = "";
   location.reload();
@@ -48,17 +59,24 @@ document.querySelectorAll(".nav-item").forEach(btn => {
 
 async function loadAll() {
   try {
-    const [projects, messages, profile] = await Promise.all([
-      api("/api/projects"), api("/api/admin/messages"), api("/api/profile")
-    ]);
-    renderProjects(projects);
-    renderMessages(messages);
-    fillProfile(profile);
-    $("#statProjects").textContent = projects.length;
-    $("#statMessages").textContent = messages.length;
-    $("#statFeatured").textContent = projects.filter(p => p.featured).length;
+    const { projects, messages, profile } = await api("/api/admin/dashboard");
+    const snapshot = JSON.stringify({ projects, messages, profile });
+    if (snapshot !== lastDashboardSnapshot) {
+      renderProjects(projects);
+      renderMessages(messages);
+      if (!profileDirty) fillProfile(profile);
+      $("#statProjects").textContent = projects.length;
+      $("#statMessages").textContent = messages.length;
+      $("#statFeatured").textContent = projects.filter(p => p.featured).length;
+      lastDashboardSnapshot = snapshot;
+    }
   } catch (e) {
-    if (e.message === "Unauthorized") location.reload();
+    if (e.message === "Admin token required") {
+      sessionStorage.removeItem("adminToken");
+      location.reload();
+    } else {
+      console.error("Could not refresh admin dashboard:", e);
+    }
   }
 }
 
@@ -70,14 +88,21 @@ function renderProjects(projects) {
         <div><h4>${esc(p.title)} ${p.featured ? '<span class="meta"> · FEATURED</span>' : ''}</h4>
         <p>${esc(p.description)}</p><span class="meta">${esc(p.tech || "")}</span></div>
         <div class="row-actions">
-          <button class="small-btn" onclick="editProject(${p.id})">Edit</button>
-          <button class="small-btn delete" onclick="deleteProject(${p.id})">Delete</button>
+          <button class="small-btn" data-edit-project="${esc(p.id)}">Edit</button>
+          <button class="small-btn delete" data-delete-project="${esc(p.id)}">Delete</button>
         </div>
       </div>`).join("") ;
   } else {
     container.innerHTML = '<div class="panel" style="padding:25px;color:#969ba7">No projects yet.</div>';
   }
 }
+
+$("#projectsList").addEventListener("click", event => {
+  const editButton = event.target.closest("[data-edit-project]");
+  const deleteButton = event.target.closest("[data-delete-project]");
+  if (editButton) window.editProject(editButton.dataset.editProject);
+  if (deleteButton) window.deleteProject(deleteButton.dataset.deleteProject);
+});
 
 function renderMessages(messages) {
   const container = $("#messagesList");
@@ -98,12 +123,17 @@ function fillProfile(p) {
     form.elements[k].value = p[k] || "";
 }
 
+$("#profileForm").addEventListener("input", () => {
+  profileDirty = true;
+});
+
 $("#profileForm").onsubmit = async e => {
   e.preventDefault();
   const status = $("#profileStatus");
   try {
     const data = Object.fromEntries(new FormData(e.target));
     await api("/api/admin/profile", {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    profileDirty = false;
     status.textContent = "Saved.";
     setTimeout(()=>status.textContent="",2000);
     loadAll();
@@ -113,12 +143,22 @@ $("#profileForm").onsubmit = async e => {
 function openProject(p={}) {
   $("#projectModal").classList.remove("hidden");
   $("#modalTitle").textContent = p.id ? "Edit project" : "New project";
+  $("#projectStatus").textContent = "";
   const f=$("#projectForm");
   ["id","title","description","tech","url","github","image"].forEach(k=>f.elements[k].value=p[k]||"");
   f.elements.featured.checked=!!p.featured;
 }
+function closeProject() {
+  $("#projectModal").classList.add("hidden");
+}
+
 $("#newProject").onclick=()=>openProject();
-$("#closeModal").onclick=()=>$("#projectModal").classList.add("hidden");
+$("#closeModal").onclick=closeProject;
+$("#cancelModal").onclick=closeProject;
+$("[data-close-modal]").onclick=closeProject;
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeProject();
+});
 
 window.editProject=async id=>openProject(await fetch("/api/projects/"+id).then(r=>r.json()));
 window.deleteProject=async id=>{
