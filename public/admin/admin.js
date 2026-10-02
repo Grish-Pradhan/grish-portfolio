@@ -140,6 +140,6 @@ $("#projectForm").onsubmit=async e=>{
   } catch(e){$("#projectStatus").textContent=e.message;}
 };
 
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">",'"':""","'":"&#039;"}[c]));}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 
 if(token) showApp();
