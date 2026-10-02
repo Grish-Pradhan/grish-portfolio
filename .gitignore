@@ -5,3 +5,5 @@ data/
 supabase/.temp/
 *.db
 *.zip
+.vercel
+.env*
