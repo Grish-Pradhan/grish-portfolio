@@ -1,0 +1,28 @@
+{
+  "name": "grish-portfolio",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Grish Pradhan's personal portfolio - full-stack security researcher & full-stack developer",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'No build step needed for static HTML'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.0.0"
+  },
+  "main": "server.js",
+  "keywords": [
+    "portfolio",
+    "supabase",
+    "postgresql",
+    "security",
+    "full-stack"
+  ],
+  "author": "Grish Pradhan",
+  "license": "MIT",
+  "type": "commonjs"
+}
