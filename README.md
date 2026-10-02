@@ -1,142 +1,56 @@
-# Docker Portfolio
+# Grish Portfolio
 
-A full-stack personal portfolio website with:
+React portfolio and admin dashboard, built with Vite and served by a Node.js/Express API. Supabase stores the profile, projects, and contact messages.
 
-- Responsive modern frontend
-- Node.js + Express backend
-- SQLite persistent storage
-- REST API for profile, projects, and contact messages
-- Admin-protected API for managing projects/profile
-- Docker + Docker Compose
-- Persistent Docker volume
+## Development
 
-## 1. Start it
-
-From this directory:
+Install dependencies and start both the API and Vite development server:
 
 ```bash
-docker compose up -d --build
+npm install
+npm run dev
 ```
 
-The Dockerfile uses `npm install` so the project does not require a pre-generated lockfile.
+Open `http://localhost:5173`. Express runs on port `3000`; Vite proxies `/api` requests to it. The admin dashboard is at `http://localhost:5173/admin/`.
 
-Open:
-
-http://localhost:3000
-
-## 2. Stop it
+## Production build
 
 ```bash
-docker compose down
+npm run build
+npm start
 ```
 
-Your SQLite database remains in the `portfolio_data` Docker volume.
+Express serves the generated files from `dist/` on port `3000`. `start-server.bat` runs these steps on Windows. Publish the contents of `dist/` for static hosting.
 
-## 3. Change the admin token
+## Supabase setup
 
-Edit `docker-compose.yml`:
+Run `supabase/setup.sql` in the Supabase SQL Editor. It creates the tables and policies and can be rerun safely.
 
-```yaml
-environment:
-  ADMIN_TOKEN: replace-with-a-long-random-secret
-```
-
-Then recreate:
-
-```bash
-docker compose up -d --build
-```
-
-Do not use the example token in production.
-
-## 4. API
-
-Public:
-
-- `GET /api/profile`
-- `GET /api/projects`
-- `GET /api/projects/:id`
-- `POST /api/contact`
-
-Admin:
-
-- `GET /api/admin/messages`
-- `POST /api/admin/projects`
-- `PUT /api/admin/projects/:id`
-- `DELETE /api/admin/projects/:id`
-- `PUT /api/admin/profile`
-
-Admin endpoints require:
-
-```http
-x-admin-token: YOUR_ADMIN_TOKEN
-```
-
-Example:
-
-```bash
-curl http://localhost:3000/api/admin/messages \
-  -H "x-admin-token: change-this-token"
-```
-
-## 5. Customize
-
-The easiest files to edit:
-
-- `public/index.html` — page structure
-- `public/style.css` — design
-- `public/app.js` — frontend behavior
-- `server.js` — backend/API/database
-
-The profile, projects, and contact messages are stored in Supabase. Run `supabase/setup.sql` once in the Supabase SQL Editor before starting the app. It creates the tables and policies and can be rerun safely.
-
-## Production notes
-
-For public deployment, put the app behind HTTPS/reverse proxy (Nginx, Caddy, Traefik, etc.), change the admin token to a strong secret, and consider adding proper authentication/rate limiting before exposing admin APIs.
-
-
-## Admin Dashboard
-
-Open:
-
-http://localhost:3000/admin
-
-Use the `ADMIN_TOKEN` value from `.env`.
-
-The dashboard provides:
-
-- Project create/edit/delete
-- Featured project controls
-- Profile editing
-- Contact message viewer
-- Session-based admin token storage
-
-The token is sent to protected API endpoints using the `x-admin-token` header.
-
-For public deployment, replace the example `ADMIN_TOKEN` with a long random secret and put the application behind HTTPS.
-
-### Supabase environment
-
-Set these values in the ignored `.env` file:
+For local Express development, set these values in the ignored `.env` file:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-SUPABASE_SECRET_KEY=your-server-only-secret-key
-ADMIN_TOKEN=your-long-random-admin-token
+PORTFOLIO_DB_SECRET_KEY=your-server-only-secret-key
+PORTFOLIO_ADMIN_TOKEN=your-long-random-admin-token
 ```
 
-Keep `SUPABASE_SECRET_KEY` server-side only. `supabase/setup.sql` removes public write access and public message reads; server admin and contact routes use this key. If a secret key has been shared, rotate it before adding its replacement to `.env`.
+Keep the secret key and admin token server-side. Rotate any secret key that has been shared.
 
+## Static hosting and Edge Function
 
-### If the browser shows an unstyled admin page
+The static site routes API requests to the Supabase `portfolio-api` Edge Function using the public key in `public/config.js`. Deploy it from the repository root:
 
-Rebuild so Docker gets the latest admin assets:
-
-```powershell
-docker compose down
-docker compose build --no-cache
-docker compose up -d
+```bash
+npx supabase functions deploy portfolio-api --project-ref kqdrhwdidjrdbmwteuom
 ```
 
-Then hard-refresh the browser with `Ctrl+F5`.
+In Supabase Edge Function Secrets, set `PORTFOLIO_DB_SECRET_KEY` and `PORTFOLIO_ADMIN_TOKEN`. Publish the Vite build output after deployment. Never add either secret to `public/config.js`.
+
+## Source files
+
+- `client/main.jsx` — public React portfolio
+- `client/admin.jsx` — React admin dashboard
+- `public/style.css` and `public/admin/dashboard-theme.css` — page styles
+- `server.js` — Node.js API and production static server
+- `supabase/functions/portfolio-api/index.ts` — deployed Supabase API

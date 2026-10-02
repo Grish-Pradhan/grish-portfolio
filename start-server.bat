@@ -1,5 +1,5 @@
 @echo off
-:: Supabase Configuration - replace with your actual Supabase project URL
-set NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project.supabase.co
-set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-public-key
-node server.js
+cd /d "%~dp0"
+call npm run build
+if errorlevel 1 exit /b %errorlevel%
+call npm start

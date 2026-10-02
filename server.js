@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const path = require("node:path");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -8,11 +9,14 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const buildDirectory = path.join(__dirname, "dist");
 
 // Supabase configuration - connect to PostgreSQL via environment variables
 // Prefer the server-only key; public keys remain supported for existing setups.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseSecretKey = process.env.PORTFOLIO_DB_SECRET_KEY ||
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseKey = supabaseSecretKey ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.SUPABASE_PUBLISHABLE_KEY ||
@@ -69,7 +73,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
-app.use(express.static("public", {
+app.use(express.static(buildDirectory, {
   setHeaders: (res, path) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
@@ -77,7 +81,7 @@ app.use(express.static("public", {
 }));
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     status: "online",
     name: "Grish Pradhan Portfolio",
@@ -89,7 +93,7 @@ app.get("/", (req, res) => {
 // Admin token verification helper
 function checkAdminToken(req, res, next) {
   const token = req.get("x-admin-token") || "";
-  const adminToken = process.env.ADMIN_TOKEN || "change-this-to-a-secret-token";
+  const adminToken = process.env.PORTFOLIO_ADMIN_TOKEN || process.env.ADMIN_TOKEN || "change-this-to-a-secret-token";
   if (token !== adminToken) {
     return res.status(401).json({ error: "Admin token required" });
   }
@@ -278,23 +282,16 @@ app.put("/api/admin/profile", checkAdminToken, async (req, res) => {
   }
 });
 
-// Serve admin page
-app.get("/admin", (req, res) => {
-  res.sendFile("admin/index.html", { root: "public" });
-});
-app.get("/admin/admin.js", (req, res) => {
-  res.sendFile("admin/admin.js", { root: "public" });
-});
-
-// Serve main app
+// Serve the React application for non-API routes.
 app.use((req, res) => {
-  if (req.path.startsWith("/admin")) {
-    return res.status(404).send("Admin page not found");
-  }
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ error: "API endpoint not found" });
   }
-  res.sendFile("index.html", { root: "public" });
+  res.sendFile(path.join(buildDirectory, "index.html"), (error) => {
+    if (error && !res.headersSent) {
+      res.status(503).send("Application build missing. Run npm run build first.");
+    }
+  });
 });
 
 // Start server
