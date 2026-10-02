@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/grish-portfolio",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/grish-portfolio/:path*",
+      "destination": "/:path*",
+      "permanent": true
+    }
+  ]
+}

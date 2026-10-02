@@ -66,7 +66,7 @@ async function getMessages() {
 
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
-    return new Response("ok", { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   const url = new URL(request.url);
