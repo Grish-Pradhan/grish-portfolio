@@ -174,6 +174,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .project-row:hover, .message:hover { border-color: #454b57; background: var(--panel2); }
 .project-row h4, .message h4 { margin: 0 0 5px; font-size: 16px; line-height: 1.4; }
 .project-row p, .message p { margin: 0 0 8px; color: var(--muted); line-height: 1.6; }
+.visit-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(280px, 1.5fr) minmax(190px, auto); align-items: center; gap: 18px; }
+.visit-row > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.visit-facts { display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font-size: 11px; }
+.visit-time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .meta { color: var(--muted); font-size: 11px; }
 .row-actions { display: flex; flex: 0 0 auto; gap: 7px; }
 .small-btn { min-height: 34px; padding: 6px 11px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 11px; cursor: pointer; transition: border-color .18s ease, color .18s ease, background-color .18s ease; }
@@ -253,6 +257,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .intro { grid-template-columns: 1fr; }
   #dashboard .intro > div { min-height: 0; padding: 20px; }
   .project-row, .message { align-items: stretch; flex-direction: column; gap: 14px; padding: 16px; }
+  .visit-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .visit-time { text-align: left; white-space: normal; }
   .row-actions { width: 100%; }
   .section-title h3 { font-size: 21px; }
   #profile .intro { grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding: 18px 14px; }

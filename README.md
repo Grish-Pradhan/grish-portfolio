@@ -57,4 +57,4 @@ In Supabase Edge Function Secrets, set `PORTFOLIO_DB_SECRET_KEY` and `PORTFOLIO_
 
 ## Privacy analytics
 
-Visitor analytics are opt-in. With consent, the site records only the page path, visit timestamp, and referring hostname. It does not store raw IP addresses, precise location, or device fingerprints. Run `supabase/setup.sql` again to add the visits table to an existing project; visitors who decline are not tracked.
+Visitor analytics are opt-in. With consent, the site records the page path, visit timestamp, referring hostname, browser family, language, timezone, and approximate two-letter country code when the edge platform provides it. It does not store raw IP addresses, precise location, or device fingerprints. Existing visitors must accept the updated v2 notice before expanded metadata is collected; visitors who decline are not tracked.

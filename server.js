@@ -144,7 +144,7 @@ async function getMessages() {
 async function getVisits() {
   const { data, error } = await supabase
     .from("visits")
-    .select("id, path, referrer_host, consent_version, created_at")
+    .select("id, path, referrer_host, country_code, browser, language, timezone, consent_version, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error?.code === "PGRST205" || error?.code === "42P01") return [];
@@ -219,16 +219,26 @@ app.post("/api/contact", async (req, res) => {
 
 app.post("/api/analytics/visit", async (req, res) => {
   try {
-    const { path: pagePath, referrerHost = "", consentVersion } = req.body || {};
-    if (consentVersion !== "2026-10-02" || typeof pagePath !== "string" ||
+    const { path: pagePath, referrerHost = "", browser = "", language = "", timezone = "", consentVersion } = req.body || {};
+    const countryHeader = req.get("cf-ipcountry") || req.get("x-vercel-ip-country") || "";
+    const countryCode = /^[a-z]{2}$/i.test(countryHeader) ? countryHeader.toUpperCase() : "";
+    const allowedBrowsers = ["Chrome", "Firefox", "Safari", "Edge", "Other"];
+    if (consentVersion !== "2026-10-02-v2" || typeof pagePath !== "string" ||
         !pagePath.startsWith("/") || pagePath.length > 200 || /[?#]/.test(pagePath) ||
         typeof referrerHost !== "string" || referrerHost.length > 253 ||
-        (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost))) {
+        (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost)) ||
+        !allowedBrowsers.includes(browser) || typeof language !== "string" || language.length > 20 ||
+        (language && !/^[a-z0-9-]+$/i.test(language)) || typeof timezone !== "string" || timezone.length > 64 ||
+        (timezone && !/^[a-z0-9_+-]+(?:\/[a-z0-9_+-]+)*$/i.test(timezone))) {
       return res.status(400).json({ error: "Invalid consented page view" });
     }
     const { error } = await supabase.from("visits").insert([{
       path: pagePath,
       referrer_host: referrerHost.toLowerCase(),
+      country_code: countryCode,
+      browser,
+      language,
+      timezone,
       consent_version: consentVersion
     }]);
     if (error) return res.status(500).json({ error: error.message });

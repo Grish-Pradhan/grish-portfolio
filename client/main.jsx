@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+const analyticsConsentVersion = "2026-10-02-v2";
+
 function safeUrl(value) {
   try {
     const url = new URL(value, window.location.origin);
@@ -10,14 +12,31 @@ function safeUrl(value) {
   }
 }
 
+function browserFamily() {
+  const userAgent = navigator.userAgent;
+  if (/Edg\//.test(userAgent)) return "Edge";
+  if (/Firefox\//.test(userAgent)) return "Firefox";
+  if (/Chrome\//.test(userAgent)) return "Chrome";
+  if (/Safari\//.test(userAgent)) return "Safari";
+  return "Other";
+}
+
 function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
-  const [analyticsConsent, setAnalyticsConsent] = useState(() => window.localStorage.getItem("portfolioAnalyticsConsent") || "unknown");
-  const [privacyOpen, setPrivacyOpen] = useState(() => window.localStorage.getItem("portfolioAnalyticsConsent") === null);
+  const [analyticsConsent, setAnalyticsConsent] = useState(() => {
+    const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
+    if (savedChoice === `${analyticsConsentVersion}:accepted`) return "accepted";
+    if (savedChoice === `${analyticsConsentVersion}:declined`) return "declined";
+    return "unknown";
+  });
+  const [privacyOpen, setPrivacyOpen] = useState(() => {
+    const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
+    return ![`${analyticsConsentVersion}:accepted`, `${analyticsConsentVersion}:declined`].includes(savedChoice);
+  });
 
   useEffect(() => {
     let active = true;
@@ -76,7 +95,10 @@ function PortfolioApp() {
       body: JSON.stringify({
         path: window.location.pathname,
         referrerHost,
-        consentVersion: "2026-10-02"
+        browser: browserFamily(),
+        language: navigator.language.slice(0, 20),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone.slice(0, 64),
+        consentVersion: analyticsConsentVersion
       })
     }).catch((error) => console.warn("Could not record consented visit:", error));
   }, [analyticsConsent]);
@@ -107,7 +129,7 @@ function PortfolioApp() {
   }
 
   function chooseAnalyticsConsent(choice) {
-    window.localStorage.setItem("portfolioAnalyticsConsent", choice);
+    window.localStorage.setItem("portfolioAnalyticsConsent", `${analyticsConsentVersion}:${choice}`);
     setAnalyticsConsent(choice);
     setPrivacyOpen(false);
   }
@@ -224,7 +246,7 @@ function PortfolioApp() {
         <aside className="privacy-consent" role="dialog" aria-label="Privacy and analytics choices">
           <div>
             <h2>Privacy choices</h2>
-            <p>With your permission, we record the page path, visit time, and referring site hostname to show recent traffic in the admin dashboard. We do not store raw IP addresses, precise location, or device fingerprints. You can decline and still use the site.</p>
+            <p>With your permission, we record the page path, visit time, referring site, browser family, language, timezone, and approximate country when available. We do not store raw IP addresses, precise location, or device fingerprints. You can decline and still use the site.</p>
           </div>
           <div className="privacy-actions">
             <button className="button ghost" type="button" onClick={() => chooseAnalyticsConsent("declined")}>Decline</button>

@@ -66,7 +66,7 @@ async function getMessages() {
 
 async function getVisits() {
   const { data, error } = await supabase!.from("visits")
-    .select("id, path, referrer_host, consent_version, created_at")
+    .select("id, path, referrer_host, country_code, browser, language, timezone, consent_version, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error?.code === "PGRST205" || error?.code === "42P01") return [];
@@ -134,14 +134,27 @@ Deno.serve(async (request: Request) => {
       const body = await bodyJson(request);
       const pagePath = typeof body?.path === "string" ? body.path : "";
       const referrerHost = typeof body?.referrerHost === "string" ? body.referrerHost : "";
-      if (body?.consentVersion !== "2026-10-02" || !pagePath.startsWith("/") ||
+      const browser = typeof body?.browser === "string" ? body.browser : "";
+      const language = typeof body?.language === "string" ? body.language : "";
+      const timezone = typeof body?.timezone === "string" ? body.timezone : "";
+      const countryHeader = request.headers.get("cf-ipcountry") || request.headers.get("x-vercel-ip-country") || "";
+      const countryCode = /^[a-z]{2}$/i.test(countryHeader) ? countryHeader.toUpperCase() : "";
+      const allowedBrowsers = ["Chrome", "Firefox", "Safari", "Edge", "Other"];
+      if (body?.consentVersion !== "2026-10-02-v2" || !pagePath.startsWith("/") ||
           pagePath.length > 200 || /[?#]/.test(pagePath) || referrerHost.length > 253 ||
-          (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost))) {
+          (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost)) ||
+          !allowedBrowsers.includes(browser) || language.length > 20 ||
+          (language && !/^[a-z0-9-]+$/i.test(language)) || timezone.length > 64 ||
+          (timezone && !/^[a-z0-9_+-]+(?:\/[a-z0-9_+-]+)*$/i.test(timezone))) {
         return json({ error: "Invalid consented page view" }, 400);
       }
       const { error } = await supabase.from("visits").insert([{
         path: pagePath,
         referrer_host: referrerHost.toLowerCase(),
+        country_code: countryCode,
+        browser,
+        language,
+        timezone,
         consent_version: body.consentVersion
       }]);
       if (error) return json({ error: error.message }, 500);

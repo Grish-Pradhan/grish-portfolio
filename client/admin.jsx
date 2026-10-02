@@ -321,7 +321,13 @@ function AdminApp() {
               {visits.length ? visits.map((visit) => (
                 <article className="message visit-row" key={visit.id}>
                   <div><h4>{visit.path}</h4><p>{visit.referrer_host || "Direct visit"}</p></div>
-                  <div className="meta">{new Date(visit.created_at).toLocaleString()}</div>
+                  <div className="visit-facts">
+                    <span>{visit.country_code || "Country unavailable"}</span>
+                    <span>{visit.browser || "Browser unavailable"}</span>
+                    <span>{visit.language || "Language unavailable"}</span>
+                    <span>{visit.timezone || "Timezone unavailable"}</span>
+                  </div>
+                  <time className="visit-time" dateTime={visit.created_at}>{new Date(visit.created_at).toLocaleString()}</time>
                 </article>
               )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No consented visits recorded yet.</div>}
             </div>
