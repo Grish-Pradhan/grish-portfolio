@@ -1,7 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-const analyticsConsentVersion = "2026-10-02-v2";
+const analyticsConsentVersion = "2026-10-02-v3";
+const visitorBrowserMetadata = () => {
+  const userAgent = navigator.userAgent || "";
+  const browserMatch = userAgent.match(/Edg\/([\d.]+)|Firefox\/([\d.]+)|Chrome\/([\d.]+)|Version\/([\d.]+).*Safari/);
+  const browser = /Edg\//.test(userAgent) ? "Edge"
+    : /Firefox\//.test(userAgent) ? "Firefox"
+    : /Chrome\//.test(userAgent) ? "Chrome"
+    : /Safari\//.test(userAgent) ? "Safari"
+    : "Other";
+  const browserVersion = browserMatch ? (browserMatch.slice(1).find(Boolean) || "").split(".")[0] : "";
+  const platform = navigator.userAgentData?.platform || navigator.platform || userAgent;
+  const touchPoints = navigator.maxTouchPoints || 0;
+  const operatingSystem = /Android/i.test(platform) ? "Android"
+    : /iPhone|iPad|iPod/i.test(userAgent) || (/MacIntel/i.test(platform) && touchPoints > 1) ? "iOS"
+    : /Win/i.test(platform) ? "Windows"
+    : /Mac/i.test(platform) ? "macOS"
+    : /Chrome OS|CrOS/i.test(`${platform} ${userAgent}`) ? "ChromeOS"
+    : /Linux/i.test(platform) ? "Linux"
+    : "Other";
+  const deviceType = navigator.userAgentData?.mobile || /Android|iPhone|iPod|Mobile/i.test(userAgent)
+    ? "Mobile"
+    : /iPad|Tablet/i.test(userAgent) ? "Tablet" : "Desktop";
+  const cpuCores = navigator.hardwareConcurrency || 0;
+  const memory = navigator.deviceMemory || 0;
+  const screenWidth = Math.max(screen.width || 0, screen.height || 0);
+  const effectiveType = navigator.connection?.effectiveType || "unknown";
+  return {
+    browser,
+    browserVersion,
+    operatingSystem,
+    deviceType,
+    cpuBucket: cpuCores ? cpuCores <= 2 ? "1-2" : cpuCores <= 4 ? "3-4" : cpuCores <= 8 ? "5-8" : "9+" : "unknown",
+    memoryBucket: memory ? memory <= 2 ? "2GB or less" : memory <= 4 ? "4GB" : memory <= 8 ? "8GB" : "16GB+" : "unknown",
+    touchCapable: (navigator.maxTouchPoints || 0) > 0,
+    networkType: ["slow-2g", "2g", "3g", "4g"].includes(effectiveType) ? effectiveType : "unknown",
+    dataSaver: Boolean(navigator.connection?.saveData),
+    screenBucket: screenWidth <= 768 ? "compact" : screenWidth <= 1440 ? "standard" : "large",
+    pixelRatioBucket: window.devicePixelRatio <= 1 ? "1x" : window.devicePixelRatio <= 2 ? "2x" : "3x+",
+    colorDepthBucket: screen.colorDepth > 24 ? "30-bit+" : "24-bit or less"
+  };
+};
+
+function browserPrivacyOptOut() {
+  return navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" ||
+    window.doNotTrack === "1" || navigator.globalPrivacyControl === true;
+}
 
 function safeUrl(value) {
   try {
@@ -28,12 +73,14 @@ function PortfolioApp() {
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
   const [analyticsConsent, setAnalyticsConsent] = useState(() => {
+    if (browserPrivacyOptOut()) return "declined";
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     if (savedChoice === `${analyticsConsentVersion}:accepted`) return "accepted";
     if (savedChoice === `${analyticsConsentVersion}:declined`) return "declined";
     return "unknown";
   });
   const [privacyOpen, setPrivacyOpen] = useState(() => {
+    if (browserPrivacyOptOut()) return false;
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     return ![`${analyticsConsentVersion}:accepted`, `${analyticsConsentVersion}:declined`].includes(savedChoice);
   });
@@ -77,7 +124,7 @@ function PortfolioApp() {
   }, []);
 
   useEffect(() => {
-    if (analyticsConsent !== "accepted") return;
+    if (analyticsConsent !== "accepted" || browserPrivacyOptOut()) return;
     const sessionKey = `portfolioVisit:${window.location.pathname}`;
     if (window.sessionStorage.getItem(sessionKey)) return;
     window.sessionStorage.setItem(sessionKey, "recorded");
@@ -95,9 +142,9 @@ function PortfolioApp() {
       body: JSON.stringify({
         path: window.location.pathname,
         referrerHost,
-        browser: browserFamily(),
         language: navigator.language.slice(0, 20),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone.slice(0, 64),
+        ...visitorBrowserMetadata(),
         consentVersion: analyticsConsentVersion
       })
     }).catch((error) => console.warn("Could not record consented visit:", error));
@@ -129,6 +176,7 @@ function PortfolioApp() {
   }
 
   function chooseAnalyticsConsent(choice) {
+    if (choice === "accepted" && browserPrivacyOptOut()) return;
     window.localStorage.setItem("portfolioAnalyticsConsent", `${analyticsConsentVersion}:${choice}`);
     setAnalyticsConsent(choice);
     setPrivacyOpen(false);
@@ -246,11 +294,13 @@ function PortfolioApp() {
         <aside className="privacy-consent" role="dialog" aria-label="Privacy and analytics choices">
           <div>
             <h2>Privacy choices</h2>
-            <p>With your permission, we record the page path, visit time, referring site, browser family, language, timezone, and approximate country when available. We do not store raw IP addresses, precise location, or device fingerprints. You can decline and still use the site.</p>
+            {browserPrivacyOptOut()
+              ? <p>Your browser privacy signal disables analytics. No visit data will be collected.</p>
+              : <p>With your permission, we record page path, referring site, browser and OS family, device category, coarse CPU/RAM/network/screen groups, language, and timezone. We do not store raw IP addresses, exact device models, GPU details, precise location, media-device labels, or battery state. You can decline and still use the site.</p>}
           </div>
           <div className="privacy-actions">
             <button className="button ghost" type="button" onClick={() => chooseAnalyticsConsent("declined")}>Decline</button>
-            <button className="button primary" type="button" onClick={() => chooseAnalyticsConsent("accepted")}>Allow analytics</button>
+            {!browserPrivacyOptOut() && <button className="button primary" type="button" onClick={() => chooseAnalyticsConsent("accepted")}>Allow analytics</button>}
           </div>
         </aside>
       )}

@@ -42,6 +42,17 @@ create table if not exists public.visits (
   referrer_host text not null default '',
   country_code text not null default '' check (char_length(country_code) <= 2),
   browser text not null default '' check (char_length(browser) <= 32),
+  browser_version text not null default '' check (char_length(browser_version) <= 6),
+  operating_system text not null default '' check (char_length(operating_system) <= 20),
+  device_type text not null default '' check (char_length(device_type) <= 16),
+  cpu_bucket text not null default '' check (char_length(cpu_bucket) <= 8),
+  memory_bucket text not null default '' check (char_length(memory_bucket) <= 20),
+  touch_capable boolean not null default false,
+  network_type text not null default '' check (char_length(network_type) <= 12),
+  data_saver boolean not null default false,
+  screen_bucket text not null default '' check (char_length(screen_bucket) <= 12),
+  pixel_ratio_bucket text not null default '' check (char_length(pixel_ratio_bucket) <= 8),
+  color_depth_bucket text not null default '' check (char_length(color_depth_bucket) <= 16),
   language text not null default '' check (char_length(language) <= 20),
   timezone text not null default '' check (char_length(timezone) <= 64),
   consent_version text not null,
@@ -50,6 +61,17 @@ create table if not exists public.visits (
 
 alter table public.visits add column if not exists country_code text not null default '';
 alter table public.visits add column if not exists browser text not null default '';
+alter table public.visits add column if not exists browser_version text not null default '';
+alter table public.visits add column if not exists operating_system text not null default '';
+alter table public.visits add column if not exists device_type text not null default '';
+alter table public.visits add column if not exists cpu_bucket text not null default '';
+alter table public.visits add column if not exists memory_bucket text not null default '';
+alter table public.visits add column if not exists touch_capable boolean not null default false;
+alter table public.visits add column if not exists network_type text not null default '';
+alter table public.visits add column if not exists data_saver boolean not null default false;
+alter table public.visits add column if not exists screen_bucket text not null default '';
+alter table public.visits add column if not exists pixel_ratio_bucket text not null default '';
+alter table public.visits add column if not exists color_depth_bucket text not null default '';
 alter table public.visits add column if not exists language text not null default '';
 alter table public.visits add column if not exists timezone text not null default '';
 
@@ -122,7 +144,7 @@ create policy "Projects are viewable by everyone"
 
 create policy "Visitors can submit consented page views"
   on public.visits for insert to anon, authenticated
-  with check (consent_version = '2026-10-02-v2');
+  with check (consent_version = '2026-10-02-v3');
 
 revoke all privileges on table public.profile, public.projects, public.messages, public.visits
   from anon, authenticated;

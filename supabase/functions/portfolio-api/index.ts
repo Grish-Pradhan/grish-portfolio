@@ -66,7 +66,7 @@ async function getMessages() {
 
 async function getVisits() {
   const { data, error } = await supabase!.from("visits")
-    .select("id, path, referrer_host, country_code, browser, language, timezone, consent_version, created_at")
+    .select("id, path, referrer_host, country_code, browser, browser_version, operating_system, device_type, cpu_bucket, memory_bucket, touch_capable, network_type, data_saver, screen_bucket, pixel_ratio_bucket, color_depth_bucket, language, timezone, consent_version, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error?.code === "PGRST205" || error?.code === "42P01") return [];
@@ -135,15 +135,42 @@ Deno.serve(async (request: Request) => {
       const pagePath = typeof body?.path === "string" ? body.path : "";
       const referrerHost = typeof body?.referrerHost === "string" ? body.referrerHost : "";
       const browser = typeof body?.browser === "string" ? body.browser : "";
+      const browserVersion = typeof body?.browserVersion === "string" ? body.browserVersion : "";
+      const operatingSystem = typeof body?.operatingSystem === "string" ? body.operatingSystem : "";
+      const deviceType = typeof body?.deviceType === "string" ? body.deviceType : "";
+      const cpuBucket = typeof body?.cpuBucket === "string" ? body.cpuBucket : "";
+      const memoryBucket = typeof body?.memoryBucket === "string" ? body.memoryBucket : "";
+      const touchCapable = body?.touchCapable;
+      const networkType = typeof body?.networkType === "string" ? body.networkType : "";
+      const dataSaver = body?.dataSaver;
+      const screenBucket = typeof body?.screenBucket === "string" ? body.screenBucket : "";
+      const pixelRatioBucket = typeof body?.pixelRatioBucket === "string" ? body.pixelRatioBucket : "";
+      const colorDepthBucket = typeof body?.colorDepthBucket === "string" ? body.colorDepthBucket : "";
       const language = typeof body?.language === "string" ? body.language : "";
       const timezone = typeof body?.timezone === "string" ? body.timezone : "";
       const countryHeader = request.headers.get("cf-ipcountry") || request.headers.get("x-vercel-ip-country") || "";
       const countryCode = /^[a-z]{2}$/i.test(countryHeader) ? countryHeader.toUpperCase() : "";
-      const allowedBrowsers = ["Chrome", "Firefox", "Safari", "Edge", "Other"];
-      if (body?.consentVersion !== "2026-10-02-v2" || !pagePath.startsWith("/") ||
+      const allowed = {
+        browser: ["Chrome", "Firefox", "Safari", "Edge", "Other"],
+        operatingSystem: ["Windows", "macOS", "Linux", "ChromeOS", "iOS", "Android", "Other"],
+        deviceType: ["Desktop", "Mobile", "Tablet"],
+        cpuBucket: ["1-2", "3-4", "5-8", "9+", "unknown"],
+        memoryBucket: ["2GB or less", "4GB", "8GB", "16GB+", "unknown"],
+        networkType: ["slow-2g", "2g", "3g", "4g", "unknown"],
+        screenBucket: ["compact", "standard", "large", "unknown"],
+        pixelRatioBucket: ["1x", "2x", "3x+", "unknown"],
+        colorDepthBucket: ["24-bit or less", "30-bit+", "unknown"]
+      };
+      if (body?.consentVersion !== "2026-10-02-v3" || !pagePath.startsWith("/") ||
           pagePath.length > 200 || /[?#]/.test(pagePath) || referrerHost.length > 253 ||
           (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost)) ||
-          !allowedBrowsers.includes(browser) || language.length > 20 ||
+          !allowed.browser.includes(browser) || !/^\d{0,3}$/.test(browserVersion) ||
+          !allowed.operatingSystem.includes(operatingSystem) || !allowed.deviceType.includes(deviceType) ||
+          !allowed.cpuBucket.includes(cpuBucket) || !allowed.memoryBucket.includes(memoryBucket) ||
+          typeof touchCapable !== "boolean" || !allowed.networkType.includes(networkType) ||
+          typeof dataSaver !== "boolean" || !allowed.screenBucket.includes(screenBucket) ||
+          !allowed.pixelRatioBucket.includes(pixelRatioBucket) || !allowed.colorDepthBucket.includes(colorDepthBucket) ||
+          language.length > 20 ||
           (language && !/^[a-z0-9-]+$/i.test(language)) || timezone.length > 64 ||
           (timezone && !/^[a-z0-9_+-]+(?:\/[a-z0-9_+-]+)*$/i.test(timezone))) {
         return json({ error: "Invalid consented page view" }, 400);
@@ -153,6 +180,17 @@ Deno.serve(async (request: Request) => {
         referrer_host: referrerHost.toLowerCase(),
         country_code: countryCode,
         browser,
+        browser_version: browserVersion,
+        operating_system: operatingSystem,
+        device_type: deviceType,
+        cpu_bucket: cpuBucket,
+        memory_bucket: memoryBucket,
+        touch_capable: touchCapable,
+        network_type: networkType,
+        data_saver: dataSaver,
+        screen_bucket: screenBucket,
+        pixel_ratio_bucket: pixelRatioBucket,
+        color_depth_bucket: colorDepthBucket,
         language,
         timezone,
         consent_version: body.consentVersion
@@ -164,6 +202,13 @@ Deno.serve(async (request: Request) => {
     if (method === "GET" && path === "/api/admin/dashboard") {
       const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
       return json({ projects, messages, profile, visits });
+    }
+
+    const adminVisitPath = path.match(/^\/api\/admin\/visits\/(\d+)$/);
+    if (adminVisitPath && method === "DELETE") {
+      const { error } = await supabase.from("visits").delete().eq("id", adminVisitPath[1]);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true });
     }
 
     if (method === "GET" && path === "/api/admin/messages") {

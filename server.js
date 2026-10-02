@@ -144,7 +144,7 @@ async function getMessages() {
 async function getVisits() {
   const { data, error } = await supabase
     .from("visits")
-    .select("id, path, referrer_host, country_code, browser, language, timezone, consent_version, created_at")
+    .select("id, path, referrer_host, country_code, browser, browser_version, operating_system, device_type, cpu_bucket, memory_bucket, touch_capable, network_type, data_saver, screen_bucket, pixel_ratio_bucket, color_depth_bucket, language, timezone, consent_version, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error?.code === "PGRST205" || error?.code === "42P01") return [];
@@ -219,15 +219,36 @@ app.post("/api/contact", async (req, res) => {
 
 app.post("/api/analytics/visit", async (req, res) => {
   try {
-    const { path: pagePath, referrerHost = "", browser = "", language = "", timezone = "", consentVersion } = req.body || {};
+    const {
+      path: pagePath, referrerHost = "", browser = "", browserVersion = "", operatingSystem = "",
+      deviceType = "", cpuBucket = "unknown", memoryBucket = "unknown", touchCapable = false,
+      networkType = "unknown", dataSaver = false, screenBucket = "unknown", pixelRatioBucket = "unknown",
+      colorDepthBucket = "unknown", language = "", timezone = "", consentVersion
+    } = req.body || {};
     const countryHeader = req.get("cf-ipcountry") || req.get("x-vercel-ip-country") || "";
     const countryCode = /^[a-z]{2}$/i.test(countryHeader) ? countryHeader.toUpperCase() : "";
-    const allowedBrowsers = ["Chrome", "Firefox", "Safari", "Edge", "Other"];
-    if (consentVersion !== "2026-10-02-v2" || typeof pagePath !== "string" ||
+    const allowed = {
+      browser: ["Chrome", "Firefox", "Safari", "Edge", "Other"],
+      operatingSystem: ["Windows", "macOS", "Linux", "ChromeOS", "iOS", "Android", "Other"],
+      deviceType: ["Desktop", "Mobile", "Tablet"],
+      cpuBucket: ["1-2", "3-4", "5-8", "9+", "unknown"],
+      memoryBucket: ["2GB or less", "4GB", "8GB", "16GB+", "unknown"],
+      networkType: ["slow-2g", "2g", "3g", "4g", "unknown"],
+      screenBucket: ["compact", "standard", "large", "unknown"],
+      pixelRatioBucket: ["1x", "2x", "3x+", "unknown"],
+      colorDepthBucket: ["24-bit or less", "30-bit+", "unknown"]
+    };
+    if (consentVersion !== "2026-10-02-v3" || typeof pagePath !== "string" ||
         !pagePath.startsWith("/") || pagePath.length > 200 || /[?#]/.test(pagePath) ||
         typeof referrerHost !== "string" || referrerHost.length > 253 ||
         (referrerHost && !/^[a-z0-9.-]+$/i.test(referrerHost)) ||
-        !allowedBrowsers.includes(browser) || typeof language !== "string" || language.length > 20 ||
+        !allowed.browser.includes(browser) || !/^\d{0,3}$/.test(browserVersion) ||
+        !allowed.operatingSystem.includes(operatingSystem) || !allowed.deviceType.includes(deviceType) ||
+        !allowed.cpuBucket.includes(cpuBucket) || !allowed.memoryBucket.includes(memoryBucket) ||
+        typeof touchCapable !== "boolean" || !allowed.networkType.includes(networkType) ||
+        typeof dataSaver !== "boolean" || !allowed.screenBucket.includes(screenBucket) ||
+        !allowed.pixelRatioBucket.includes(pixelRatioBucket) || !allowed.colorDepthBucket.includes(colorDepthBucket) ||
+        typeof language !== "string" || language.length > 20 ||
         (language && !/^[a-z0-9-]+$/i.test(language)) || typeof timezone !== "string" || timezone.length > 64 ||
         (timezone && !/^[a-z0-9_+-]+(?:\/[a-z0-9_+-]+)*$/i.test(timezone))) {
       return res.status(400).json({ error: "Invalid consented page view" });
@@ -237,6 +258,17 @@ app.post("/api/analytics/visit", async (req, res) => {
       referrer_host: referrerHost.toLowerCase(),
       country_code: countryCode,
       browser,
+      browser_version: browserVersion,
+      operating_system: operatingSystem,
+      device_type: deviceType,
+      cpu_bucket: cpuBucket,
+      memory_bucket: memoryBucket,
+      touch_capable: touchCapable,
+      network_type: networkType,
+      data_saver: dataSaver,
+      screen_bucket: screenBucket,
+      pixel_ratio_bucket: pixelRatioBucket,
+      color_depth_bucket: colorDepthBucket,
       language,
       timezone,
       consent_version: consentVersion
@@ -293,6 +325,16 @@ app.get("/api/admin/dashboard", checkAdminToken, async (req, res) => {
     const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
     res.set("Cache-Control", "no-store");
     res.json({ projects, messages, profile, visits });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/admin/visits/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { error } = await supabase.from("visits").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

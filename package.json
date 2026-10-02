@@ -28,6 +28,7 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
+    "chart.js": "^4.5.1",
     "concurrently": "^10.0.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

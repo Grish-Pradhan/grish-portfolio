@@ -174,10 +174,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .project-row:hover, .message:hover { border-color: #454b57; background: var(--panel2); }
 .project-row h4, .message h4 { margin: 0 0 5px; font-size: 16px; line-height: 1.4; }
 .project-row p, .message p { margin: 0 0 8px; color: var(--muted); line-height: 1.6; }
-.visit-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(280px, 1.5fr) minmax(190px, auto); align-items: center; gap: 18px; }
+.visit-row { display: grid; grid-template-columns: minmax(130px, .8fr) minmax(280px, 1.6fr) minmax(190px, auto) auto; align-items: center; gap: 18px; }
 .visit-row > div:first-child { min-width: 0; overflow-wrap: anywhere; }
 .visit-facts { display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font-size: 11px; }
 .visit-time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.analytics-charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.analytics-card { min-width: 0; padding: 15px; border: 1px solid var(--line); background: var(--panel); }
+.analytics-card h4 { margin: 0 0 10px; color: var(--text); font-size: 13px; }
+.analytics-canvas { position: relative; height: 190px; }
+.analytics-empty { display: grid; min-height: 190px; place-items: center; margin: 0; color: var(--muted); font-size: 12px; }
 .meta { color: var(--muted); font-size: 11px; }
 .row-actions { display: flex; flex: 0 0 auto; gap: 7px; }
 .small-btn { min-height: 34px; padding: 6px 11px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 11px; cursor: pointer; transition: border-color .18s ease, color .18s ease, background-color .18s ease; }
@@ -238,6 +243,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .side-bottom { margin: 0; padding: 0 0 0 16px; border-top: 0; border-left: 1px solid var(--line); }
   .main { width: 100%; margin: 0; padding: 34px 5vw 60px; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 600px) {
@@ -247,6 +253,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .nav-item { flex: 1; padding: 8px 5px; font-size: 12px; text-align: center; }
   .side-bottom { margin-left: auto; padding-left: 12px; }
   .main { padding: 26px 18px 42px; }
+  .analytics-charts { grid-template-columns: 1fr; }
   .topbar { align-items: start; margin-bottom: 24px; padding-bottom: 18px; }
   .topbar h2 { font-size: 30px; }
   .stats { gap: 8px; }

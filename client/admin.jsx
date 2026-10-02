@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { BarController, BarElement, CategoryScale, Chart, Legend, LinearScale, Tooltip } from "chart.js";
+
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+Chart.defaults.color = "#969ba7";
 
 async function api(path, token, options = {}) {
   const headers = new Headers(options.headers || {});
@@ -18,6 +22,56 @@ async function api(path, token, options = {}) {
 const emptyProject = () => ({ id: "", title: "", description: "", tech: "", image: "", url: "", github: "", featured: false });
 const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
+const chartPalette = ["#c8ff36", "#38c9a9", "#5da9ff", "#ffbe55", "#ff7185", "#af91ff", "#55d1db", "#b1bdc9"];
+
+function VisitorChart({ title, field, visits }) {
+  const canvasRef = useRef(null);
+  const counts = visits.reduce((result, visit) => {
+    const value = visit[field];
+    const category = value === null || value === undefined || value === "" ? "Unavailable" : String(value);
+    result[category] = (result[category] || 0) + 1;
+    return result;
+  }, {});
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+  useEffect(() => {
+    if (!canvasRef.current || !entries.length) return undefined;
+    const chart = new Chart(canvasRef.current, {
+      type: "bar",
+      data: {
+        labels: entries.map(([label]) => label),
+        datasets: [{
+          data: entries.map(([, count]) => count),
+          backgroundColor: entries.map((_, index) => chartPalette[index % chartPalette.length]),
+          borderWidth: 0,
+          borderRadius: 2
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        animation: { duration: 180 },
+        plugins: {
+          legend: { display: false },
+          tooltip: { displayColors: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#969ba7", maxRotation: 35, minRotation: 0 } },
+          y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: "#969ba7" }, grid: { color: "rgba(150,155,167,.12)" } }
+        }
+      }
+    });
+    return () => chart.destroy();
+  }, [field, entries, title]);
+
+  return (
+    <article className="analytics-card">
+      <h4>{title}</h4>
+      {entries.length
+        ? <div className="analytics-canvas"><canvas ref={canvasRef} role="img" aria-label={`${title} visitor distribution`} /></div>
+        : <p className="analytics-empty">No consented visits yet.</p>}
+    </article>
+  );
+}
 
 function AdminApp() {
   const [token, setToken] = useState(sessionStorage.getItem("adminToken") || "");
@@ -199,6 +253,16 @@ function AdminApp() {
     }
   }
 
+  async function deleteVisit(id) {
+    if (!window.confirm("Delete this visitor record?")) return;
+    try {
+      await api(`/api/admin/visits/${id}`, token, { method: "DELETE" });
+      await refreshDashboard(token);
+    } catch (error) {
+      setDashboardError(error.message);
+    }
+  }
+
   useEffect(() => {
     if (!token || authenticated) return;
     let active = true;
@@ -317,17 +381,41 @@ function AdminApp() {
         {activeSection === "visits" && (
           <section id="visits" className="page active">
             <div className="section-title"><h3>Recent Consented Visits</h3></div>
+            <div className="analytics-charts">
+              <VisitorChart title="Browser" field="browser" visits={visits} />
+              <VisitorChart title="Operating system" field="operating_system" visits={visits} />
+              <VisitorChart title="Device type" field="device_type" visits={visits} />
+              <VisitorChart title="Network" field="network_type" visits={visits} />
+              <VisitorChart title="CPU cores" field="cpu_bucket" visits={visits} />
+              <VisitorChart title="Approx. memory" field="memory_bucket" visits={visits} />
+              <VisitorChart title="Screen class" field="screen_bucket" visits={visits} />
+              <VisitorChart title="Pixel ratio" field="pixel_ratio_bucket" visits={visits} />
+              <VisitorChart title="Color depth" field="color_depth_bucket" visits={visits} />
+              <VisitorChart title="Country" field="country_code" visits={visits} />
+              <VisitorChart title="Language" field="language" visits={visits} />
+              <VisitorChart title="Touch capability" field="touch_capable" visits={visits} />
+              <VisitorChart title="Data saver" field="data_saver" visits={visits} />
+            </div>
             <div className="messages">
               {visits.length ? visits.map((visit) => (
                 <article className="message visit-row" key={visit.id}>
                   <div><h4>{visit.path}</h4><p>{visit.referrer_host || "Direct visit"}</p></div>
                   <div className="visit-facts">
                     <span>{visit.country_code || "Country unavailable"}</span>
-                    <span>{visit.browser || "Browser unavailable"}</span>
+                    <span>{visit.browser ? `${visit.browser}${visit.browser_version ? ` ${visit.browser_version}` : ""}` : "Browser unavailable"}</span>
+                    <span>{visit.operating_system || "OS unavailable"}</span>
+                    <span>{visit.device_type || "Device unavailable"}</span>
+                    <span>CPU: {visit.cpu_bucket || "unknown"}</span>
+                    <span>RAM: {visit.memory_bucket || "unknown"}</span>
+                    <span>Network: {visit.network_type || "unknown"}</span>
+                    <span>Screen: {visit.screen_bucket || "unknown"}</span>
                     <span>{visit.language || "Language unavailable"}</span>
                     <span>{visit.timezone || "Timezone unavailable"}</span>
+                    {visit.touch_capable && <span>Touch enabled</span>}
+                    {visit.data_saver && <span>Data saver</span>}
                   </div>
                   <time className="visit-time" dateTime={visit.created_at}>{new Date(visit.created_at).toLocaleString()}</time>
+                  <div className="row-actions"><button className="small-btn delete" onClick={() => deleteVisit(visit.id)}>Delete</button></div>
                 </article>
               )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No consented visits recorded yet.</div>}
             </div>
