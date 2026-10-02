@@ -183,6 +183,9 @@ app.get("/api/projects/:id", async (req, res) => {
 
 app.post("/api/contact", async (req, res) => {
   try {
+    if (!supabaseSecretKey) {
+      return res.status(503).json({ error: "Contact storage requires a server-side Supabase secret key" });
+    }
     const { name, email, message } = req.body || {};
     if (!name || !email || !message) {
       return res.status(400).json({ error: "Name, email and message are required" });
@@ -278,9 +281,6 @@ app.put("/api/admin/profile", checkAdminToken, async (req, res) => {
 // Serve admin page
 app.get("/admin", (req, res) => {
   res.sendFile("admin/index.html", { root: "public" });
-});
-app.get("/admin/admin.css", (req, res) => {
-  res.sendFile("admin/admin.css", { root: "public" });
 });
 app.get("/admin/admin.js", (req, res) => {
   res.sendFile("admin/admin.js", { root: "public" });

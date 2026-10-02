@@ -88,7 +88,7 @@ The easiest files to edit:
 - `public/app.js` — frontend behavior
 - `server.js` — backend/API/database
 
-The profile, projects, and contact messages are stored in Supabase. Apply the SQL files in `supabase/` in filename order before starting the app.
+The profile, projects, and contact messages are stored in Supabase. Run `supabase/setup.sql` once in the Supabase SQL Editor before starting the app. It creates the tables and policies and can be rerun safely.
 
 ## Production notes
 
@@ -126,7 +126,7 @@ SUPABASE_SECRET_KEY=your-server-only-secret-key
 ADMIN_TOKEN=your-long-random-admin-token
 ```
 
-Keep `SUPABASE_SECRET_KEY` server-side only. Run the latest SQL migration to remove the old public policies for admin data. If a secret key has been shared, rotate it before adding its replacement to `.env`.
+Keep `SUPABASE_SECRET_KEY` server-side only. `supabase/setup.sql` removes public write access and public message reads; server admin and contact routes use this key. If a secret key has been shared, rotate it before adding its replacement to `.env`.
 
 
 ### If the browser shows an unstyled admin page
