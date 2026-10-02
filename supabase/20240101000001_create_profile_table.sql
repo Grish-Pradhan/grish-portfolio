@@ -1,15 +1,16 @@
 create table if not exists profile (
-  id integer primary key check (id = 1),
+  id integer primary key,
   name text not null,
   role text not null,
   bio text not null,
   location text default '',
   email text default '',
   github text default '',
-  linkedin text default,
-  website text default,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  linkedin text default '',
+  website text default '',
+created_at timestamptz default now(),
+   updated_at timestamptz default now()
+, constraint chk_profile_id check (id = 1)
 );
 
 -- Enable row level security

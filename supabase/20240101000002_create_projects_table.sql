@@ -5,7 +5,7 @@ create table if not exists projects (
   tech text default '',
   image text default '',
   url text default '',
-  github text default,
+  github text default '',
   featured integer default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
