@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -69,7 +70,7 @@ app.use(
 );
 
 // Parse bodies
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
@@ -128,6 +129,18 @@ async function getProjects() {
     .from("projects")
     .select("*")
     .order("created_at", { ascending: false });
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
+async function getCertifications() {
+  const { data, error } = await supabase
+    .from("certifications")
+    .select("*")
+    .order("issued_on", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
   if (error) throw error;
   return data || [];
 }
@@ -155,9 +168,9 @@ async function getVisits() {
 // Public portfolio data
 app.get("/api/site-data", async (req, res) => {
   try {
-    const [profile, projects] = await Promise.all([getProfile(), getProjects()]);
+    const [profile, projects, certifications] = await Promise.all([getProfile(), getProjects(), getCertifications()]);
     res.set("Cache-Control", "no-store");
-    res.json({ profile, projects });
+    res.json({ profile, projects, certifications });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -176,6 +189,15 @@ app.get("/api/projects", async (req, res) => {
   try {
     res.set("Cache-Control", "no-store");
     res.json(await getProjects());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/certifications", async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    res.json(await getCertifications());
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -322,9 +344,9 @@ app.delete("/api/admin/messages/:id", checkAdminToken, async (req, res) => {
 
 app.get("/api/admin/dashboard", checkAdminToken, async (req, res) => {
   try {
-    const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
+    const [projects, messages, profile, visits, certifications] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications()]);
     res.set("Cache-Control", "no-store");
-    res.json({ projects, messages, profile, visits });
+    res.json({ projects, messages, profile, visits, certifications });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -338,6 +360,65 @@ app.delete("/api/admin/visits/:id", checkAdminToken, async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+app.post("/api/admin/uploads", checkAdminToken, async (req, res) => {
+  try {
+    const { fileName = "certificate", contentType = "", data = "" } = req.body || {};
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    const match = String(data).match(/^data:([^;]+);base64,([\s\S]+)$/);
+    if (!allowedTypes.includes(contentType) || !match) {
+      return res.status(400).json({ error: "Upload a JPG, PNG, WEBP, or AVIF image." });
+    }
+    const buffer = Buffer.from(match[2], "base64");
+    if (!buffer.length || buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: "Images must be smaller than 5 MB." });
+    }
+    const extension = contentType.split("/")[1].replace("jpeg", "jpg");
+    const safeName = String(fileName).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
+    const objectPath = `certifications/${safeName}-${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from("portfolio-assets").upload(objectPath, buffer, {
+      contentType, cacheControl: "31536000", upsert: false
+    });
+    if (error) return res.status(500).json({ error: error.message });
+    const { data: publicData } = supabase.storage.from("portfolio-assets").getPublicUrl(objectPath);
+    res.status(201).json({ path: objectPath, url: publicData.publicUrl });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/admin/certifications", checkAdminToken, async (req, res) => {
+  try {
+    const { title, issuer, issued_on = null, credential_url = "", image_url = "", description = "" } = req.body || {};
+    if (!title || !issuer) return res.status(400).json({ error: "Title and issuer are required" });
+    const { data, error } = await supabase.from("certifications").insert([{
+      title: String(title).trim(), issuer: String(issuer).trim(), issued_on: issued_on || null,
+      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), description: String(description || "").trim()
+    }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/api/admin/certifications/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { title, issuer, issued_on = null, credential_url = "", image_url = "", description = "" } = req.body || {};
+    if (!title || !issuer) return res.status(400).json({ error: "Title and issuer are required" });
+    const { data, error } = await supabase.from("certifications").update({
+      title: String(title).trim(), issuer: String(issuer).trim(), issued_on: issued_on || null,
+      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), description: String(description || "").trim()
+    }).eq("id", req.params.id).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Certification not found" });
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/api/admin/certifications/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { error } = await supabase.from("certifications").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/admin/projects", checkAdminToken, async (req, res) => {

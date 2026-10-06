@@ -26,6 +26,8 @@ Express serves the generated files from `dist/` on port `3000`. `start-server.ba
 
 Run `supabase/setup.sql` in the Supabase SQL Editor. It creates the tables and policies and can be rerun safely.
 
+The same setup now creates the `certifications` table and the public `portfolio-assets` Storage bucket used for certificate artwork. Admin uploads are handled server-side with the Supabase secret; keep that secret out of `public/config.js`.
+
 For local Express development, set these values in the ignored `.env` file:
 
 ```env

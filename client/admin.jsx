@@ -21,6 +21,7 @@ async function api(path, token, options = {}) {
 
 const emptyProject = () => ({ id: "", title: "", description: "", tech: "", image: "", url: "", github: "", featured: false });
 const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
+const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: "", credential_url: "", image_url: "", description: "", imageFile: null, imageName: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
 const chartPalette = ["#c8ff36", "#38c9a9", "#5da9ff", "#ffbe55", "#ff7185", "#af91ff", "#55d1db", "#b1bdc9"];
 
@@ -81,6 +82,7 @@ function AdminApp() {
   const [projects, setProjects] = useState([]);
   const [messages, setMessages] = useState([]);
   const [visits, setVisits] = useState([]);
+  const [certifications, setCertifications] = useState([]);
   const [profile, setProfile] = useState({ name: "", role: "", bio: "", location: "", email: "", github: "", linkedin: "", website: "" });
   const [profileDirty, setProfileDirty] = useState(false);
   const [profileStatus, setProfileStatus] = useState("");
@@ -92,12 +94,16 @@ function AdminApp() {
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [messageDraft, setMessageDraft] = useState(emptyMessage);
   const [messageStatus, setMessageStatus] = useState("");
+  const [certificationModalOpen, setCertificationModalOpen] = useState(false);
+  const [certificationDraft, setCertificationDraft] = useState(emptyCertification);
+  const [certificationStatus, setCertificationStatus] = useState("");
 
   async function refreshDashboard(currentToken = token) {
     const data = await api("/api/admin/dashboard", currentToken);
     setProjects(data.projects || []);
     setMessages(data.messages || []);
     setVisits(data.visits || []);
+    setCertifications(data.certifications || []);
     if (!profileDirty) setProfile(data.profile || {});
     setDashboardError("");
     setAuthenticated(true);
@@ -107,7 +113,7 @@ function AdminApp() {
     if (!token || !authenticated) return undefined;
     let active = true;
     const refresh = async () => {
-      if (!active || document.hidden || profileDirty || projectModalOpen || messageModalOpen) return;
+      if (!active || document.hidden || profileDirty || projectModalOpen || messageModalOpen || certificationModalOpen) return;
       try {
         await refreshDashboard(token);
       } catch (error) {
@@ -127,7 +133,7 @@ function AdminApp() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [token, authenticated, profileDirty, projectModalOpen, messageModalOpen]);
+  }, [token, authenticated, profileDirty, projectModalOpen, messageModalOpen, certificationModalOpen]);
 
   async function submitLogin(event) {
     event.preventDefault();
@@ -139,6 +145,7 @@ function AdminApp() {
       setProjects(data.projects || []);
       setMessages(data.messages || []);
       setVisits(data.visits || []);
+      setCertifications(data.certifications || []);
       setProfile(data.profile || {});
       setAuthenticated(true);
     } catch (error) {
@@ -214,6 +221,67 @@ function AdminApp() {
     } catch (error) {
       setDashboardError(error.message);
     }
+  }
+
+  function openCertification(certification = emptyCertification()) {
+    setCertificationDraft({ ...emptyCertification(), ...certification, imageFile: null, imageName: "" });
+    setCertificationStatus("");
+    setCertificationModalOpen(true);
+  }
+
+  function updateCertification(event) {
+    const { name, value, files } = event.target;
+    if (name === "imageFile") {
+      const file = files?.[0] || null;
+      setCertificationDraft((current) => ({ ...current, imageFile: file, imageName: file?.name || "" }));
+      return;
+    }
+    setCertificationDraft((current) => ({ ...current, [name]: value }));
+    setCertificationStatus("");
+  }
+
+  function fileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Could not read the certificate image."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function saveCertification(event) {
+    event.preventDefault();
+    try {
+      let imageUrl = certificationDraft.image_url || "";
+      if (certificationDraft.imageFile) {
+        if (!certificationDraft.imageFile.type.startsWith("image/")) throw new Error("Choose an image file.");
+        if (certificationDraft.imageFile.size > 5 * 1024 * 1024) throw new Error("Images must be smaller than 5 MB.");
+        const data = await fileAsDataUrl(certificationDraft.imageFile);
+        const upload = await api("/api/admin/uploads", token, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName: certificationDraft.imageFile.name, contentType: certificationDraft.imageFile.type, data })
+        });
+        imageUrl = upload.url;
+      }
+      const body = { title: certificationDraft.title, issuer: certificationDraft.issuer, issued_on: certificationDraft.issued_on || null, credential_url: certificationDraft.credential_url, image_url: imageUrl, description: certificationDraft.description };
+      const isEdit = Boolean(certificationDraft.id);
+      await api(`/api/admin/certifications${isEdit ? `/${certificationDraft.id}` : ""}`, token, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      setCertificationModalOpen(false);
+      await refreshDashboard(token);
+    } catch (error) { setCertificationStatus(error.message); }
+  }
+
+  async function deleteCertification(id) {
+    if (!window.confirm("Delete this certification?")) return;
+    try {
+      await api(`/api/admin/certifications/${id}`, token, { method: "DELETE" });
+      await refreshDashboard(token);
+    } catch (error) { setDashboardError(error.message); }
   }
 
   function openMessage(message) {
@@ -299,8 +367,8 @@ function AdminApp() {
     );
   }
 
-  const sections = ["dashboard", "projects", "messages", "visits", "profile"];
-  const pageTitles = { dashboard: "Dashboard", projects: "Projects", messages: "Messages", visits: "Visitors", profile: "Profile" };
+  const sections = ["dashboard", "projects", "certifications", "messages", "visits", "profile"];
+  const pageTitles = { dashboard: "Dashboard", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
 
   return (
     <div className="app">
@@ -329,6 +397,7 @@ function AdminApp() {
               <div className="stat"><small>Total Projects</small><strong>{projects.length}</strong></div>
               <div className="stat"><small>Messages</small><strong>{messages.length}</strong></div>
               <div className="stat"><small>Featured</small><strong>{projects.filter((project) => project.featured).length}</strong></div>
+              <div className="stat"><small>Certifications</small><strong>{certifications.length}</strong></div>
               <div className="stat"><small>Recent Visits</small><strong>{visits.length}</strong></div>
             </div>
             <div className="intro">
@@ -357,6 +426,26 @@ function AdminApp() {
               )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No projects yet.</div>}
             </div>
             <button type="button" className="button primary" style={{ marginTop: 20, width: "100%" }} onClick={() => openProject()}>Add New Project</button>
+          </section>
+        )}
+
+        {activeSection === "certifications" && (
+          <section id="certifications" className="page active">
+            <div className="section-title"><div><h3>Certification library</h3><p>Build trust with verifiable credentials and supporting artwork.</p></div></div>
+            <div className="certification-admin-grid">
+              {certifications.length ? certifications.map((certification) => (
+                <article className="certification-admin-card" key={certification.id}>
+                  {certification.image_url ? <img src={certification.image_url} alt="" loading="lazy" /> : <div className="certification-placeholder">✦</div>}
+                  <div className="certification-admin-copy">
+                    <span className="meta">{certification.issued_on || "Credential"}</span>
+                    <h4>{certification.title}</h4>
+                    <p>{certification.issuer}</p>
+                    <div className="row-actions"><button className="small-btn" onClick={() => openCertification(certification)}>Edit</button><button className="small-btn delete" onClick={() => deleteCertification(certification.id)}>Delete</button></div>
+                  </div>
+                </article>
+              )) : <div className="panel" style={{ padding: 25, color: "#91a4ac" }}>No certifications yet.</div>}
+            </div>
+            <button type="button" className="button primary" style={{ marginTop: 20, width: "100%" }} onClick={() => openCertification()}>Add Certification</button>
           </section>
         )}
 
@@ -466,6 +555,25 @@ function AdminApp() {
                 <button className="small-btn" type="button" onClick={() => setProjectModalOpen(false)}>Cancel</button>
                 <button className="button primary" type="submit">Save project</button>
               </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {certificationModalOpen && (
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="certificationModalTitle" onMouseDown={(event) => { if (event.target === event.currentTarget) setCertificationModalOpen(false); }}>
+          <section className="modal-panel">
+            <div className="modal-head"><div><p className="eyebrow">CREDENTIAL EDITOR</p><h3 id="certificationModalTitle">{certificationDraft.id ? "Edit certification" : "New certification"}</h3></div><button className="modal-close" type="button" aria-label="Close certification editor" onClick={() => setCertificationModalOpen(false)}>×</button></div>
+            <form id="certificationForm" onSubmit={saveCertification}>
+              <label>Title<input name="title" value={certificationDraft.title} onChange={updateCertification} placeholder="Security+" required /></label>
+              <label>Issuer<input name="issuer" value={certificationDraft.issuer} onChange={updateCertification} placeholder="CompTIA" required /></label>
+              <label>Date issued<input name="issued_on" type="date" value={certificationDraft.issued_on || ""} onChange={updateCertification} /></label>
+              <label>Credential URL<input name="credential_url" type="url" value={certificationDraft.credential_url} onChange={updateCertification} placeholder="https://..." /></label>
+              <label className="modal-full">Certificate image<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={updateCertification} /><span className="file-help">JPG, PNG, WEBP, or AVIF · max 5 MB {certificationDraft.imageName ? `· ${certificationDraft.imageName}` : ""}</span></label>
+              <label className="modal-full">Description<textarea name="description" value={certificationDraft.description} onChange={updateCertification} rows="4" placeholder="What this credential demonstrates..." /></label>
+              {certificationDraft.image_url ? <img className="certification-preview" src={certificationDraft.image_url} alt="Current certificate" /> : null}
+              <p className="status modal-full" role="status">{certificationStatus}</p>
+              <div className="modal-actions modal-full"><button className="small-btn" type="button" onClick={() => setCertificationModalOpen(false)}>Cancel</button><button className="button primary" type="submit">Save certification</button></div>
             </form>
           </section>
         </div>

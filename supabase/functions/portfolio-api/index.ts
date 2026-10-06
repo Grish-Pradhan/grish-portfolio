@@ -58,6 +58,15 @@ async function getProjects() {
   return data || [];
 }
 
+async function getCertifications() {
+  const { data, error } = await supabase!.from("certifications").select("*")
+    .order("issued_on", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
 async function getMessages() {
   const { data, error } = await supabase!.from("messages").select("*").order("created_at", { ascending: false });
   if (error) throw error;
@@ -95,8 +104,8 @@ Deno.serve(async (request: Request) => {
 
   try {
     if (method === "GET" && path === "/api/site-data") {
-      const [profile, projects] = await Promise.all([getProfile(), getProjects()]);
-      return json({ profile, projects });
+      const [profile, projects, certifications] = await Promise.all([getProfile(), getProjects(), getCertifications()]);
+      return json({ profile, projects, certifications });
     }
 
     if (method === "GET" && path === "/api/profile") {
@@ -105,6 +114,10 @@ Deno.serve(async (request: Request) => {
 
     if (method === "GET" && path === "/api/projects") {
       return json(await getProjects());
+    }
+
+    if (method === "GET" && path === "/api/certifications") {
+      return json(await getCertifications());
     }
 
     const projectPath = path.match(/^\/api\/projects\/(\d+)$/);
@@ -200,8 +213,8 @@ Deno.serve(async (request: Request) => {
     }
 
     if (method === "GET" && path === "/api/admin/dashboard") {
-      const [projects, messages, profile, visits] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits()]);
-      return json({ projects, messages, profile, visits });
+      const [projects, messages, profile, visits, certifications] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications()]);
+      return json({ projects, messages, profile, visits, certifications });
     }
 
     const adminVisitPath = path.match(/^\/api\/admin\/visits\/(\d+)$/);
@@ -233,6 +246,55 @@ Deno.serve(async (request: Request) => {
 
     if (adminMessagePath && method === "DELETE") {
       const { error } = await supabase.from("messages").delete().eq("id", adminMessagePath[1]);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true });
+    }
+
+    if (method === "POST" && path === "/api/admin/uploads") {
+      const body = await bodyJson(request);
+      const fileName = String(body?.fileName || "certificate");
+      const contentType = String(body?.contentType || "");
+      const rawData = String(body?.data || "");
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+      const match = rawData.match(/^data:([^;]+);base64,([\s\S]+)$/);
+      if (!allowedTypes.includes(contentType) || !match) return json({ error: "Upload a JPG, PNG, WEBP, or AVIF image." }, 400);
+      const binary = Uint8Array.from(atob(match[2]), (character) => character.charCodeAt(0));
+      if (!binary.length || binary.length > 5 * 1024 * 1024) return json({ error: "Images must be smaller than 5 MB." }, 400);
+      const extension = contentType.split("/")[1].replace("jpeg", "jpg");
+      const safeName = fileName.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
+      const objectPath = `certifications/${safeName}-${crypto.randomUUID()}.${extension}`;
+      const { error } = await supabase.storage.from("portfolio-assets").upload(objectPath, binary, { contentType, cacheControl: "31536000", upsert: false });
+      if (error) return json({ error: error.message }, 500);
+      const { data: publicData } = supabase.storage.from("portfolio-assets").getPublicUrl(objectPath);
+      return json({ path: objectPath, url: publicData.publicUrl }, 201);
+    }
+
+    if (method === "POST" && path === "/api/admin/certifications") {
+      const body = await bodyJson(request);
+      if (!body?.title || !body?.issuer) return json({ error: "Title and issuer are required" }, 400);
+      const { data, error } = await supabase.from("certifications").insert([{
+        title: String(body.title).trim(), issuer: String(body.issuer).trim(), issued_on: body.issued_on || null,
+        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), description: String(body.description || "").trim()
+      }]).select().single();
+      if (error) return json({ error: error.message }, 500);
+      return json(data, 201);
+    }
+
+    const adminCertificationPath = path.match(/^\/api\/admin\/certifications\/(\d+)$/);
+    if (adminCertificationPath && method === "PUT") {
+      const body = await bodyJson(request);
+      if (!body?.title || !body?.issuer) return json({ error: "Title and issuer are required" }, 400);
+      const { data, error } = await supabase.from("certifications").update({
+        title: String(body.title).trim(), issuer: String(body.issuer).trim(), issued_on: body.issued_on || null,
+        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), description: String(body.description || "").trim()
+      }).eq("id", adminCertificationPath[1]).select().maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (!data) return json({ error: "Certification not found" }, 404);
+      return json(data);
+    }
+
+    if (adminCertificationPath && method === "DELETE") {
+      const { error } = await supabase.from("certifications").delete().eq("id", adminCertificationPath[1]);
       if (error) return json({ error: error.message }, 500);
       return json({ success: true });
     }

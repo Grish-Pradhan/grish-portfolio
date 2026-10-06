@@ -69,6 +69,7 @@ function browserFamily() {
 function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [certifications, setCertifications] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -99,6 +100,7 @@ function PortfolioApp() {
         if (active) {
           setProfile(data.profile);
           setProjects(data.projects || []);
+          setCertifications(data.certifications || []);
           setLoadError("");
         }
       } catch (error) {
@@ -191,7 +193,7 @@ function PortfolioApp() {
         <div className="nav-meta"><span className="status-dot" /> AVAILABLE FOR SELECT PROJECTS</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
-          {["Home", "About", "Projects", "Contact"].map((item) => (
+          {["Home", "About", "Projects", "Certifications", "Contact"].map((item) => (
             <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{item}</a>
           ))}
         </nav>
@@ -270,9 +272,34 @@ function PortfolioApp() {
           </div>
         </section>
 
+        <section id="certifications" className="section certifications-section">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">03 / CREDENTIALS</p>
+              <h2>Proof of<br /><span>practice.</span></h2>
+            </div>
+            <span className="count">{certifications.length} credential{certifications.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="certifications-grid">
+            {certifications.length ? certifications.map((cert) => (
+              <article className="certification-card" key={cert.id}>
+                <div className="certificate-seal">✦</div>
+                {cert.image_url ? <img src={safeUrl(cert.image_url)} alt={`${cert.title} certificate`} loading="lazy" /> : null}
+                <div className="certificate-copy">
+                  <span className="certificate-date">{cert.issued_on || "Credential"}</span>
+                  <h3>{cert.title}</h3>
+                  <p className="certificate-issuer">{cert.issuer}</p>
+                  {cert.description ? <p>{cert.description}</p> : null}
+                  {cert.credential_url ? <a className="certificate-link" href={safeUrl(cert.credential_url)} target="_blank" rel="noreferrer">VERIFY CREDENTIAL ↗</a> : null}
+                </div>
+              </article>
+            )) : <div className="empty-state">Certifications will appear here as they are added.</div>}
+          </div>
+        </section>
+
         <section id="contact" className="section contact">
           <div>
-            <p className="eyebrow">03 / CONTACT</p>
+            <p className="eyebrow">04 / CONTACT</p>
             <h2>Let's build<br />something.</h2>
             <p className="muted">Have a project, idea, or collaboration in mind? Send a message.</p>
           </div>
