@@ -74,6 +74,28 @@ function VisitorChart({ title, field, visits }) {
   );
 }
 
+const analyticsOptions = [
+  ["browser", "Browser"], ["operating_system", "Operating system"], ["device_type", "Device type"],
+  ["network_type", "Network"], ["cpu_bucket", "CPU cores"], ["memory_bucket", "Approx. memory"],
+  ["screen_bucket", "Screen class"], ["pixel_ratio_bucket", "Pixel ratio"], ["color_depth_bucket", "Color depth"],
+  ["country_code", "Country"], ["language", "Language"], ["touch_capable", "Touch capability"], ["data_saver", "Data saver"]
+];
+
+function VisitorAnalytics({ visits }) {
+  const [selectedField, setSelectedField] = useState("browser");
+  const selectedTitle = analyticsOptions.find(([field]) => field === selectedField)?.[1] || "Browser";
+
+  return (
+    <article className="analytics-single-card">
+      <div className="analytics-toolbar">
+        <div><p className="eyebrow">VISITOR TRACKER</p><h3>{selectedTitle} distribution</h3><p>Choose a dimension to explore the same visitor dataset.</p></div>
+        <label className="analytics-select-label">View by<select value={selectedField} onChange={(event) => setSelectedField(event.target.value)}>{analyticsOptions.map(([field, title]) => <option key={field} value={field}>{title}</option>)}</select></label>
+      </div>
+      <VisitorChart title={selectedTitle} field={selectedField} visits={visits} />
+    </article>
+  );
+}
+
 function AdminApp() {
   const [token, setToken] = useState(sessionStorage.getItem("adminToken") || "");
   const [loginToken, setLoginToken] = useState("");
@@ -470,21 +492,7 @@ function AdminApp() {
         {activeSection === "visits" && (
           <section id="visits" className="page active">
             <div className="section-title"><h3>Recent Consented Visits</h3></div>
-            <div className="analytics-charts">
-              <VisitorChart title="Browser" field="browser" visits={visits} />
-              <VisitorChart title="Operating system" field="operating_system" visits={visits} />
-              <VisitorChart title="Device type" field="device_type" visits={visits} />
-              <VisitorChart title="Network" field="network_type" visits={visits} />
-              <VisitorChart title="CPU cores" field="cpu_bucket" visits={visits} />
-              <VisitorChart title="Approx. memory" field="memory_bucket" visits={visits} />
-              <VisitorChart title="Screen class" field="screen_bucket" visits={visits} />
-              <VisitorChart title="Pixel ratio" field="pixel_ratio_bucket" visits={visits} />
-              <VisitorChart title="Color depth" field="color_depth_bucket" visits={visits} />
-              <VisitorChart title="Country" field="country_code" visits={visits} />
-              <VisitorChart title="Language" field="language" visits={visits} />
-              <VisitorChart title="Touch capability" field="touch_capable" visits={visits} />
-              <VisitorChart title="Data saver" field="data_saver" visits={visits} />
-            </div>
+            <VisitorAnalytics visits={visits} />
             <div className="messages">
               {visits.length ? visits.map((visit) => (
                 <article className="message visit-row" key={visit.id}>
