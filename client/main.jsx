@@ -187,7 +187,8 @@ function PortfolioApp() {
   return (
     <>
       <header className="nav">
-        <a className="brand" href="#home"><span>◆</span> GRISH PORTFOLIO</a>
+        <a className="brand" href="#home"><span className="brand-mark">✳</span><span>GRISH PORTFOLIO</span></a>
+        <div className="nav-meta"><span className="status-dot" /> AVAILABLE FOR SELECT PROJECTS</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
           {["Home", "About", "Projects", "Contact"].map((item) => (
@@ -200,7 +201,9 @@ function PortfolioApp() {
         <section id="home" className="hero section">
           <div className="hero-copy">
             <p className="eyebrow">{profile?.role || "CYBERSECURITY · FORENSICS · SYSTEMS"}</p>
+            <div className="hero-kicker"><span>01</span><span className="kicker-line" /><span>BASED IN <b>{(profile?.location || "NEPAL").toUpperCase()}</b></span></div>
             <h1>Building things<br /><span>that matter.</span></h1>
+            <p className="role">{profile?.role || "Security researcher & full-stack developer"}</p>
             <p className="lead">{profile?.bio || loadError || "Loading profile..."}</p>
             <div className="actions">
               <a className="button primary" href="#projects">View Projects</a>
@@ -217,6 +220,8 @@ function PortfolioApp() {
                 <p>security + software + automation</p>
                 <p><b>$</b> status</p>
                 <p className="green">● available for interesting work</p>
+                <p><b>$</b> uptime</p>
+                <p className="accent">always learning / shipping</p>
               </div>
             </div>
           </div>
@@ -246,9 +251,10 @@ function PortfolioApp() {
           </div>
           <div className="projects">
             {sortedProjects.map((project, index) => (
-              <article className="project" key={project.id}>
+              <article className={`project ${project.featured ? "featured" : ""}`} key={project.id}>
                 {project.image && <img className="project-image" src={safeUrl(project.image)} alt={project.title} loading="lazy" />}
-                <div className="number">{String(index + 1).padStart(2, "0")}</div>
+                <div className="project-top"><div className="number">{String(index + 1).padStart(2, "0")}</div>{project.featured ? <span className="featured-label">FEATURED</span> : null}</div>
+                <div className="project-icon">{["↗", "⌘", "◌", "✦", "⌁"][index % 5]}</div>
                 <h3>{project.title}</h3>
                 <p>{project.description}</p>
                 <div className="tags">
