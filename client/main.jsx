@@ -74,14 +74,12 @@ function PortfolioApp() {
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
   const [analyticsConsent, setAnalyticsConsent] = useState(() => {
-    if (browserPrivacyOptOut()) return "declined";
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     if (savedChoice === `${analyticsConsentVersion}:accepted`) return "accepted";
     if (savedChoice === `${analyticsConsentVersion}:declined`) return "declined";
     return "unknown";
   });
   const [privacyOpen, setPrivacyOpen] = useState(() => {
-    if (browserPrivacyOptOut()) return false;
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     return ![`${analyticsConsentVersion}:accepted`, `${analyticsConsentVersion}:declined`].includes(savedChoice);
   });
