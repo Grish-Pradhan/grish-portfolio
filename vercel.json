@@ -1,4 +1,9 @@
 {
+  "rewrites": [
+    { "source": "/certifications", "destination": "/" },
+    { "source": "/achievements", "destination": "/" },
+    { "source": "/certificate/:id", "destination": "/" }
+  ],
   "redirects": [
     {
       "source": "/grish-portfolio",
