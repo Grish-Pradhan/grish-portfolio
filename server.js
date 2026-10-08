@@ -365,14 +365,14 @@ app.delete("/api/admin/visits/:id", checkAdminToken, async (req, res) => {
 app.post("/api/admin/uploads", checkAdminToken, async (req, res) => {
   try {
     const { fileName = "certificate", contentType = "", data = "" } = req.body || {};
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "application/pdf"];
     const match = String(data).match(/^data:([^;]+);base64,([\s\S]+)$/);
     if (!allowedTypes.includes(contentType) || !match) {
-      return res.status(400).json({ error: "Upload a JPG, PNG, WEBP, or AVIF image." });
+      return res.status(400).json({ error: "Upload a JPG, PNG, WEBP, AVIF image, or PDF document." });
     }
     const buffer = Buffer.from(match[2], "base64");
-    if (!buffer.length || buffer.length > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Images must be smaller than 5 MB." });
+    if (!buffer.length || buffer.length > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: "Uploads must be smaller than 10 MB." });
     }
     const extension = contentType.split("/")[1].replace("jpeg", "jpg");
     const safeName = String(fileName).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
@@ -388,11 +388,11 @@ app.post("/api/admin/uploads", checkAdminToken, async (req, res) => {
 
 app.post("/api/admin/certifications", checkAdminToken, async (req, res) => {
   try {
-    const { title, issuer, issued_on = null, credential_url = "", image_url = "", description = "" } = req.body || {};
+    const { title, issuer, issued_on = null, credential_url = "", image_url = "", document_url = "", description = "" } = req.body || {};
     if (!title || !issuer) return res.status(400).json({ error: "Title and issuer are required" });
     const { data, error } = await supabase.from("certifications").insert([{
       title: String(title).trim(), issuer: String(issuer).trim(), issued_on: issued_on || null,
-      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), description: String(description || "").trim()
+      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), document_url: String(document_url || "").trim(), description: String(description || "").trim()
     }]).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.status(201).json(data);
@@ -401,11 +401,11 @@ app.post("/api/admin/certifications", checkAdminToken, async (req, res) => {
 
 app.put("/api/admin/certifications/:id", checkAdminToken, async (req, res) => {
   try {
-    const { title, issuer, issued_on = null, credential_url = "", image_url = "", description = "" } = req.body || {};
+    const { title, issuer, issued_on = null, credential_url = "", image_url = "", document_url = "", description = "" } = req.body || {};
     if (!title || !issuer) return res.status(400).json({ error: "Title and issuer are required" });
     const { data, error } = await supabase.from("certifications").update({
       title: String(title).trim(), issuer: String(issuer).trim(), issued_on: issued_on || null,
-      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), description: String(description || "").trim()
+      credential_url: String(credential_url || "").trim(), image_url: String(image_url || "").trim(), document_url: String(document_url || "").trim(), description: String(description || "").trim()
     }).eq("id", req.params.id).select().maybeSingle();
     if (error) return res.status(500).json({ error: error.message });
     if (!data) return res.status(404).json({ error: "Certification not found" });

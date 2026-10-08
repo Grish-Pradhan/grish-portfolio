@@ -21,7 +21,7 @@ async function api(path, token, options = {}) {
 
 const emptyProject = () => ({ id: "", title: "", description: "", tech: "", image: "", url: "", github: "", featured: false });
 const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
-const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: "", credential_url: "", image_url: "", description: "", imageFile: null, imageName: "" });
+const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: "", credential_url: "", image_url: "", document_url: "", description: "", imageFile: null, imageName: "", documentFile: null, documentName: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
 const chartPalette = ["#c8ff36", "#38c9a9", "#5da9ff", "#ffbe55", "#ff7185", "#af91ff", "#55d1db", "#b1bdc9"];
 
@@ -253,9 +253,10 @@ function AdminApp() {
 
   function updateCertification(event) {
     const { name, value, files } = event.target;
-    if (name === "imageFile") {
+    if (name === "imageFile" || name === "documentFile") {
       const file = files?.[0] || null;
-      setCertificationDraft((current) => ({ ...current, imageFile: file, imageName: file?.name || "" }));
+      const prefix = name === "imageFile" ? "image" : "document";
+      setCertificationDraft((current) => ({ ...current, [`${prefix}File`]: file, [`${prefix}Name`]: file?.name || "" }));
       return;
     }
     setCertificationDraft((current) => ({ ...current, [name]: value }));
@@ -266,7 +267,7 @@ function AdminApp() {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("Could not read the certificate image."));
+      reader.onerror = () => reject(new Error("Could not read the selected upload."));
       reader.readAsDataURL(file);
     });
   }
@@ -275,6 +276,7 @@ function AdminApp() {
     event.preventDefault();
     try {
       let imageUrl = certificationDraft.image_url || "";
+      let documentUrl = certificationDraft.document_url || "";
       if (certificationDraft.imageFile) {
         if (!certificationDraft.imageFile.type.startsWith("image/")) throw new Error("Choose an image file.");
         if (certificationDraft.imageFile.size > 5 * 1024 * 1024) throw new Error("Images must be smaller than 5 MB.");
@@ -286,7 +288,18 @@ function AdminApp() {
         });
         imageUrl = upload.url;
       }
-      const body = { title: certificationDraft.title, issuer: certificationDraft.issuer, issued_on: certificationDraft.issued_on || null, credential_url: certificationDraft.credential_url, image_url: imageUrl, description: certificationDraft.description };
+      if (certificationDraft.documentFile) {
+        if (certificationDraft.documentFile.type !== "application/pdf") throw new Error("Choose a PDF document.");
+        if (certificationDraft.documentFile.size > 10 * 1024 * 1024) throw new Error("Documents must be smaller than 10 MB.");
+        const data = await fileAsDataUrl(certificationDraft.documentFile);
+        const upload = await api("/api/admin/uploads", token, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName: certificationDraft.documentFile.name, contentType: certificationDraft.documentFile.type, data })
+        });
+        documentUrl = upload.url;
+      }
+      const body = { title: certificationDraft.title, issuer: certificationDraft.issuer, issued_on: certificationDraft.issued_on || null, credential_url: certificationDraft.credential_url, image_url: imageUrl, document_url: documentUrl, description: certificationDraft.description };
       const isEdit = Boolean(certificationDraft.id);
       await api(`/api/admin/certifications${isEdit ? `/${certificationDraft.id}` : ""}`, token, {
         method: isEdit ? "PUT" : "POST",
@@ -462,6 +475,7 @@ function AdminApp() {
                     <span className="meta">{certification.issued_on || "Credential"}</span>
                     <h4>{certification.title}</h4>
                     <p>{certification.issuer}</p>
+                    {certification.document_url ? <a className="admin-doc-link" href={certification.document_url} target="_blank" rel="noreferrer">PDF DOCUMENT ↗</a> : null}
                     <div className="row-actions"><button className="small-btn" onClick={() => openCertification(certification)}>Edit</button><button className="small-btn delete" onClick={() => deleteCertification(certification.id)}>Delete</button></div>
                   </div>
                 </article>
@@ -578,6 +592,7 @@ function AdminApp() {
               <label>Date issued<input name="issued_on" type="date" value={certificationDraft.issued_on || ""} onChange={updateCertification} /></label>
               <label>Credential URL<input name="credential_url" type="url" value={certificationDraft.credential_url} onChange={updateCertification} placeholder="https://..." /></label>
               <label className="modal-full">Certificate image<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={updateCertification} /><span className="file-help">JPG, PNG, WEBP, or AVIF · max 5 MB {certificationDraft.imageName ? `· ${certificationDraft.imageName}` : ""}</span></label>
+              <label className="modal-full">Original PDF<input name="documentFile" type="file" accept="application/pdf" onChange={updateCertification} /><span className="file-help">PDF · max 10 MB {certificationDraft.documentName ? `· ${certificationDraft.documentName}` : ""}</span></label>
               <label className="modal-full">Description<textarea name="description" value={certificationDraft.description} onChange={updateCertification} rows="4" placeholder="What this credential demonstrates..." /></label>
               {certificationDraft.image_url ? <img className="certification-preview" src={certificationDraft.image_url} alt="Current certificate" /> : null}
               <p className="status modal-full" role="status">{certificationStatus}</p>

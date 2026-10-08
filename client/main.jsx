@@ -295,7 +295,10 @@ function PortfolioApp() {
                   <h3>{cert.title}</h3>
                   <p className="certificate-issuer">{cert.issuer}</p>
                   {cert.description ? <p>{cert.description}</p> : null}
-                  {cert.credential_url ? <a className="certificate-link" href={safeUrl(cert.credential_url)} target="_blank" rel="noreferrer">VERIFY CREDENTIAL ↗</a> : null}
+                  <div className="certificate-actions">
+                    {cert.credential_url ? <a className="certificate-link" href={safeUrl(cert.credential_url)} target="_blank" rel="noreferrer">VERIFY CREDENTIAL ↗</a> : null}
+                    {cert.document_url ? <a className="certificate-link" href={safeUrl(cert.document_url)} target="_blank" rel="noreferrer">OPEN DOCUMENT ↗</a> : null}
+                  </div>
                 </div>
               </article>
             )) : <div className="empty-state">Certifications will appear here as they are added.</div>}

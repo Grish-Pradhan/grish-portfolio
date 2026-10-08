@@ -255,11 +255,11 @@ Deno.serve(async (request: Request) => {
       const fileName = String(body?.fileName || "certificate");
       const contentType = String(body?.contentType || "");
       const rawData = String(body?.data || "");
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "application/pdf"];
       const match = rawData.match(/^data:([^;]+);base64,([\s\S]+)$/);
-      if (!allowedTypes.includes(contentType) || !match) return json({ error: "Upload a JPG, PNG, WEBP, or AVIF image." }, 400);
+      if (!allowedTypes.includes(contentType) || !match) return json({ error: "Upload a JPG, PNG, WEBP, AVIF image, or PDF document." }, 400);
       const binary = Uint8Array.from(atob(match[2]), (character) => character.charCodeAt(0));
-      if (!binary.length || binary.length > 5 * 1024 * 1024) return json({ error: "Images must be smaller than 5 MB." }, 400);
+      if (!binary.length || binary.length > 10 * 1024 * 1024) return json({ error: "Uploads must be smaller than 10 MB." }, 400);
       const extension = contentType.split("/")[1].replace("jpeg", "jpg");
       const safeName = fileName.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
       const objectPath = `certifications/${safeName}-${crypto.randomUUID()}.${extension}`;
@@ -274,7 +274,7 @@ Deno.serve(async (request: Request) => {
       if (!body?.title || !body?.issuer) return json({ error: "Title and issuer are required" }, 400);
       const { data, error } = await supabase.from("certifications").insert([{
         title: String(body.title).trim(), issuer: String(body.issuer).trim(), issued_on: body.issued_on || null,
-        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), description: String(body.description || "").trim()
+        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), document_url: String(body.document_url || "").trim(), description: String(body.description || "").trim()
       }]).select().single();
       if (error) return json({ error: error.message }, 500);
       return json(data, 201);
@@ -286,7 +286,7 @@ Deno.serve(async (request: Request) => {
       if (!body?.title || !body?.issuer) return json({ error: "Title and issuer are required" }, 400);
       const { data, error } = await supabase.from("certifications").update({
         title: String(body.title).trim(), issuer: String(body.issuer).trim(), issued_on: body.issued_on || null,
-        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), description: String(body.description || "").trim()
+        credential_url: String(body.credential_url || "").trim(), image_url: String(body.image_url || "").trim(), document_url: String(body.document_url || "").trim(), description: String(body.description || "").trim()
       }).eq("id", adminCertificationPath[1]).select().maybeSingle();
       if (error) return json({ error: error.message }, 500);
       if (!data) return json({ error: "Certification not found" }, 404);
