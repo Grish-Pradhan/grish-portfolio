@@ -37,7 +37,8 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   controls.minPolarAngle = .25;
   controls.maxPolarAngle = Math.PI * .46;
   controls.rotateSpeed = .55;
-  scene.add(new THREE.HemisphereLight("#fff4d9", "#789885", 2.5));
+  const hemisphere = new THREE.HemisphereLight("#fff4d9", "#789885", 2.5);
+  scene.add(hemisphere);
   const sun = new THREE.DirectionalLight("#ffe4b4", 3);
   sun.position.set(-15, 30, 12);
   sun.castShadow = true;
@@ -86,6 +87,18 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   }
   const sunlight = mesh(new THREE.SphereGeometry(5, 20, 16), "#fff2ce", scene, -43, 20, -48, true);
   sunlight.castShadow = false;
+  const starPositions = [];
+  for (let i = 0; i < 180; i++) {
+    const angle = i * 2.399963;
+    const radius = 48 + (i % 13) * 2;
+    starPositions.push(Math.cos(angle) * radius, 22 + (i % 29) * 1.1, Math.sin(angle) * radius);
+  }
+  const starsGeometry = new THREE.BufferGeometry();
+  starsGeometry.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
+  const starsMaterial = new THREE.PointsMaterial({ color:"#dbe9ff", size:.23, transparent:true, opacity:.8, depthWrite:false });
+  const stars = new THREE.Points(starsGeometry, starsMaterial);
+  stars.visible = false;
+  scene.add(stars);
   const clouds = [];
   for (let i = 0; i < 8; i++) {
     const cloud = new THREE.Group();
@@ -403,6 +416,21 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   };
   frame = requestAnimationFrame(tick);
   return {
+    setTheme(theme) {
+      const night = theme === "dark";
+      scene.background.set(night ? "#111d32" : "#f4d4ad");
+      scene.fog.color.copy(scene.background);
+      hemisphere.color.set(night ? "#a9c8ff" : "#fff4d9");
+      hemisphere.groundColor.set(night ? "#24364f" : "#789885");
+      hemisphere.intensity = night ? 1.1 : 2.5;
+      sun.color.set(night ? "#b6ceff" : "#ffe4b4");
+      sun.intensity = night ? 1.2 : 3;
+      sea.material.color.set(night ? "#173a53" : "#72bcb6");
+      sunlight.material.color.set(night ? "#d5e7ff" : "#fff2ce");
+      sunlight.material.emissive.set(night ? "#b4d2ff" : "#fff2ce");
+      stars.visible = night;
+      renderer.shadowMap.needsUpdate = true;
+    },
     setMode(next) { if (next === "walk") walk(); else overview(); },
     travel,
     setContent({ certifications }) {
@@ -441,6 +469,7 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
       const geometries = new Set();
       scene.traverse(object => { if (object.geometry) geometries.add(object.geometry); });
       geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose());
+      starsMaterial.dispose();
       previewTextures.forEach(texture => texture.dispose()); previewSlots.forEach(slot => slot.material.dispose());
       renderer.dispose(); renderer.domElement.remove();
     }

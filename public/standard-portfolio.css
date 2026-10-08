@@ -1,6 +1,7 @@
 /* Standard portfolio: a single scoped theme. The island and admin are independent. */
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; background: #f7f8fa; }
+:root[data-theme="dark"] body { background: #101722; }
 .standard-portfolio {
   --bg: #f7f8fa;
   --panel: #fff;
@@ -243,3 +244,25 @@ body { margin: 0; min-width: 320px; background: #f7f8fa; }
   html { scroll-behavior: auto; }
   .standard-portfolio *, .standard-portfolio *::before, .standard-portfolio *::after { animation: none !important; transition: none !important; }
 }
+
+/* The dark palette keeps the same layout and document artwork. */
+[data-theme="dark"] .standard-portfolio {
+  --bg:#101722; --panel:#182231; --text:#e6edf6; --muted:#a2b2c7;
+  --line:#304056; --accent:#91bff0; --accent2:#91bff0;
+}
+[data-theme="dark"] .standard-portfolio :is(.ghost,.menu,.nav nav.open,.project,.empty-state,.certification-card,.archive-card,.certificate-viewer,.contact form,.privacy-consent) { background:var(--panel); color:var(--text); }
+[data-theme="dark"] .standard-portfolio :is(.ghost:hover,.featured-label,.tag,.certificate-viewer-toolbar) { background:#212e40; color:var(--accent); }
+[data-theme="dark"] .standard-portfolio :is(.certificate-copy .certificate-issuer,.featured-label,.certificate-actions,.archive-card>b,.project-links) { border-color:var(--line); }
+[data-theme="dark"] .standard-portfolio :is(.certification-card>img,.archive-card>img,.archive-placeholder) { background:#212e40; }
+[data-theme="dark"] .standard-portfolio .archive-number { background:#182231ed; color:var(--muted); border-color:var(--line); }
+[data-theme="dark"] .standard-portfolio :is(.contact input,.contact textarea) { background:#131d2a; border-color:var(--line); color:var(--text); }
+[data-theme="dark"] .standard-portfolio .contact label { color:var(--muted); }
+[data-theme="dark"] .standard-portfolio :is(.contact input::placeholder,.contact textarea::placeholder) { color:#91a1b7; }
+[data-theme="dark"] .standard-portfolio .achievement-stats>div { background:var(--panel); }
+[data-theme="dark"] .standard-portfolio .empty-state { border-color:#405571; }
+[data-theme="dark"] .standard-portfolio .privacy-consent { border-color:var(--line); }
+[data-theme="dark"] .standard-portfolio .certificate-loading-shimmer { background:linear-gradient(110deg,transparent 25%,#27374b 50%,transparent 75%); background-size:200% 100%; }
+.world-preparing { min-height:100dvh; display:grid; place-content:center; gap:18px; background:#faf1df; color:#293c38; }
+[data-theme="dark"] .world-preparing { background:#111d32; color:#e5edf6; }
+.world-preparing a { color:inherit; }
+@media(max-width:780px) { .standard-portfolio .nav { gap:12px; } .standard-portfolio .brand { margin-right:auto; } [data-theme="dark"] .standard-portfolio .nav nav a[aria-current="page"] { background:#212e40; } }

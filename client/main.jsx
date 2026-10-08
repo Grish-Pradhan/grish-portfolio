@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import TechnologyArtifacts from "./TechnologyArtifacts";
+import { ThemeToggle } from "./theme";
 const PortfolioWorld = lazy(() => import("./PortfolioWorld"));
 
 const portfolioRequest = (path, options = {}) => {
@@ -248,7 +249,7 @@ function PortfolioApp() {
   const sortedProjects = [...projects].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
 
   if (route === "/" || route === "/world") {
-    return <Suspense fallback={<main style={{ minHeight: "100dvh", display: "grid", placeContent: "center", gap: 18, background: "#faf1df", color: "#293c38" }}><p role="status">Preparing the observatory…</p><a href="/portfolio">Open standard portfolio ↗</a></main>}><PortfolioWorld profile={profile} projects={sortedProjects} certifications={certifications} loading={!portfolioReady} error={loadError} sendMessage={sendMessage} formStatus={formStatus} privacyOpen={privacyOpen} onPrivacyChoice={chooseAnalyticsConsent} onOpenPrivacy={() => setPrivacyOpen(true)} privacyOptOut={browserPrivacyOptOut()} /></Suspense>;
+    return <Suspense fallback={<main className="world-preparing"><p role="status">Preparing the observatory…</p><a href="/portfolio">Open standard portfolio ↗</a></main>}><PortfolioWorld profile={profile} projects={sortedProjects} certifications={certifications} loading={!portfolioReady} error={loadError} sendMessage={sendMessage} formStatus={formStatus} privacyOpen={privacyOpen} onPrivacyChoice={chooseAnalyticsConsent} onOpenPrivacy={() => setPrivacyOpen(true)} privacyOptOut={browserPrivacyOptOut()} /></Suspense>;
   }
 
   return (
@@ -256,12 +257,13 @@ function PortfolioApp() {
       <header className="nav">
         <a className="brand" href="/portfolio"><span className="brand-mark">GP</span><span>{profile?.name || "Grish Pradhan"}<small>Security & software</small></span></a>
         <div className="nav-meta"><span className="status-dot" /> {profile?.location || "Nepal"}</div>
-        <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
           {[{ label: "Home", href: "/portfolio" }, { label: "About", href: "/about" }, { label: "Projects", href: "/projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/contact" }].map((item) => (
             <a key={item.label} href={item.href} aria-current={route === item.href || (item.href === "/certifications" && route.startsWith("/certificate/")) ? "page" : undefined} onClick={() => setMenuOpen(false)}>{item.label}</a>
           ))}
         </nav>
+        <ThemeToggle />
+        <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
       </header>
 
       <main>

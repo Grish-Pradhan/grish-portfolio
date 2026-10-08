@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ThemeToggle, useTheme } from "./theme";
 import { BarController, BarElement, CategoryScale, Chart, Legend, LinearScale, Tooltip } from "chart.js";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -32,22 +33,28 @@ const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: ""
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
 
 function VisitorChart({ title, field, visits }) {
+  const theme = useTheme();
   const canvasRef = useRef(null);
-  const counts = visits.reduce((result, visit) => {
-    const value = visit[field];
-    const category = value === null || value === undefined || value === "" ? "Unavailable" : String(value);
-    result[category] = (result[category] || 0) + 1;
-    return result;
-  }, {});
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const entries = useMemo(() => {
+    const counts = visits.reduce((result, visit) => {
+      const value = visit[field];
+      const category = value === null || value === undefined || value === "" ? "Unavailable" : String(value);
+      result[category] = (result[category] || 0) + 1;
+      return result;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  }, [visits, field]);
 
   useEffect(() => {
     if (!canvasRef.current || !entries.length) return undefined;
     const context = canvasRef.current.getContext("2d");
-    const fill = context.createLinearGradient(0, 0, 0, 330);
-    fill.addColorStop(0, "rgba(143,232,225,.95)");
-    fill.addColorStop(.55, "rgba(93,169,255,.82)");
-    fill.addColorStop(1, "rgba(243,181,98,.35)");
+    if (!context) return undefined;
+    const palette = getComputedStyle(document.documentElement);
+    const text = palette.getPropertyValue("--muted").trim();
+    const grid = palette.getPropertyValue("--line").trim();
+    const fill = context.createLinearGradient(0, 0, 450, 0);
+    fill.addColorStop(0, theme === "dark" ? "#659bd9" : "#245d9e");
+    fill.addColorStop(1, theme === "dark" ? "#9ac5ee" : "#6699cc");
     const chart = new Chart(canvasRef.current, {
       type: "bar",
       data: {
@@ -55,30 +62,31 @@ function VisitorChart({ title, field, visits }) {
         datasets: [{
           data: entries.map(([, count]) => count),
           backgroundColor: fill,
-          hoverBackgroundColor: "#f3b562",
-          borderColor: "rgba(245,241,232,.9)",
-          borderWidth: 1,
-          borderRadius: 8,
+          hoverBackgroundColor: theme === "dark" ? "#b3d7fa" : "#193f6b",
+          borderWidth: 0,
+          borderRadius: 5,
+          maxBarThickness: 28,
           borderSkipped: false,
           barPercentage: .68,
           categoryPercentage: .72
         }]
       },
       options: {
+        indexAxis: "y",
         maintainAspectRatio: false,
-        animation: { duration: 850, easing: "easeOutQuart" },
+        animation: { duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450, easing: "easeOutQuart" },
         plugins: {
           legend: { display: false },
-          tooltip: { displayColors: false, padding: 12, cornerRadius: 10, callbacks: { label: (context) => ` ${context.raw} visitor${context.raw === 1 ? "" : "s"}` } }
+          tooltip: { backgroundColor: theme === "dark" ? "#e4edf7" : "#19273b", titleColor: theme === "dark" ? "#19273b" : "#fff", bodyColor: theme === "dark" ? "#19273b" : "#fff", displayColors: false, padding: 12, cornerRadius: 6, callbacks: { label: (context) => ` ${context.raw} visitor${context.raw === 1 ? "" : "s"}` } }
         },
         scales: {
-          x: { grid: { display: false }, border: { display: false }, ticks: { color: "#b6c2d8", maxRotation: 35, minRotation: 0, font: { size: 11 } } },
-          y: { beginAtZero: true, border: { display: false }, ticks: { precision: 0, stepSize: 1, color: "#8f9eb9", font: { size: 11 } }, grid: { color: "rgba(143,232,225,.1)" } }
+          x: { beginAtZero: true, border: { display: false }, ticks: { precision: 0, color: text, font: { size: 11 } }, grid: { color: grid } },
+          y: { grid: { display: false }, border: { display: false }, ticks: { color: text, font: { size: 12 } } }
         }
       }
     });
     return () => chart.destroy();
-  }, [field, entries, title]);
+  }, [field, entries, title, theme]);
 
   return (
     <article className="analytics-card">
@@ -86,6 +94,7 @@ function VisitorChart({ title, field, visits }) {
       {entries.length
         ? <div className="analytics-canvas"><canvas ref={canvasRef} role="img" aria-label={`${title} visitor distribution`} /></div>
         : <p className="analytics-empty">No consented visits yet.</p>}
+      {entries.length > 0 && <details className="chart-data"><summary>View chart data</summary><table><thead><tr><th scope="col">{title}</th><th scope="col">Visitors</th></tr></thead><tbody>{entries.map(([label, count]) => <tr key={label}><th scope="row">{label}</th><td>{count}</td></tr>)}</tbody></table></details>}
     </article>
   );
 }
@@ -135,6 +144,30 @@ function AdminApp() {
   const [certificationModalOpen, setCertificationModalOpen] = useState(false);
   const [certificationDraft, setCertificationDraft] = useState(emptyCertification);
   const [certificationStatus, setCertificationStatus] = useState("");
+
+  // Keep keyboard navigation inside whichever editor is currently open.
+  useEffect(() => {
+    if (!projectModalOpen && !messageModalOpen && !certificationModalOpen) return;
+    const dialog = document.querySelector('.modal[role="dialog"]');
+    if (!dialog) return;
+    const previous = document.activeElement;
+    const focusable = () => [...dialog.querySelectorAll('button,a[href],input,textarea,select')].filter(element => !element.disabled && element.getClientRects().length);
+    focusable()[0]?.focus();
+    const onKeyDown = event => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setProjectModalOpen(false); setMessageModalOpen(false); setCertificationModalOpen(false);
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable(), first = items[0], last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    dialog.addEventListener("keydown", onKeyDown);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { dialog.removeEventListener("keydown", onKeyDown); document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus({ preventScroll:true }); };
+  }, [projectModalOpen, messageModalOpen, certificationModalOpen]);
 
   async function refreshDashboard(currentToken = token) {
     const data = await api("/api/admin/dashboard", currentToken);
@@ -391,6 +424,7 @@ function AdminApp() {
         setProjects(data.projects || []);
         setMessages(data.messages || []);
         setVisits(data.visits || []);
+        setCertifications(data.certifications || []);
         setProfile(data.profile || {});
         setAuthenticated(true);
       })
@@ -404,15 +438,17 @@ function AdminApp() {
   if (!authenticated) {
     return (
       <div className="login-wrap">
+        <div className="login-theme"><ThemeToggle /></div>
         <div className="login-card">
           <div className="brand">GRISH PORTFOLIO</div>
           <h1>Admin Login</h1>
           <p>Secure dashboard access</p>
           <form onSubmit={submitLogin}>
-            <input type="password" value={loginToken} onChange={(event) => setLoginToken(event.target.value)} placeholder="Enter admin token" required />
+            <label>Admin token<input type="password" value={loginToken} onChange={(event) => setLoginToken(event.target.value)} placeholder="Enter admin token" autoComplete="current-password" required /></label>
             <button type="submit" className="button">Login</button>
           </form>
           <div className="status" role="status">{loginStatus}</div>
+          <a className="back" href="/portfolio">← Back to portfolio</a>
         </div>
       </div>
     );
@@ -427,18 +463,18 @@ function AdminApp() {
         <div className="brand">◆ GRISH PORTFOLIO</div>
         <nav>
           {sections.map((section) => (
-            <button key={section} className={`nav-item ${activeSection === section ? "active" : ""}`} onClick={() => setActiveSection(section)}>
+            <button key={section} aria-current={activeSection === section ? "page" : undefined} className={`nav-item ${activeSection === section ? "active" : ""}`} onClick={() => setActiveSection(section)}>
               {pageTitles[section]}
             </button>
           ))}
         </nav>
-        <div className="side-bottom"><button type="button" onClick={logout}>Logout</button></div>
+        <div className="side-bottom"><a href="/portfolio" target="_blank" rel="noreferrer">View website ↗</a><button type="button" onClick={logout}>Log out</button></div>
       </aside>
 
       <main className="main">
         <div className="topbar">
           <div><p className="eyebrow">ADMIN DASHBOARD</p><h2>{pageTitles[activeSection]}</h2></div>
-          <span className="secure">● Secure</span>
+          <div className="topbar-actions"><span className="secure">● Admin session</span><ThemeToggle /></div>
         </div>
         {dashboardError && <p className="status" role="alert">{dashboardError}</p>}
 
@@ -452,9 +488,10 @@ function AdminApp() {
               <div className="stat"><small>Recent Visits</small><strong>{visits.length}</strong></div>
             </div>
             <div className="intro">
-              <div><div className="big-mark">◆</div><h3>Portfolio Overview</h3><p>Manage your projects, view visitor messages, and update your profile.</p></div>
-              <div><div className="big-mark">◆</div><h3>Quick Stats</h3><p>Portfolio activity refreshes automatically while this tab is open.</p></div>
+              <div><p className="eyebrow">CONTENT</p><h3>Your portfolio, up to date.</h3><p>Edit the content visitors see on the website and in the island.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("projects")}>Manage projects →</button><button className="small-btn" onClick={() => setActiveSection("certifications")}>Certificates →</button></div></div>
+              <div><p className="eyebrow">INBOX</p><h3>{messages.length ? `${messages.length} message${messages.length === 1 ? "" : "s"} in your inbox` : "Your inbox is clear."}</h3><p>Read visitor questions and collaboration requests.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("messages")}>Open messages →</button></div></div>
             </div>
+            <VisitorAnalytics visits={visits} />
           </section>
         )}
 
@@ -568,12 +605,12 @@ function AdminApp() {
                 <h3>Update Profile</h3>
                 <p>Modify your public profile information.</p>
               </div>
-              <form id="profileForm" onSubmit={saveProfile} onChange={updateProfile}>
+              <form id="profileForm" onSubmit={saveProfile}>
                 <input type="hidden" name="id" value="1" readOnly />
                 {profileFields.map((field) => field === "bio" ? (
-                  <textarea key={field} id="profileBio" name={field} value={profile[field] || ""} onChange={updateProfile} placeholder="Bio" required rows="4" />
+                  <label key={field} className="full">Biography<textarea id="profileBio" name={field} value={profile[field] || ""} onChange={updateProfile} placeholder="Bio" required rows="4" /></label>
                 ) : (
-                  <input key={field} name={field} type={field === "email" ? "email" : ["github", "linkedin", "website"].includes(field) ? "url" : "text"} value={profile[field] || ""} onChange={updateProfile} placeholder={field[0].toUpperCase() + field.slice(1)} required={["name", "role"].includes(field)} />
+                  <label key={field}>{field[0].toUpperCase() + field.slice(1)}<input name={field} type={field === "email" ? "email" : ["github", "linkedin", "website"].includes(field) ? "url" : "text"} value={profile[field] || ""} onChange={updateProfile} placeholder={field[0].toUpperCase() + field.slice(1)} required={["name", "role"].includes(field)} /></label>
                 ))}
                 <button type="submit" className="button primary">Save Changes</button>
                 <p className="status" role="status">{profileStatus}</p>

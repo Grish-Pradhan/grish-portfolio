@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./portfolio-world.css";
+import { ThemeToggle, useTheme } from "./theme";
 
 const places = [
   { id: "about", label: "About", name: "About pavilion", symbol: "01" },
@@ -61,6 +62,7 @@ function ExhibitContent({ selected, profile, projects, certifications, loading, 
 }
 
 export default function PortfolioWorld({ profile, projects, certifications, loading, error, sendMessage, formStatus, privacyOpen, onPrivacyChoice, onOpenPrivacy, privacyOptOut }) {
+  const theme = useTheme();
   const host = useRef(null);
   const scene = useRef(null);
   const markers = useRef({});
@@ -80,6 +82,7 @@ export default function PortfolioWorld({ profile, projects, certifications, load
       if (cancelled) return;
       try {
         scene.current = createWorld(host.current, { onOpen: open, onLocation: setNearby, markers: markers.current, onFailure: () => setFailed(true) });
+        scene.current.setTheme(window.portfolioTheme.getSnapshot());
         scene.current.setBlocked(blocked.current);
         setReady(true);
       } catch (error) { console.warn("3D portfolio unavailable:", error); setFailed(true); }
@@ -91,6 +94,7 @@ export default function PortfolioWorld({ profile, projects, certifications, load
     scene.current?.setBlocked(blocked.current);
   }, [entered, selected, privacyOpen]);
   useEffect(() => { if (ready) scene.current?.setContent({ certifications }); }, [ready, certifications]);
+  useEffect(() => { if (ready) scene.current?.setTheme(theme); }, [ready, theme]);
   const enter = () => { setEntered(true); setMode("overview"); scene.current?.setMode("overview"); scene.current?.focus(); };
   const changeMode = next => { setMode(next); scene.current?.setMode(next); scene.current?.focus(); };
   const visit = id => { setMode("walk"); scene.current?.travel(id); scene.current?.focus(); };
@@ -98,7 +102,7 @@ export default function PortfolioWorld({ profile, projects, certifications, load
     <div className="world-scene" ref={host} inert={!entered || Boolean(selected) || privacyOpen ? true : undefined} />
     <div className="world-vignette" aria-hidden="true" />
     <div className="world-hud" inert={selected || privacyOpen ? true : undefined}>
-      <header className="world-header"><a href="/" className="world-brand"><Compass /><span>{profile?.name || "Grish Pradhan"}<small>A PERSONAL OBSERVATORY</small></span></a><div className="world-header-links"><a href="/portfolio">Standard portfolio <span aria-hidden="true">↗</span></a><button className="world-round" type="button" aria-label="World controls and help" onClick={() => open("help")}>?</button></div></header>
+      <header className="world-header"><a href="/" className="world-brand"><Compass /><span>{profile?.name || "Grish Pradhan"}<small>A PERSONAL OBSERVATORY</small></span></a><div className="world-header-links"><a href="/portfolio">Standard portfolio <span aria-hidden="true">↗</span></a><ThemeToggle /><button className="world-round" type="button" aria-label="World controls and help" onClick={() => open("help")}>?</button></div></header>
       {!entered && <section className="world-welcome"><p className="world-kicker">CODE / CURIOSITY / CRAFT</p><h1>A little world.<br /><em>A curious mind.</em></h1><p className="world-introduction">An island for the things I build,<br />the things I learn, and what comes next.</p><p className="world-welcome-role">{profile?.role || "Security research & software development"}</p><div className="world-welcome-actions"><button type="button" className="world-button" onClick={enter} disabled={!ready || failed}>{failed ? "3D unavailable" : ready ? "Explore the island →" : "Preparing the island…"}</button><a href="/portfolio">Or take the direct route ↗</a></div><span className="world-handnote">Take a look around. There’s no wrong way.</span></section>}
       {failed && <div className="world-fallback" role="status"><h2>Take the direct route.</h2><p>Your browser couldn’t start the 3D scene. All portfolio content is still available.</p><div>{places.map(place => <a href={`/${place.id === "achievements" ? "achievements" : place.id}`} key={place.id}>{place.label} ↗</a>)}</div></div>}
       {entered && !failed && <>
