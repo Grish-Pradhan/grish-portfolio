@@ -1,0 +1,59 @@
+.certifications-section::before { display: none; }
+@media (max-width: 780px) { .nav nav { top: 100%; } }
+.hero.technology-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+  padding-block: 64px 80px;
+  min-height: calc(100svh - 82px);
+}
+.technology-hero::before { display: none; }
+.technology-hero .hero-copy { min-width: 0; }
+.technology-hero .hero-location { margin: 0 0 22px; color: var(--muted); font-size: 13px; letter-spacing: 0; }
+.technology-hero h1 { font-size: clamp(52px, 5.5vw, 78px); line-height: 1.06; letter-spacing: -.055em; color: var(--text); }
+.technology-hero h1 span { color: inherit; }
+.technology-hero .role { margin: 24px 0 0; font-size: 15px; color: var(--accent); line-height: 1.6; }
+.technology-hero .lead { margin: 18px 0 28px; font-size: 17px; line-height: 1.75; max-width: 46ch; }
+.technology-hero .hero-links { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 34px; font-size: 13px; color: var(--muted); }
+.technology-hero .hero-links a { border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+.technology-hero .hero-links a:hover { color: var(--text); border-color: var(--accent); }
+.artifact-viewer { margin: 0; width: 100%; min-width: 0; overflow: hidden; border: 1px solid rgba(154, 238, 227, .18); border-radius: 16px; background: #0b1422; box-shadow: 0 24px 70px rgba(0,0,0,.22); }
+.artifact-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 20px 24px; color: #eeeae2; font-size: 12px; border-bottom: 1px solid rgba(154,238,227,.12); }
+.artifact-heading .artifact-topic { color: #9fb0c6; }
+.artifact-stage { height: clamp(310px, 29vw, 410px); position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #1b3446 0%, #0c1828 52%, #0b1422 80%); }
+.artifact-canvas { position: absolute; inset: 0; }
+.artifact-canvas canvas { display: block; width: 100%; height: 100%; }
+.artifact-fallback { position: absolute; inset: 0; margin: auto; width: 85%; height: 85%; color: #9aeee3; pointer-events: none; }
+.artifact-coordinate { position: absolute; bottom: 18px; left: 24px; color: #a3b6c9; font-size: 10px; pointer-events: none; }
+.artifact-motion { position: absolute; bottom: 12px; right: 18px; border: 1px solid rgba(154,238,227,.2); border-radius: 6px; background: #0b1422; color: #c8d9e5; padding: 8px 10px; cursor: pointer; font-size: 11px; }
+.artifact-motion:disabled { opacity: .45; cursor: default; }
+.artifact-options { display: flex; gap: 4px; padding: 8px 18px; background: #101e2e; border-block: 1px solid rgba(154,238,227,.12); }
+.artifact-options button { flex: 1; min-width: 0; padding: 12px 6px; border: 0; border-radius: 6px; font-size: 12px; background: transparent; color: #a8bbce; cursor: pointer; transition: background .2s, color .2s; }
+.artifact-options button:hover { color: #f5f1e8; background: #1b3042; }
+.artifact-options button[aria-pressed="true"] { background: #284052; color: #b7f7ec; }
+.artifact-caption { padding: 22px 24px 24px; min-height: 170px; }
+.artifact-caption h2 { margin: 0 0 8px; color: #f5f1e8; font-size: 19px; line-height: 1.3; letter-spacing: -.025em; }
+.artifact-caption p { margin: 0; color: #b0bfd0; font-size: 13px; line-height: 1.7; max-width: 58ch; }
+.artifact-caption > span { display: block; color: #859bb2; margin-top: 14px; font-size: 11px; line-height: 1.6; }
+@media (max-width: 960px) {
+  .hero.technology-hero { grid-template-columns: minmax(0, 1fr); min-height: auto; gap: 40px; padding-block: 48px 64px; }
+  .technology-hero .hero-copy { max-width: 660px; }
+  .technology-hero h1 { font-size: clamp(46px, 8vw, 70px); }
+  .artifact-viewer { max-width: 680px; }
+  .artifact-stage { height: 380px; }
+}
+@media (max-width: 500px) {
+  .hero.technology-hero { padding-block: 40px 56px; gap: 32px; }
+  .technology-hero h1 { font-size: clamp(38px, 10vw, 50px); }
+  .technology-hero .lead { font-size: 15px; }
+  .artifact-stage { height: 300px; }
+  .artifact-heading, .artifact-caption { padding: 18px; }
+  .artifact-heading { font-size: 11px; }
+  .artifact-coordinate { left: 18px; font-size: 9px; }
+  .artifact-motion { right: 12px; font-size: 10px; }
+  .artifact-caption { min-height: 184px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .artifact-options button { transition: none; }
+}

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import TechnologyArtifacts from "./TechnologyArtifacts";
 
 const portfolioRequest = (path, options = {}) => {
   if (typeof window.portfolioApi === "function") return window.portfolioApi(path, options);
@@ -81,56 +82,6 @@ function formatCredentialDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function SignalField() {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
-    let cancelled = false;
-    let dispose = () => { cancelled = true; };
-    import("three").then((THREE) => {
-      if (cancelled) return;
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-      camera.position.z = 5.8;
-      let renderer;
-      try {
-        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
-      } catch {
-        return;
-      }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      renderer.setClearColor(0x000000, 0);
-      mount.appendChild(renderer.domElement);
-      const group = new THREE.Group();
-      const points = [];
-      for (let index = 0; index < 90; index += 1) {
-        const angle = (index / 90) * Math.PI * 2;
-        const radius = 1.1 + (index % 9) * 0.08;
-        points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, (index % 7 - 3) * 0.09));
-      }
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const nodes = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x8fe8e1, size: 0.045, transparent: true, opacity: 0.85 }));
-      group.add(nodes);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.012, 8, 96), new THREE.MeshBasicMaterial({ color: 0xf3b562, transparent: true, opacity: 0.7 }));
-      ring.rotation.x = Math.PI / 2.2;
-      group.add(ring);
-      scene.add(group);
-      const resize = () => { const width = mount.clientWidth || 1; const height = mount.clientHeight || 1; camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height, false); };
-      resize();
-      const observer = new ResizeObserver(resize);
-      observer.observe(mount);
-      let frame = 0;
-      const render = (time) => { group.rotation.z = time * 0.00008; group.rotation.y = Math.sin(time * 0.00025) * 0.12; renderer.render(scene, camera); frame = window.requestAnimationFrame(render); };
-      frame = window.requestAnimationFrame(render);
-      dispose = () => { cancelled = true; window.cancelAnimationFrame(frame); observer.disconnect(); geometry.dispose(); nodes.material.dispose(); ring.geometry.dispose(); ring.material.dispose(); renderer.dispose(); if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement); };
-    }).catch(() => {});
-    return () => dispose();
-  }, []);
-
-  return <div className="signal-field" ref={mountRef} aria-hidden="true" />;
-}
 
 function CertificateDetail({ certificate, loading }) {
   if (loading) {
@@ -298,7 +249,7 @@ function PortfolioApp() {
   return (
     <>
       <header className="nav">
-        <a className="brand" href="#home"><span className="brand-mark">✳</span><span>GRISH PORTFOLIO</span></a>
+        <a className="brand" href="/"><span className="brand-mark">✳</span><span>GRISH PORTFOLIO</span></a>
         <div className="nav-meta"><span className="status-dot" /> Available for select projects</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
@@ -310,41 +261,19 @@ function PortfolioApp() {
 
       <main>
         {route.match(/^\/certificate\//) ? <CertificateDetail loading={!portfolioReady} certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : route === "/projects" ? <ProjectsPage projects={projects} /> : route === "/about" ? <AboutPage profile={profile} certifications={certifications} projects={projects} /> : route === "/contact" ? <ContactPage profile={profile} sendMessage={sendMessage} formStatus={formStatus} /> : <>
-        <section id="home" className="hero section">
+        <section id="home" className="hero section technology-hero">
           <div className="hero-copy">
-            <p className="eyebrow">{profile?.role || "Cybersecurity · forensics · systems"}</p>
-            <div className="hero-badge"><span className="badge-spark">✦</span> Building secure digital experiences</div>
-            <div className="hero-kicker"><span>01</span><span className="kicker-line" /><span>Based in <b>{profile?.location || "Nepal"}</b></span></div>
-            <h1>Building things<br /><span>that matter.</span></h1>
+            <p className="hero-location">{profile?.name || "Grish Pradhan"} / {profile?.location || "Nepal"}</p>
+            <h1>Technology,<br />built with<br />security in mind.</h1>
             <p className="role">{profile?.role || "Security researcher & full-stack developer"}</p>
-            <p className="lead">{profile?.bio || loadError || "Loading profile..."}</p>
+            <p className="lead">{profile?.bio || loadError || "Exploring how systems work, where they break, and how to build them better."}</p>
             <div className="actions">
-              <a className="button primary" href="#projects">View Projects</a>
-              <a className="button ghost" href="#contact">Let's Talk ↗</a>
+              <a className="button primary" href="/projects">Explore projects</a>
+              <a className="button ghost" href="/contact">Get in touch</a>
             </div>
-            <div className="hero-stats" aria-label="Portfolio highlights">
-              <div><strong>24/7</strong><span>curiosity</span></div>
-              <div><strong>{projects.length}</strong><span>selected builds</span></div>
-              <div><strong>{certifications.length}</strong><span>credentials</span></div>
-            </div>
-            <a className="scroll-cue" href="#about"><span className="scroll-line" /><span>Scroll to explore</span></a>
+            <div className="hero-links"><a href="/about">About my work</a><a href="/certifications">Certifications{portfolioReady ? ` (${certifications.length})` : ""}</a></div>
           </div>
-          <div className="hero-card">
-            <SignalField />
-            <div className="terminal">
-              <div className="dots"><i /><i /><i /></div>
-              <div className="code">
-                <p><b>$</b> whoami</p>
-                <p className="accent">{(profile?.name || "grish-pradhan").toLowerCase().replace(/\s+/g, "-")}</p>
-                <p><b>$</b> cat focus.txt</p>
-                <p>security + software + automation</p>
-                <p><b>$</b> status</p>
-                <p className="green">● available for interesting work</p>
-                <p><b>$</b> uptime</p>
-                <p className="accent">always learning / shipping</p>
-              </div>
-            </div>
-          </div>
+          <TechnologyArtifacts />
         </section>
 
         <section id="about" className="section split">
