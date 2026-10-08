@@ -230,7 +230,7 @@ function PortfolioApp() {
     <>
       <header className="nav">
         <a className="brand" href="#home"><span className="brand-mark">✳</span><span>GRISH PORTFOLIO</span></a>
-        <div className="nav-meta"><span className="status-dot" /> AVAILABLE FOR SELECT PROJECTS</div>
+        <div className="nav-meta"><span className="status-dot" /> Available for select projects</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
           {[{ label: "Home", href: "/" }, { label: "About", href: "/#about" }, { label: "Projects", href: "/#projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/#contact" }].map((item) => (
@@ -243,9 +243,9 @@ function PortfolioApp() {
         {route.match(/^\/certificate\//) ? <CertificateDetail certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : <>
         <section id="home" className="hero section">
           <div className="hero-copy">
-            <p className="eyebrow">{profile?.role || "CYBERSECURITY · FORENSICS · SYSTEMS"}</p>
+            <p className="eyebrow">{profile?.role || "Cybersecurity · forensics · systems"}</p>
             <div className="hero-badge"><span className="badge-spark">✦</span> Building secure digital experiences</div>
-            <div className="hero-kicker"><span>01</span><span className="kicker-line" /><span>BASED IN <b>{(profile?.location || "NEPAL").toUpperCase()}</b></span></div>
+            <div className="hero-kicker"><span>01</span><span className="kicker-line" /><span>Based in <b>{profile?.location || "Nepal"}</b></span></div>
             <h1>Building things<br /><span>that matter.</span></h1>
             <p className="role">{profile?.role || "Security researcher & full-stack developer"}</p>
             <p className="lead">{profile?.bio || loadError || "Loading profile..."}</p>
@@ -258,7 +258,7 @@ function PortfolioApp() {
               <div><strong>{projects.length}</strong><span>selected builds</span></div>
               <div><strong>{certifications.length}</strong><span>credentials</span></div>
             </div>
-            <a className="scroll-cue" href="#about"><span className="scroll-line" /><span>SCROLL TO EXPLORE</span></a>
+            <a className="scroll-cue" href="#about"><span className="scroll-line" /><span>Scroll to explore</span></a>
           </div>
           <div className="hero-card">
             <div className="terminal">
@@ -279,7 +279,7 @@ function PortfolioApp() {
 
         <section id="about" className="section split">
           <div>
-            <p className="eyebrow">01 / ABOUT</p>
+            <p className="eyebrow">01 / About</p>
             <h2>A little about me.</h2>
           </div>
           <div className="about-copy">
@@ -294,7 +294,7 @@ function PortfolioApp() {
         <section id="projects" className="section">
           <div className="section-head">
             <div>
-              <p className="eyebrow">02 / SELECTED WORK</p>
+              <p className="eyebrow">02 / Selected work</p>
               <h2>Things I've built.</h2>
             </div>
             <span className="count">{projects.length} project{projects.length === 1 ? "" : "s"}</span>
@@ -323,7 +323,7 @@ function PortfolioApp() {
         <section id="certifications" className="section certifications-section">
           <div className="section-head">
             <div>
-              <p className="eyebrow">03 / CREDENTIALS</p>
+              <p className="eyebrow">03 / Credentials</p>
               <h2>Proof of<br /><span>practice.</span></h2>
             </div>
             <span className="count">{certifications.length} credential{certifications.length === 1 ? "" : "s"}</span>
@@ -351,7 +351,7 @@ function PortfolioApp() {
 
         <section id="contact" className="section contact">
           <div>
-            <p className="eyebrow">04 / CONTACT</p>
+              <p className="eyebrow">04 / Contact</p>
             <h2>Let's build<br />something.</h2>
             <p className="muted">Have a project, idea, or collaboration in mind? Send a message.</p>
           </div>
