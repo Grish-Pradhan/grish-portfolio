@@ -132,7 +132,10 @@ function SignalField() {
   return <div className="signal-field" ref={mountRef} aria-hidden="true" />;
 }
 
-function CertificateDetail({ certificate }) {
+function CertificateDetail({ certificate, loading }) {
+  if (loading) {
+    return <section className="detail-page section"><a className="back-link" href="/certifications">← Back to certifications</a><div className="detail-intro"><p className="eyebrow">Opening credential</p><h1>Loading<br /><span>certificate.</span></h1><p className="detail-subtitle">Fetching the verified certificate and preview.</p></div><div className="certificate-viewer certificate-viewer-loading" aria-busy="true"><div className="certificate-loading-shimmer" /><p>Preparing certificate preview…</p></div></section>;
+  }
   if (!certificate) {
     return <section className="detail-page section"><a className="back-link" href="/certifications">← Back to certifications</a><h1>Certificate not found.</h1></section>;
   }
@@ -175,6 +178,7 @@ function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  const [portfolioReady, setPortfolioReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -211,6 +215,7 @@ function PortfolioApp() {
         if (active) setLoadError("Portfolio data is temporarily unavailable.");
         console.error("Could not load portfolio data:", error);
       } finally {
+        if (active) setPortfolioReady(true);
         loading = false;
       }
     }
@@ -304,7 +309,7 @@ function PortfolioApp() {
       </header>
 
       <main>
-        {route.match(/^\/certificate\//) ? <CertificateDetail certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : route === "/projects" ? <ProjectsPage projects={projects} /> : route === "/about" ? <AboutPage profile={profile} certifications={certifications} projects={projects} /> : route === "/contact" ? <ContactPage profile={profile} sendMessage={sendMessage} formStatus={formStatus} /> : <>
+        {route.match(/^\/certificate\//) ? <CertificateDetail loading={!portfolioReady} certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : route === "/projects" ? <ProjectsPage projects={projects} /> : route === "/about" ? <AboutPage profile={profile} certifications={certifications} projects={projects} /> : route === "/contact" ? <ContactPage profile={profile} sendMessage={sendMessage} formStatus={formStatus} /> : <>
         <section id="home" className="hero section">
           <div className="hero-copy">
             <p className="eyebrow">{profile?.role || "Cybersecurity · forensics · systems"}</p>
