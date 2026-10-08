@@ -30,7 +30,6 @@ const emptyProject = () => ({ id: "", title: "", description: "", tech: "", imag
 const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
 const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: "", credential_url: "", image_url: "", document_url: "", description: "", imageFile: null, imageName: "", documentFile: null, documentName: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
-const chartPalette = ["#c8ff36", "#38c9a9", "#5da9ff", "#ffbe55", "#ff7185", "#af91ff", "#55d1db", "#b1bdc9"];
 
 function VisitorChart({ title, field, visits }) {
   const canvasRef = useRef(null);
@@ -44,27 +43,37 @@ function VisitorChart({ title, field, visits }) {
 
   useEffect(() => {
     if (!canvasRef.current || !entries.length) return undefined;
+    const context = canvasRef.current.getContext("2d");
+    const fill = context.createLinearGradient(0, 0, 0, 330);
+    fill.addColorStop(0, "rgba(143,232,225,.95)");
+    fill.addColorStop(.55, "rgba(93,169,255,.82)");
+    fill.addColorStop(1, "rgba(243,181,98,.35)");
     const chart = new Chart(canvasRef.current, {
       type: "bar",
       data: {
         labels: entries.map(([label]) => label),
         datasets: [{
           data: entries.map(([, count]) => count),
-          backgroundColor: entries.map((_, index) => chartPalette[index % chartPalette.length]),
-          borderWidth: 0,
-          borderRadius: 2
+          backgroundColor: fill,
+          hoverBackgroundColor: "#f3b562",
+          borderColor: "rgba(245,241,232,.9)",
+          borderWidth: 1,
+          borderRadius: 8,
+          borderSkipped: false,
+          barPercentage: .68,
+          categoryPercentage: .72
         }]
       },
       options: {
         maintainAspectRatio: false,
-        animation: { duration: 180 },
+        animation: { duration: 850, easing: "easeOutQuart" },
         plugins: {
           legend: { display: false },
-          tooltip: { displayColors: false }
+          tooltip: { displayColors: false, padding: 12, cornerRadius: 10, callbacks: { label: (context) => ` ${context.raw} visitor${context.raw === 1 ? "" : "s"}` } }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: "#969ba7", maxRotation: 35, minRotation: 0 } },
-          y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: "#969ba7" }, grid: { color: "rgba(150,155,167,.12)" } }
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: "#b6c2d8", maxRotation: 35, minRotation: 0, font: { size: 11 } } },
+          y: { beginAtZero: true, border: { display: false }, ticks: { precision: 0, stepSize: 1, color: "#8f9eb9", font: { size: 11 } }, grid: { color: "rgba(143,232,225,.1)" } }
         }
       }
     });
@@ -95,7 +104,7 @@ function VisitorAnalytics({ visits }) {
   return (
     <article className="analytics-single-card">
       <div className="analytics-toolbar">
-        <div><p className="eyebrow">VISITOR TRACKER</p><h3>{selectedTitle} distribution</h3><p>Choose a dimension to explore the same visitor dataset.</p></div>
+        <div><p className="eyebrow">Visitor tracker</p><h3>{selectedTitle} distribution</h3><p>Choose a dimension to explore the same visitor dataset.</p></div>
         <label className="analytics-select-label">View by<select value={selectedField} onChange={(event) => setSelectedField(event.target.value)}>{analyticsOptions.map(([field, title]) => <option key={field} value={field}>{title}</option>)}</select></label>
       </div>
       <VisitorChart title={selectedTitle} field={selectedField} visits={visits} />

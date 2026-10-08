@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 const portfolioRequest = (path, options = {}) => {
@@ -81,6 +81,57 @@ function formatCredentialDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+function SignalField() {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    let cancelled = false;
+    let dispose = () => { cancelled = true; };
+    import("three").then((THREE) => {
+      if (cancelled) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      camera.position.z = 5.8;
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
+      } catch {
+        return;
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setClearColor(0x000000, 0);
+      mount.appendChild(renderer.domElement);
+      const group = new THREE.Group();
+      const points = [];
+      for (let index = 0; index < 90; index += 1) {
+        const angle = (index / 90) * Math.PI * 2;
+        const radius = 1.1 + (index % 9) * 0.08;
+        points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius, (index % 7 - 3) * 0.09));
+      }
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const nodes = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x8fe8e1, size: 0.045, transparent: true, opacity: 0.85 }));
+      group.add(nodes);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.012, 8, 96), new THREE.MeshBasicMaterial({ color: 0xf3b562, transparent: true, opacity: 0.7 }));
+      ring.rotation.x = Math.PI / 2.2;
+      group.add(ring);
+      scene.add(group);
+      const resize = () => { const width = mount.clientWidth || 1; const height = mount.clientHeight || 1; camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height, false); };
+      resize();
+      const observer = new ResizeObserver(resize);
+      observer.observe(mount);
+      let frame = 0;
+      const render = (time) => { group.rotation.z = time * 0.00008; group.rotation.y = Math.sin(time * 0.00025) * 0.12; renderer.render(scene, camera); frame = window.requestAnimationFrame(render); };
+      frame = window.requestAnimationFrame(render);
+      dispose = () => { cancelled = true; window.cancelAnimationFrame(frame); observer.disconnect(); geometry.dispose(); nodes.material.dispose(); ring.geometry.dispose(); ring.material.dispose(); renderer.dispose(); if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement); };
+    }).catch(() => {});
+    return () => dispose();
+  }, []);
+
+  return <div className="signal-field" ref={mountRef} aria-hidden="true" />;
+}
+
 function CertificateDetail({ certificate }) {
   if (!certificate) {
     return <section className="detail-page section"><a className="back-link" href="/certifications">← Back to certifications</a><h1>Certificate not found.</h1></section>;
@@ -105,6 +156,19 @@ function CertificationsPage({ certifications }) {
 function AchievementsPage({ projects, certifications }) {
   const milestones = [...certifications].sort((a, b) => String(b.issued_on || "").localeCompare(String(a.issued_on || "")));
   return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">04 / ACHIEVEMENTS</p><h1>Momentum<br /><span>in motion.</span></h1><p className="detail-subtitle">A living timeline of shipped work, security practice, and the habits behind the progress.</p></div><div className="achievement-stats"><div><strong>{projects.length}</strong><span>projects shipped</span></div><div><strong>{certifications.length}</strong><span>credentials earned</span></div><div><strong>24/7</strong><span>learning mindset</span></div></div><div className="timeline">{milestones.map((cert, index) => <a className="timeline-item" href={`/certificate/${cert.id}`} key={cert.id}><span className="timeline-index">{String(index + 1).padStart(2, "0")}</span><span className="timeline-dot" /><div><small>{formatCredentialDate(cert.issued_on)}</small><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>OPEN ↗</b></a>)}</div></section>;
+}
+
+function ProjectsPage({ projects }) {
+  const sortedProjects = [...projects].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">02 / Selected work</p><h1>Built for<br /><span>the real world.</span></h1><p className="detail-subtitle">A focused collection of systems, interfaces, and security-minded experiments.</p></div><div className="projects standalone-projects">{sortedProjects.map((project, index) => <article className={`project ${project.featured ? "featured" : ""}`} key={project.id}>{project.image ? <img className="project-image" src={safeUrl(project.image)} alt={project.title} loading="lazy" /> : null}<div className="project-top"><div className="number">{String(index + 1).padStart(2, "0")}</div>{project.featured ? <span className="featured-label">Featured</span> : null}</div><div className="project-icon">{["↗", "⌘", "◌", "✦", "⌁"][index % 5]}</div><h3>{project.title}</h3><p>{project.description}</p><div className="tags">{(project.tech || "").split(",").filter(Boolean).map((tech) => <span className="tag" key={tech}>{tech.trim()}</span>)}</div><div className="project-links">{project.url ? <a href={safeUrl(project.url)} target="_blank" rel="noreferrer">Open project ↗</a> : null}{project.github ? <a href={safeUrl(project.github)} target="_blank" rel="noreferrer">View code ↗</a> : null}</div></article>)}</div></section>;
+}
+
+function AboutPage({ profile, certifications, projects }) {
+  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">01 / About</p><h1>Curious by<br /><span>default.</span></h1><p className="detail-subtitle">The person behind the systems: a security researcher and full-stack developer based in {profile?.location || "Nepal"}.</p></div><div className="about-page-grid"><div className="about-copy"><p>{profile?.bio || "Building useful, secure software with a bias toward learning in public."}</p></div><div className="facts"><div><small>Location</small><strong>{profile?.location || "Lalitpur, Nepal"}</strong></div><div><small>Credentials</small><strong>{certifications.length} earned</strong></div><div><small>Selected builds</small><strong>{projects.length} shipped</strong></div><div><small>Focus</small><strong>Security + software</strong></div></div></div></section>;
+}
+
+function ContactPage({ profile, sendMessage, formStatus }) {
+  return <section className="archive-page section contact-page"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">05 / Contact</p><h1>Start a<br /><span>conversation.</span></h1><p className="detail-subtitle">Have a project, security question, or collaboration in mind? Send a note and I’ll get back to you.</p></div><div className="contact contact-page-grid"><div><p className="muted">{profile?.email || "Email is available through the form."}</p><p className="muted">Prefer a quick hello? Find me on GitHub or LinkedIn below.</p></div><form onSubmit={sendMessage}><label>Name<input name="name" required placeholder="Your name" /></label><label>Email<input type="email" name="email" required placeholder="you@example.com" /></label><label>Message<textarea name="message" rows="6" required placeholder="Tell me about it..." /></label><button className="button primary" type="submit">Send message</button><p className="status" role="status">{formStatus}</p></form></div></section>;
 }
 
 function PortfolioApp() {
@@ -233,14 +297,14 @@ function PortfolioApp() {
         <div className="nav-meta"><span className="status-dot" /> Available for select projects</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
-          {[{ label: "Home", href: "/" }, { label: "About", href: "/#about" }, { label: "Projects", href: "/#projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/#contact" }].map((item) => (
+          {[{ label: "Home", href: "/" }, { label: "About", href: "/about" }, { label: "Projects", href: "/projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/contact" }].map((item) => (
             <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>
           ))}
         </nav>
       </header>
 
       <main>
-        {route.match(/^\/certificate\//) ? <CertificateDetail certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : <>
+        {route.match(/^\/certificate\//) ? <CertificateDetail certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : route === "/projects" ? <ProjectsPage projects={projects} /> : route === "/about" ? <AboutPage profile={profile} certifications={certifications} projects={projects} /> : route === "/contact" ? <ContactPage profile={profile} sendMessage={sendMessage} formStatus={formStatus} /> : <>
         <section id="home" className="hero section">
           <div className="hero-copy">
             <p className="eyebrow">{profile?.role || "Cybersecurity · forensics · systems"}</p>
@@ -261,6 +325,7 @@ function PortfolioApp() {
             <a className="scroll-cue" href="#about"><span className="scroll-line" /><span>Scroll to explore</span></a>
           </div>
           <div className="hero-card">
+            <SignalField />
             <div className="terminal">
               <div className="dots"><i /><i /><i /></div>
               <div className="code">
