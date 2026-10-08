@@ -201,6 +201,7 @@ function PortfolioApp() {
         <section id="home" className="hero section">
           <div className="hero-copy">
             <p className="eyebrow">{profile?.role || "CYBERSECURITY · FORENSICS · SYSTEMS"}</p>
+            <div className="hero-badge"><span className="badge-spark">✦</span> Building secure digital experiences</div>
             <div className="hero-kicker"><span>01</span><span className="kicker-line" /><span>BASED IN <b>{(profile?.location || "NEPAL").toUpperCase()}</b></span></div>
             <h1>Building things<br /><span>that matter.</span></h1>
             <p className="role">{profile?.role || "Security researcher & full-stack developer"}</p>
@@ -209,6 +210,12 @@ function PortfolioApp() {
               <a className="button primary" href="#projects">View Projects</a>
               <a className="button ghost" href="#contact">Let's Talk ↗</a>
             </div>
+            <div className="hero-stats" aria-label="Portfolio highlights">
+              <div><strong>24/7</strong><span>curiosity</span></div>
+              <div><strong>{projects.length}</strong><span>selected builds</span></div>
+              <div><strong>{certifications.length}</strong><span>credentials</span></div>
+            </div>
+            <a className="scroll-cue" href="#about"><span className="scroll-line" /><span>SCROLL TO EXPLORE</span></a>
           </div>
           <div className="hero-card">
             <div className="terminal">
