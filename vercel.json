@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/world", "destination": "/" },
+    { "source": "/portfolio", "destination": "/" },
     { "source": "/certifications", "destination": "/" },
     { "source": "/achievements", "destination": "/" },
     { "source": "/projects", "destination": "/" },

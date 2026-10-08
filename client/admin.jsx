@@ -418,8 +418,8 @@ function AdminApp() {
     );
   }
 
-  const sections = ["dashboard", "projects", "certifications", "messages", "visits", "profile"];
-  const pageTitles = { dashboard: "Dashboard", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
+  const sections = ["dashboard", "world", "projects", "certifications", "messages", "visits", "profile"];
+  const pageTitles = { dashboard: "Dashboard", world: "Portfolio world", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
 
   return (
     <div className="app">
@@ -455,6 +455,16 @@ function AdminApp() {
               <div><div className="big-mark">◆</div><h3>Portfolio Overview</h3><p>Manage your projects, view visitor messages, and update your profile.</p></div>
               <div><div className="big-mark">◆</div><h3>Quick Stats</h3><p>Portfolio activity refreshes automatically while this tab is open.</p></div>
             </div>
+          </section>
+        )}
+
+        {activeSection === "world" && (
+          <section className="page active world-admin">
+            <div className="world-admin-header"><div><p className="eyebrow">YOUR LIVE EXHIBITS</p><h3>A portfolio, not a second database.</h3><p>The island uses the same saved profile, projects, and certificates as your regular website. Published changes refresh in the world within 15 seconds while the visitor’s tab is open.</p></div><a className="small-btn" href="/world" target="_blank" rel="noreferrer">Preview island ↗</a></div>
+            <div className="world-admin-grid">
+              {[{ number: "01", title: "About pavilion", description: "Your name, role, biography, location, and social links.", section: "profile", action: "Edit profile" }, { number: "02", title: "Project workshop", description: `${projects.length} projects. Titles, descriptions, artwork, technology, and project links are editable here.`, section: "projects", action: "Manage projects" }, { number: "03", title: "Credential gallery", description: `${certifications.length} certificates. Manage previews, original PDFs, dates, and verification links.`, section: "certifications", action: "Manage certificates" }, { number: "04", title: "Milestone garden", description: "A timeline drawn from the certificate library, ordered by issue date.", section: "certifications", action: "Edit milestones" }, { number: "05", title: "Contact beacon", description: "The island contact form sends notes to your existing inbox.", section: "messages", action: "Open inbox" }].map(exhibit => <article key={exhibit.number}><span>{exhibit.number}</span><h4>{exhibit.title}</h4><p>{exhibit.description}</p><button className="small-btn" type="button" onClick={() => setActiveSection(exhibit.section)}>{exhibit.action} →</button></article>)}
+            </div>
+            <p className="world-admin-note">The island’s architecture and walking paths are part of the website design. This panel controls the portfolio content displayed inside it.</p>
           </section>
         )}
 

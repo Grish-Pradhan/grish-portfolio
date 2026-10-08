@@ -13,6 +13,22 @@ npm run dev
 
 Open `http://localhost:5173`. Express runs on port `3000`; Vite proxies `/api` requests to it. The admin dashboard is at `http://localhost:5173/admin/`.
 
+## Explorable portfolio
+
+The homepage (`/`, also `/world`) is a procedural Three.js island. `/portfolio` retains the standard website, and the dedicated `/about`, `/projects`, `/certifications`, `/achievements`, `/contact`, and `/certificate/:id` routes remain available.
+
+Visitors can orbit the island, switch to walking (WASD/arrows, drag to look, Q/E to turn), use touch direction buttons, and travel directly to five exhibits. Buildings and floating labels open keyboard-accessible reading panels. Certificates enlarge without cropping, with original document and verification links where available. Reduced-motion preferences disable decorative movement and travel animation. Unsupported WebGL browsers receive direct links to the standard pages.
+
+The exhibits read the existing `/api/site-data` payload; no additional database or duplicated portfolio records are used. The admin dashboard’s **Portfolio world** section links each exhibit to its existing content editor. Profile, projects, credentials, and the milestone timeline refresh from the API every 15 seconds in visible tabs. Contact notes use the existing `/api/contact` inbox. Island geometry and paths are maintained in code, not in the content editors.
+
+For a local visual preview using the configured remote Supabase API without local server secrets:
+
+```bash
+npx vite --host 127.0.0.1 --mode remote-preview
+```
+
+This mode uses the public publishable key. It reads the real portfolio; admin edits and contact submissions would also reach the real API. Use the normal `npm run dev` workflow for isolated local API development.
+
 ## Production build
 
 ```bash

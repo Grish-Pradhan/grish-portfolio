@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import TechnologyArtifacts from "./TechnologyArtifacts";
+const PortfolioWorld = lazy(() => import("./PortfolioWorld"));
 
 const portfolioRequest = (path, options = {}) => {
   if (typeof window.portfolioApi === "function") return window.portfolioApi(path, options);
-  const url = new URL(path, "https://kqdrhwdidjrdbmwteuom.supabase.co/functions/v1/portfolio-api");
+  const url = new URL("https://kqdrhwdidjrdbmwteuom.supabase.co/functions/v1/portfolio-api");
   url.searchParams.set("path", path);
   const headers = new Headers(options.headers || {});
   headers.set("apikey", "sb_publishable_Nmyw4pDaqtHNTfuYCmoA3A_aFgn8tZ3");
@@ -143,7 +144,7 @@ function PortfolioApp() {
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     return ![`${analyticsConsentVersion}:accepted`, `${analyticsConsentVersion}:declined`].includes(savedChoice);
   });
-  const [route] = useState(() => window.location.pathname);
+  const [route] = useState(() => window.location.pathname.replace(/\/+$/, "") || "/");
 
   useEffect(() => {
     let active = true;
@@ -245,6 +246,10 @@ function PortfolioApp() {
   }
 
   const sortedProjects = [...projects].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+
+  if (route === "/" || route === "/world") {
+    return <Suspense fallback={<main style={{ minHeight: "100dvh", display: "grid", placeContent: "center", gap: 18, background: "#faf1df", color: "#293c38" }}><p role="status">Preparing the observatory…</p><a href="/portfolio">Open standard portfolio ↗</a></main>}><PortfolioWorld profile={profile} projects={sortedProjects} certifications={certifications} loading={!portfolioReady} error={loadError} sendMessage={sendMessage} formStatus={formStatus} privacyOpen={privacyOpen} onPrivacyChoice={chooseAnalyticsConsent} onOpenPrivacy={() => setPrivacyOpen(true)} privacyOptOut={browserPrivacyOptOut()} /></Suspense>;
+  }
 
   return (
     <>
