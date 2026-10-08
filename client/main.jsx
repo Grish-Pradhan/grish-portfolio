@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+const portfolioRequest = (path, options = {}) => {
+  if (typeof window.portfolioApi === "function") return window.portfolioApi(path, options);
+  const url = new URL(path, "https://kqdrhwdidjrdbmwteuom.supabase.co/functions/v1/portfolio-api");
+  url.searchParams.set("path", path);
+  const headers = new Headers(options.headers || {});
+  headers.set("apikey", "sb_publishable_Nmyw4pDaqtHNTfuYCmoA3A_aFgn8tZ3");
+  return fetch(url, { ...options, headers });
+};
+
 const analyticsConsentVersion = "2026-10-02-v3";
 const visitorBrowserMetadata = () => {
   const userAgent = navigator.userAgent || "";
@@ -125,7 +134,7 @@ function PortfolioApp() {
       if (loading) return;
       loading = true;
       try {
-        const response = await window.portfolioApi("/api/site-data", { cache: "no-store" });
+        const response = await portfolioRequest("/api/site-data", { cache: "no-store" });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Portfolio data unavailable");
         if (active) {
@@ -169,7 +178,7 @@ function PortfolioApp() {
       referrerHost = "";
     }
 
-    window.portfolioApi("/api/analytics/visit", {
+    portfolioRequest("/api/analytics/visit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -194,7 +203,7 @@ function PortfolioApp() {
     const values = Object.fromEntries(new FormData(form));
 
     try {
-      const response = await window.portfolioApi("/api/contact", {
+      const response = await portfolioRequest("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values)

@@ -8,7 +8,14 @@ Chart.defaults.color = "#969ba7";
 async function api(path, token, options = {}) {
   const headers = new Headers(options.headers || {});
   headers.set("x-admin-token", token);
-  const response = await window.portfolioApi(path, { ...options, headers });
+  const request = typeof window.portfolioApi === "function" ? window.portfolioApi : (requestPath, requestOptions) => {
+    const url = new URL(requestPath, "https://kqdrhwdidjrdbmwteuom.supabase.co/functions/v1/portfolio-api");
+    url.searchParams.set("path", requestPath);
+    const requestHeaders = new Headers(requestOptions.headers || {});
+    requestHeaders.set("apikey", "sb_publishable_Nmyw4pDaqtHNTfuYCmoA3A_aFgn8tZ3");
+    return fetch(url, { ...requestOptions, headers: requestHeaders });
+  };
+  const response = await request(path, { ...options, headers });
   let data = {};
   try {
     data = await response.json();
