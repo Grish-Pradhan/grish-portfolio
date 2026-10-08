@@ -7,7 +7,9 @@ const clientRoot = resolve(projectRoot, "client");
 
 export default defineConfig(({ command }) => ({
   root: clientRoot,
-  base: command === "build" ? "./" : "/",
+  // Keep assets rooted at the site origin so nested SPA routes such as
+  // /certificate/7 never resolve scripts and styles under /certificate/.
+  base: "/",
   publicDir: resolve(projectRoot, "public"),
   server: {
     proxy: {
