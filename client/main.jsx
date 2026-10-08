@@ -105,25 +105,25 @@ function CertificateDetail({ certificate, loading }) {
 }
 
 function CertificationsPage({ certifications }) {
-  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">03 / CREDENTIALS</p><h1>Proof of<br /><span>practice.</span></h1><p className="detail-subtitle">A visual archive of certifications, courses, and practical security learning.</p></div><div className="archive-grid">{certifications.map((cert, index) => <a className="archive-card" href={`/certificate/${cert.id}`} key={cert.id}><span className="archive-number">{String(index + 1).padStart(2, "0")}</span>{cert.image_url ? <img src={safeUrl(cert.image_url)} alt="" loading="lazy" /> : <span className="archive-placeholder">PDF</span>}<div><span>{formatCredentialDate(cert.issued_on)}</span><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>VIEW CREDENTIAL ↗</b></a>)}</div></section>;
+  return <section className="archive-page section"><a className="back-link" href="/portfolio">← Back home</a><div className="detail-intro"><p className="eyebrow">03 / CREDENTIALS</p><h1>Proof of<br /><span>practice.</span></h1><p className="detail-subtitle">A visual archive of certifications, courses, and practical security learning.</p></div><div className="archive-grid">{certifications.map((cert, index) => <a className="archive-card" href={`/certificate/${cert.id}`} key={cert.id}><span className="archive-number">{String(index + 1).padStart(2, "0")}</span>{cert.image_url ? <img src={safeUrl(cert.image_url)} alt="" loading="lazy" /> : <span className="archive-placeholder">PDF</span>}<div><span>{formatCredentialDate(cert.issued_on)}</span><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>VIEW CREDENTIAL ↗</b></a>)}</div></section>;
 }
 
 function AchievementsPage({ projects, certifications }) {
   const milestones = [...certifications].sort((a, b) => String(b.issued_on || "").localeCompare(String(a.issued_on || "")));
-  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">04 / ACHIEVEMENTS</p><h1>Momentum<br /><span>in motion.</span></h1><p className="detail-subtitle">A living timeline of shipped work, security practice, and the habits behind the progress.</p></div><div className="achievement-stats"><div><strong>{projects.length}</strong><span>projects shipped</span></div><div><strong>{certifications.length}</strong><span>credentials earned</span></div><div><strong>24/7</strong><span>learning mindset</span></div></div><div className="timeline">{milestones.map((cert, index) => <a className="timeline-item" href={`/certificate/${cert.id}`} key={cert.id}><span className="timeline-index">{String(index + 1).padStart(2, "0")}</span><span className="timeline-dot" /><div><small>{formatCredentialDate(cert.issued_on)}</small><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>OPEN ↗</b></a>)}</div></section>;
+  return <section className="archive-page section"><a className="back-link" href="/portfolio">← Back home</a><div className="detail-intro"><p className="eyebrow">04 / ACHIEVEMENTS</p><h1>Momentum<br /><span>in motion.</span></h1><p className="detail-subtitle">A living timeline of shipped work, security practice, and the habits behind the progress.</p></div><div className="achievement-stats"><div><strong>{projects.length}</strong><span>projects shipped</span></div><div><strong>{certifications.length}</strong><span>credentials earned</span></div><div><strong>24/7</strong><span>learning mindset</span></div></div><div className="timeline">{milestones.map((cert, index) => <a className="timeline-item" href={`/certificate/${cert.id}`} key={cert.id}><span className="timeline-index">{String(index + 1).padStart(2, "0")}</span><span className="timeline-dot" /><div><small>{formatCredentialDate(cert.issued_on)}</small><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>OPEN ↗</b></a>)}</div></section>;
 }
 
 function ProjectsPage({ projects }) {
   const sortedProjects = [...projects].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
-  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">02 / Selected work</p><h1>Built for<br /><span>the real world.</span></h1><p className="detail-subtitle">A focused collection of systems, interfaces, and security-minded experiments.</p></div><div className="projects standalone-projects">{sortedProjects.map((project, index) => <article className={`project ${project.featured ? "featured" : ""}`} key={project.id}>{project.image ? <img className="project-image" src={safeUrl(project.image)} alt={project.title} loading="lazy" /> : null}<div className="project-top"><div className="number">{String(index + 1).padStart(2, "0")}</div>{project.featured ? <span className="featured-label">Featured</span> : null}</div><div className="project-icon">{["↗", "⌘", "◌", "✦", "⌁"][index % 5]}</div><h3>{project.title}</h3><p>{project.description}</p><div className="tags">{(project.tech || "").split(",").filter(Boolean).map((tech) => <span className="tag" key={tech}>{tech.trim()}</span>)}</div><div className="project-links">{project.url ? <a href={safeUrl(project.url)} target="_blank" rel="noreferrer">Open project ↗</a> : null}{project.github ? <a href={safeUrl(project.github)} target="_blank" rel="noreferrer">View code ↗</a> : null}</div></article>)}</div></section>;
+  return <section className="archive-page section"><a className="back-link" href="/portfolio">← Back home</a><div className="detail-intro"><p className="eyebrow">02 / Selected work</p><h1>Built for<br /><span>the real world.</span></h1><p className="detail-subtitle">A focused collection of systems, interfaces, and security-minded experiments.</p></div><div className="projects standalone-projects">{sortedProjects.map((project, index) => <article className={`project ${project.featured ? "featured" : ""}`} key={project.id}>{project.image ? <img className="project-image" src={safeUrl(project.image)} alt={project.title} loading="lazy" /> : null}<div className="project-top"><div className="number">{String(index + 1).padStart(2, "0")}</div>{project.featured ? <span className="featured-label">Featured</span> : null}</div><div className="project-icon">{["↗", "⌘", "◌", "✦", "⌁"][index % 5]}</div><h3>{project.title}</h3><p>{project.description}</p><div className="tags">{(project.tech || "").split(",").filter(Boolean).map((tech) => <span className="tag" key={tech}>{tech.trim()}</span>)}</div><div className="project-links">{project.url ? <a href={safeUrl(project.url)} target="_blank" rel="noreferrer">Open project ↗</a> : null}{project.github ? <a href={safeUrl(project.github)} target="_blank" rel="noreferrer">View code ↗</a> : null}</div></article>)}</div></section>;
 }
 
 function AboutPage({ profile, certifications, projects }) {
-  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">01 / About</p><h1>Curious by<br /><span>default.</span></h1><p className="detail-subtitle">The person behind the systems: a security researcher and full-stack developer based in {profile?.location || "Nepal"}.</p></div><div className="about-page-grid"><div className="about-copy"><p>{profile?.bio || "Building useful, secure software with a bias toward learning in public."}</p></div><div className="facts"><div><small>Location</small><strong>{profile?.location || "Lalitpur, Nepal"}</strong></div><div><small>Credentials</small><strong>{certifications.length} earned</strong></div><div><small>Selected builds</small><strong>{projects.length} shipped</strong></div><div><small>Focus</small><strong>Security + software</strong></div></div></div></section>;
+  return <section className="archive-page section"><a className="back-link" href="/portfolio">← Back home</a><div className="detail-intro"><p className="eyebrow">01 / About</p><h1>Curious by<br /><span>default.</span></h1><p className="detail-subtitle">The person behind the systems: a security researcher and full-stack developer based in {profile?.location || "Nepal"}.</p></div><div className="about-page-grid"><div className="about-copy"><p>{profile?.bio || "Building useful, secure software with a bias toward learning in public."}</p></div><div className="facts"><div><small>Location</small><strong>{profile?.location || "Lalitpur, Nepal"}</strong></div><div><small>Credentials</small><strong>{certifications.length} earned</strong></div><div><small>Selected builds</small><strong>{projects.length} shipped</strong></div><div><small>Focus</small><strong>Security + software</strong></div></div></div></section>;
 }
 
 function ContactPage({ profile, sendMessage, formStatus }) {
-  return <section className="archive-page section contact-page"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">05 / Contact</p><h1>Start a<br /><span>conversation.</span></h1><p className="detail-subtitle">Have a project, security question, or collaboration in mind? Send a note and I’ll get back to you.</p></div><div className="contact contact-page-grid"><div><p className="muted">{profile?.email || "Email is available through the form."}</p><p className="muted">Prefer a quick hello? Find me on GitHub or LinkedIn below.</p></div><form onSubmit={sendMessage}><label>Name<input name="name" required placeholder="Your name" /></label><label>Email<input type="email" name="email" required placeholder="you@example.com" /></label><label>Message<textarea name="message" rows="6" required placeholder="Tell me about it..." /></label><button className="button primary" type="submit">Send message</button><p className="status" role="status">{formStatus}</p></form></div></section>;
+  return <section className="archive-page section contact-page"><a className="back-link" href="/portfolio">← Back home</a><div className="detail-intro"><p className="eyebrow">05 / Contact</p><h1>Start a<br /><span>conversation.</span></h1><p className="detail-subtitle">Have a project, security question, or collaboration in mind? Send a note and I’ll get back to you.</p></div><div className="contact contact-page-grid"><div><p className="muted">{profile?.email || "Email is available through the form."}</p><p className="muted">Prefer a quick hello? Find me on GitHub or LinkedIn below.</p></div><form onSubmit={sendMessage}><label>Name<input name="name" required placeholder="Your name" /></label><label>Email<input type="email" name="email" required placeholder="you@example.com" /></label><label>Message<textarea name="message" rows="6" required placeholder="Tell me about it..." /></label><button className="button primary" type="submit">Send message</button><p className="status" role="status">{formStatus}</p></form></div></section>;
 }
 
 function PortfolioApp() {
@@ -252,14 +252,14 @@ function PortfolioApp() {
   }
 
   return (
-    <>
+    <div className="standard-portfolio">
       <header className="nav">
-        <a className="brand" href="/"><span className="brand-mark">✳</span><span>GRISH PORTFOLIO</span></a>
-        <div className="nav-meta"><span className="status-dot" /> Available for select projects</div>
+        <a className="brand" href="/portfolio"><span className="brand-mark">GP</span><span>{profile?.name || "Grish Pradhan"}<small>Security & software</small></span></a>
+        <div className="nav-meta"><span className="status-dot" /> {profile?.location || "Nepal"}</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
-          {[{ label: "Home", href: "/" }, { label: "About", href: "/about" }, { label: "Projects", href: "/projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/contact" }].map((item) => (
-            <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>
+          {[{ label: "Home", href: "/portfolio" }, { label: "About", href: "/about" }, { label: "Projects", href: "/projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/contact" }].map((item) => (
+            <a key={item.label} href={item.href} aria-current={route === item.href || (item.href === "/certifications" && route.startsWith("/certificate/")) ? "page" : undefined} onClick={() => setMenuOpen(false)}>{item.label}</a>
           ))}
         </nav>
       </header>
@@ -321,6 +321,7 @@ function PortfolioApp() {
                 </div>
               </article>
             ))}
+            {!sortedProjects.length && <div className="empty-state"><strong>Work in progress</strong><p>New projects will appear here as they’re published.</p></div>}
           </div>
         </section>
 
@@ -338,7 +339,7 @@ function PortfolioApp() {
                 <div className="certificate-seal">✦</div>
                 {cert.image_url ? <img src={safeUrl(cert.image_url)} alt={`${cert.title} certificate`} loading="lazy" /> : null}
                 <div className="certificate-copy">
-                  <span className="certificate-date">{cert.issued_on || "Credential"}</span>
+                  <span className="certificate-date">{formatCredentialDate(cert.issued_on)}</span>
                   <h3>{cert.title}</h3>
                   <p className="certificate-issuer">{cert.issuer}</p>
                   {cert.description ? <p>{cert.description}</p> : null}
@@ -373,6 +374,7 @@ function PortfolioApp() {
       <footer>
         <span>© {new Date().getFullYear()} {profile?.name || "Grish Pradhan"}</span>
         <div className="socials">
+          <a href="/world">Explore the island ↗</a>
           {profile?.github && <a href={safeUrl(profile.github)} target="_blank" rel="noreferrer">GitHub ↗</a>}
           {profile?.linkedin && <a href={safeUrl(profile.linkedin)} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
           {profile?.website && <a href={safeUrl(profile.website)} target="_blank" rel="noreferrer">Website ↗</a>}
@@ -394,7 +396,7 @@ function PortfolioApp() {
           </div>
         </aside>
       )}
-    </>
+    </div>
   );
 }
 
