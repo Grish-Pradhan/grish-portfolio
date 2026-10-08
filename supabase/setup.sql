@@ -143,6 +143,24 @@ values (
 )
 on conflict (id) do nothing;
 
+insert into public.certifications (title, issuer, issued_on, credential_url, image_url, document_url, description)
+select * from (values
+  ('APISEC Certified Practitioner', 'APISEC University', '2026-03-25'::date, 'https://www.credly.com/badges/f0bdbfa5-d95b-44f2-b0fb-62c2f1f7fd3b', '/certificates/ACP.png', '', 'API security practitioner certification.'),
+  ('Certified API Security Analyst', 'APISEC University', '2026-03-14'::date, 'https://www.credly.com/badges/ffe66c83-e901-4977-9cb3-fc55a7aa9485', '/certificates/casa-grish.png', '/certificates/CASAExam20260314-33-x7ztkv.pdf', 'API security analysis and assessment.'),
+  ('Certified Threat Intelligence & Governance Analyst', 'Red Team Leaders', '2026-01-11'::date, 'https://courses.redteamleaders.com/exam-completion/57815fb39704a13c', '/certificates/CTIGA.jpg', '', 'Threat intelligence, governance, and structured analysis.'),
+  ('Certified Red Team Operations Management', 'Red Team Leaders', '2025-12-26'::date, 'https://courses.redteamleaders.com/exam-completion/898fc2d5c46bf502', '/certificates/crtom.png', '', 'Red team operations management and adversary simulation.'),
+  ('Advent of Cyber 2025', 'TryHackMe', '2025-12-25'::date, '', '/certificates/THM-2025-1.png', '/certificates/THM-2025.pdf', '24 hands-on cybersecurity challenges.'),
+  ('Introduction to Penetration Testing', 'Security Blue Team', '2025-11-26'::date, '', '/certificates/Introduction%20to%20Penetration%20Testing-course_page-0001.jpg', '/certificates/Introduction%20to%20Penetration%20Testing-course.pdf', 'Foundations of ethical hacking and penetration testing.'),
+  ('Web Fundamentals', 'TryHackMe', '2025-05-01'::date, '', '/certificates/webfundamental.png', '/certificates/thm-webfundamentals.pdf', 'Web security fundamentals learning path.'),
+  ('Jr Penetration Tester', 'TryHackMe', '2025-05-01'::date, '', '/certificates/jrpentest.png', '/certificates/THM-CF9KJ3JXBX.pdf', 'Practical penetration testing learning path.'),
+  ('Cyber Security 101', 'TryHackMe', '2025-04-24'::date, '', '/certificates/101.png', '/certificates/thm-101.pdf', 'Cybersecurity fundamentals learning path.'),
+  ('Scenario-Based CW-OS', 'Certificate document', null, '', '/certificates/scenerio-based-CW-OS-preview.png', '/certificates/scenerio%20based%20CW-OS.pdf', 'Scenario-based security training.'),
+  ('Security Certificate', 'Certificate document', null, '', '/certificates/certified_certificate-preview.png', '/certificates/certified_certificate.pdf', 'Additional security credential.'),
+  ('Security Certificate I', 'Certificate document', null, '', '/certificates/certified_certificate1-preview.png', '/certificates/certified_certificate1.pdf', 'Additional security credential.'),
+  ('Red Team Certificate', 'Certificate document', null, '', '/certificates/certified_red_certificate-preview.png', '/certificates/certified_red_certificate.pdf', 'Additional red team credential.')
+) as seed(title, issuer, issued_on, credential_url, image_url, document_url, description)
+where not exists (select 1 from public.certifications existing where existing.title = seed.title);
+
 alter table public.profile enable row level security;
 alter table public.projects enable row level security;
 alter table public.certifications enable row level security;

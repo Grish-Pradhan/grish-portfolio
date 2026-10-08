@@ -66,6 +66,38 @@ function browserFamily() {
   return "Other";
 }
 
+function formatCredentialDate(value) {
+  if (!value) return "Credential";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function CertificateDetail({ certificate }) {
+  if (!certificate) {
+    return <section className="detail-page section"><a className="back-link" href="/certifications">← Back to certifications</a><h1>Certificate not found.</h1></section>;
+  }
+  return (
+    <section className="detail-page section">
+      <a className="back-link" href="/certifications">← Back to certifications</a>
+      <div className="detail-intro"><p className="eyebrow">VERIFIED CREDENTIAL</p><h1>{certificate.title}</h1><p className="detail-subtitle">{certificate.issuer} · {formatCredentialDate(certificate.issued_on)}</p></div>
+      <div className="certificate-viewer">
+        <div className="certificate-viewer-toolbar"><span>DOCUMENT PREVIEW</span><div>{certificate.credential_url ? <a href={safeUrl(certificate.credential_url)} target="_blank" rel="noreferrer">Verify ↗</a> : null}{certificate.document_url ? <a href={safeUrl(certificate.document_url)} target="_blank" rel="noreferrer">Open PDF ↗</a> : null}</div></div>
+        {certificate.image_url ? <img src={safeUrl(certificate.image_url)} alt={`${certificate.title} certificate`} /> : <div className="certificate-viewer-empty">Preview unavailable. Open the original document above.</div>}
+      </div>
+      {certificate.description ? <p className="detail-description">{certificate.description}</p> : null}
+    </section>
+  );
+}
+
+function CertificationsPage({ certifications }) {
+  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">03 / CREDENTIALS</p><h1>Proof of<br /><span>practice.</span></h1><p className="detail-subtitle">A visual archive of certifications, courses, and practical security learning.</p></div><div className="archive-grid">{certifications.map((cert, index) => <a className="archive-card" href={`/certificate/${cert.id}`} key={cert.id}><span className="archive-number">{String(index + 1).padStart(2, "0")}</span>{cert.image_url ? <img src={safeUrl(cert.image_url)} alt="" loading="lazy" /> : <span className="archive-placeholder">PDF</span>}<div><span>{formatCredentialDate(cert.issued_on)}</span><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>VIEW CREDENTIAL ↗</b></a>)}</div></section>;
+}
+
+function AchievementsPage({ projects, certifications }) {
+  const milestones = [...certifications].sort((a, b) => String(b.issued_on || "").localeCompare(String(a.issued_on || "")));
+  return <section className="archive-page section"><a className="back-link" href="/">← Back home</a><div className="detail-intro"><p className="eyebrow">04 / ACHIEVEMENTS</p><h1>Momentum<br /><span>in motion.</span></h1><p className="detail-subtitle">A living timeline of shipped work, security practice, and the habits behind the progress.</p></div><div className="achievement-stats"><div><strong>{projects.length}</strong><span>projects shipped</span></div><div><strong>{certifications.length}</strong><span>credentials earned</span></div><div><strong>24/7</strong><span>learning mindset</span></div></div><div className="timeline">{milestones.map((cert, index) => <a className="timeline-item" href={`/certificate/${cert.id}`} key={cert.id}><span className="timeline-index">{String(index + 1).padStart(2, "0")}</span><span className="timeline-dot" /><div><small>{formatCredentialDate(cert.issued_on)}</small><h2>{cert.title}</h2><p>{cert.issuer}</p></div><b>OPEN ↗</b></a>)}</div></section>;
+}
+
 function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -83,6 +115,7 @@ function PortfolioApp() {
     const savedChoice = window.localStorage.getItem("portfolioAnalyticsConsent");
     return ![`${analyticsConsentVersion}:accepted`, `${analyticsConsentVersion}:declined`].includes(savedChoice);
   });
+  const [route] = useState(() => window.location.pathname);
 
   useEffect(() => {
     let active = true;
@@ -191,13 +224,14 @@ function PortfolioApp() {
         <div className="nav-meta"><span className="status-dot" /> AVAILABLE FOR SELECT PROJECTS</div>
         <button className="menu" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         <nav className={menuOpen ? "open" : ""}>
-          {["Home", "About", "Projects", "Certifications", "Contact"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{item}</a>
+          {[{ label: "Home", href: "/" }, { label: "About", href: "/#about" }, { label: "Projects", href: "/#projects" }, { label: "Certifications", href: "/certifications" }, { label: "Achievements", href: "/achievements" }, { label: "Contact", href: "/#contact" }].map((item) => (
+            <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>
           ))}
         </nav>
       </header>
 
       <main>
+        {route.match(/^\/certificate\//) ? <CertificateDetail certificate={certifications.find((item) => String(item.id) === route.split("/").filter(Boolean)[1])} /> : route === "/certifications" ? <CertificationsPage certifications={certifications} /> : route === "/achievements" ? <AchievementsPage projects={projects} certifications={certifications} /> : <>
         <section id="home" className="hero section">
           <div className="hero-copy">
             <p className="eyebrow">{profile?.role || "CYBERSECURITY · FORENSICS · SYSTEMS"}</p>
@@ -287,7 +321,7 @@ function PortfolioApp() {
           </div>
           <div className="certifications-grid">
             {certifications.length ? certifications.map((cert) => (
-              <article className="certification-card" key={cert.id}>
+                <article className="certification-card" key={cert.id} role="link" tabIndex="0" onClick={(event) => { if (!event.target.closest("a")) window.location.href = `/certificate/${cert.id}`; }} onKeyDown={(event) => { if (event.key === "Enter") window.location.href = `/certificate/${cert.id}`; }}>
                 <div className="certificate-seal">✦</div>
                 {cert.image_url ? <img src={safeUrl(cert.image_url)} alt={`${cert.title} certificate`} loading="lazy" /> : null}
                 <div className="certificate-copy">
@@ -296,11 +330,12 @@ function PortfolioApp() {
                   <p className="certificate-issuer">{cert.issuer}</p>
                   {cert.description ? <p>{cert.description}</p> : null}
                   <div className="certificate-actions">
+                    <a className="certificate-link" href={`/certificate/${cert.id}`}>VIEW CERTIFICATE ↗</a>
                     {cert.credential_url ? <a className="certificate-link" href={safeUrl(cert.credential_url)} target="_blank" rel="noreferrer">VERIFY CREDENTIAL ↗</a> : null}
                     {cert.document_url ? <a className="certificate-link" href={safeUrl(cert.document_url)} target="_blank" rel="noreferrer">OPEN DOCUMENT ↗</a> : null}
                   </div>
                 </div>
-              </article>
+                </article>
             )) : <div className="empty-state">Certifications will appear here as they are added.</div>}
           </div>
         </section>
@@ -319,6 +354,7 @@ function PortfolioApp() {
             <p className="status" role="status">{formStatus}</p>
           </form>
         </section>
+        </>}
       </main>
 
       <footer>
