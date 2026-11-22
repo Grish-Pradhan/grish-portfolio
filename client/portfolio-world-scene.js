@@ -12,8 +12,8 @@ export const destinations = {
 // All scenery is generated here. No downloaded models, trackers, or audio.
 export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#f4d4ad");
-  scene.fog = new THREE.Fog("#f4d4ad", 42, 105);
+  scene.background = new THREE.Color("#dceee5");
+  scene.fog = new THREE.Fog("#dceee5", 42, 105);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "low-power" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -23,7 +23,7 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   // can stay static instead of re-rendering hundreds of shadow casters each frame.
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
-  renderer.domElement.setAttribute("aria-label", "Interactive portfolio island. Drag to rotate. Use the destination buttons to open exhibits.");
+  renderer.domElement.setAttribute("aria-label", "Interactive cybersecurity portfolio observatory. Drag to rotate. Use the destination buttons to open exhibits.");
   renderer.domElement.tabIndex = 0;
   host.appendChild(renderer.domElement);
   const camera = new THREE.PerspectiveCamera(45, 1, .1, 180);
@@ -418,16 +418,16 @@ export function createWorld(host, { onOpen, onLocation, markers, onFailure }) {
   return {
     setTheme(theme) {
       const night = theme === "dark";
-      scene.background.set(night ? "#111d32" : "#f4d4ad");
+      scene.background.set(night ? "#070b09" : "#dceee5");
       scene.fog.color.copy(scene.background);
-      hemisphere.color.set(night ? "#a9c8ff" : "#fff4d9");
-      hemisphere.groundColor.set(night ? "#24364f" : "#789885");
-      hemisphere.intensity = night ? 1.1 : 2.5;
-      sun.color.set(night ? "#b6ceff" : "#ffe4b4");
-      sun.intensity = night ? 1.2 : 3;
-      sea.material.color.set(night ? "#173a53" : "#72bcb6");
-      sunlight.material.color.set(night ? "#d5e7ff" : "#fff2ce");
-      sunlight.material.emissive.set(night ? "#b4d2ff" : "#fff2ce");
+      hemisphere.color.set(night ? "#b7f34a" : "#e8f7ed");
+      hemisphere.groundColor.set(night ? "#10231b" : "#6f9c85");
+      hemisphere.intensity = night ? 1.25 : 2.4;
+      sun.color.set(night ? "#b7f34a" : "#d8f4df");
+      sun.intensity = night ? 1.35 : 2.8;
+      sea.material.color.set(night ? "#0b2b1c" : "#8fbbaa");
+      sunlight.material.color.set(night ? "#b7f34a" : "#e8f7ed");
+      sunlight.material.emissive.set(night ? "#b7f34a" : "#d8f4df");
       stars.visible = night;
       renderer.shadowMap.needsUpdate = true;
     },

@@ -366,3 +366,167 @@ body { margin:0; min-width:320px; background:var(--site-bg); }
 .standard-portfolio .portal-coordinate { color:#d6bd91; }
 .standard-portfolio .portal-meta { border-top-color:#a9824b99; color:#dfc993; }
 .standard-portfolio .portal-meta b { color:#fff4d8; }
+
+/* Cyber field-notes system: artifacts, traces, and evidence replace decorative geometry. */
+.standard-portfolio {
+  --bg:#f1f6f2;
+  --panel:#fbfffc;
+  --soft:#e2eee7;
+  --text:#10231b;
+  --muted:#5e766a;
+  --line:#c5d9cd;
+  --accent:#167a4a;
+  --on-accent:#f4fff8;
+  --accent-soft:#d9eee1;
+  --hot:#c94b43;
+  background-color:var(--bg);
+  background-image:linear-gradient(90deg,#10231b08 1px,transparent 1px),linear-gradient(#10231b08 1px,transparent 1px);
+  background-size:72px 72px;
+  font-family:"Montserrat","Segoe UI",sans-serif;
+}
+[data-theme="dark"] .standard-portfolio {
+  --bg:#070b09;
+  --panel:#0e1713;
+  --soft:#14231d;
+  --text:#e8f7ed;
+  --muted:#91aa9c;
+  --line:#294238;
+  --accent:#b7f34a;
+  --on-accent:#071008;
+  --accent-soft:#1d3527;
+  --hot:#ff6256;
+  background-image:linear-gradient(90deg,#e8f7ed08 1px,transparent 1px),linear-gradient(#e8f7ed08 1px,transparent 1px);
+}
+.standard-portfolio :is(h1,h2,h3,.brand,.button,.text-link,.page-intro h1,.detail-intro h1,.timeline-item h2) { font-family:"Montserrat","Segoe UI",sans-serif; }
+.standard-portfolio :is(h1,h2,.contact-copy h2,.section-head h2) { font-family:"Montserrat","Segoe UI",sans-serif; }
+.standard-portfolio h1,.standard-portfolio h2 { font-weight:800; letter-spacing:-.07em; }
+.standard-portfolio em { color:var(--accent); font-family:"Fira Code",Consolas,monospace; font-style:normal; font-weight:500; letter-spacing:-.08em; }
+.standard-portfolio .hero h1 em { color:var(--accent); font-family:"Fira Code",Consolas,monospace; font-style:normal; font-weight:600; letter-spacing:-.1em; }
+.standard-portfolio :is(.mono,.eyebrow,.hero-role,.project-top,.tags,.footer-bottom,.portal-meta,.artifact-label) { font-family:"Fira Code","DM Mono",Consolas,monospace; }
+.standard-portfolio .brand-mark { border:1px solid var(--accent); border-radius:2px; color:var(--accent); font-family:"Share Tech Mono",monospace; }
+.standard-portfolio .nav { border-bottom:1px solid var(--line); }
+.standard-portfolio .nav nav a { font-family:"Fira Code",monospace; font-size:10px; letter-spacing:.04em; }
+.standard-portfolio :is(.theme-toggle,.menu) { border-color:var(--line); border-radius:2px; }
+.standard-portfolio .hero { min-height:720px; }
+.standard-portfolio .hero h1 { font-size:clamp(56px,7.4vw,112px); line-height:.96; letter-spacing:-.09em; }
+.standard-portfolio .hero h1 em { color:var(--accent); font-size:.78em; letter-spacing:-.1em; }
+.standard-portfolio .status-dot { background:var(--hot); box-shadow:0 0 0 4px color-mix(in srgb,var(--hot) 16%,transparent),0 0 18px color-mix(in srgb,var(--hot) 50%,transparent); }
+.standard-portfolio .hero-note { border-top:1px solid var(--accent); border-left:1px solid var(--line); }
+.standard-portfolio .hero-note-label { color:var(--accent); font-family:"Fira Code",monospace; }
+.standard-portfolio .hero-note-copy { font-size:20px; letter-spacing:-.035em; }
+.standard-portfolio .hero-note-list>div { border-top:1px dashed var(--line); }
+.standard-portfolio .button { border-radius:2px; font-family:"Fira Code",monospace; font-size:10px; letter-spacing:.02em; }
+.standard-portfolio .button.primary { box-shadow:4px 4px 0 var(--text); }
+.standard-portfolio .button.primary:hover { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--text); }
+.standard-portfolio .portfolio-strip { background:var(--text); color:var(--bg); border-block:0; }
+.standard-portfolio .portfolio-strip>div { font-family:"Share Tech Mono",monospace; font-style:normal; letter-spacing:.08em; text-transform:uppercase; }
+.standard-portfolio .section-head { border-top:1px solid var(--line); padding-top:18px; }
+.standard-portfolio .section-head h2,.standard-portfolio .contact-copy h2 { font-size:clamp(44px,5vw,76px); }
+.standard-portfolio .section-head .eyebrow span:not(.status-dot) { color:var(--accent); }
+.standard-portfolio .about-summary>p { font-size:clamp(21px,2.2vw,30px); line-height:1.35; }
+.standard-portfolio .real-stats { border-top:1px dashed var(--line); }
+.standard-portfolio .real-stats strong { color:var(--accent); font-family:"Share Tech Mono",monospace; font-size:42px; }
+.standard-portfolio .focus-card { border-color:var(--line); border-radius:2px; background:color-mix(in srgb,var(--panel) 85%,transparent); box-shadow:none; }
+.standard-portfolio .focus-card>div { color:var(--accent); }
+.standard-portfolio .focus-card h3 { font-weight:700; }
+.standard-portfolio .project { border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:2px; background:var(--panel); box-shadow:none; transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease; }
+.standard-portfolio .project:hover { border-color:var(--accent); transform:translateY(-5px); box-shadow:0 16px 34px #0b241715; }
+.standard-portfolio .project-media { border-bottom:1px solid var(--line); }
+.standard-portfolio .project-artwork { color:#b7f34a; background:#08120d; }
+.standard-portfolio .project-artwork.artwork-1 { color:#ffb067; background:#15110d; }
+.standard-portfolio .project-artwork.artwork-2 { color:#7ae2d5; background:#071417; }
+.standard-portfolio .project-artwork>span { display:none; }
+.standard-portfolio .project-top .mono { color:var(--muted); }
+.standard-portfolio .featured-label { border-radius:2px; color:var(--hot); background:color-mix(in srgb,var(--hot) 12%,transparent); font-family:"Fira Code",monospace; }
+.standard-portfolio .tags>span { border-color:var(--line); border-radius:2px; font-family:"Fira Code",monospace; }
+.standard-portfolio .credential-card { border:1px solid var(--line); border-radius:2px; box-shadow:none; transition:transform .25s ease,border-color .25s ease; }
+.standard-portfolio .credential-card:hover { border-color:var(--accent); transform:translateY(-5px); }
+.standard-portfolio .credential-open { border-radius:2px; background:var(--text); color:var(--bg); }
+.standard-portfolio .contact-form { border:1px solid var(--line); border-radius:2px; box-shadow:none; }
+.standard-portfolio :is(input,textarea,select) { border-color:var(--line); border-radius:2px; }
+.standard-portfolio .privacy-consent { border:1px solid var(--line); border-radius:2px; box-shadow:8px 8px 0 var(--hot); }
+
+/* Project media artifacts. These are authored evidence objects rather than abstract icons. */
+.standard-portfolio .project-artwork { position:relative; min-height:100%; overflow:hidden; isolation:isolate; }
+.standard-portfolio .artifact-noise { position:absolute; inset:0; opacity:.16; background:repeating-linear-gradient(0deg,transparent 0 4px,currentColor 5px 6px); mix-blend-mode:screen; animation:artifact-scan 7s linear infinite; }
+.standard-portfolio .artifact-label { position:absolute; left:22px; bottom:18px; color:currentColor; font-size:9px; letter-spacing:.08em; opacity:.8; }
+.standard-portfolio .artifact-stamp { position:absolute; right:22px; bottom:18px; color:currentColor; font:9px/1.4 "Fira Code",monospace; letter-spacing:.08em; opacity:.62; }
+.standard-portfolio .artifact-terminal,.standard-portfolio .artifact-evidence,.standard-portfolio .artifact-packet { position:absolute; inset:14% 12%; border:1px solid currentColor; background:#06100bd9; box-shadow:12px 12px 0 #0000002a; animation:artifact-arrive .7s cubic-bezier(.22,1,.36,1) both; }
+.standard-portfolio .artifact-window-bar,.standard-portfolio .evidence-header,.standard-portfolio .packet-header { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px; padding:0 14px; border-bottom:1px solid currentColor; font:9px "Fira Code",monospace; letter-spacing:.08em; }
+.standard-portfolio .artifact-window-bar>span { width:6px; height:6px; margin-right:-6px; border:1px solid currentColor; border-radius:50%; opacity:.8; }
+.standard-portfolio .artifact-window-bar b { margin-left:auto; font-weight:500; opacity:.85; }
+.standard-portfolio .artifact-terminal-body { display:grid; gap:11px; padding:22px; color:#d9f7df; font:11px/1.5 "Fira Code",monospace; }
+.standard-portfolio .artifact-terminal-body p { margin:0; white-space:nowrap; }
+.standard-portfolio .artifact-terminal-body i { color:currentColor; font-style:normal; }
+.standard-portfolio .artifact-terminal-body .ok { color:#9de58a; }
+.standard-portfolio .artifact-terminal-body .warn { color:#ffb067; }
+.standard-portfolio .artifact-cursor { display:inline-block; width:7px; height:1em; margin-left:5px; vertical-align:-2px; background:currentColor; animation:artifact-blink 1s steps(2,end) infinite; }
+.standard-portfolio .artifact-evidence { inset:18% 14%; color:#ffb067; background:#17100bdd; }
+.standard-portfolio .evidence-header span { color:#b7f34a; }
+.standard-portfolio .evidence-main { display:flex; align-items:center; gap:20px; padding:26px 24px 22px; }
+.standard-portfolio .evidence-id { display:grid; place-items:center; width:68px; height:76px; border:1px solid currentColor; color:#ffb067; font:22px "Share Tech Mono",monospace; }
+.standard-portfolio .evidence-main p,.standard-portfolio .evidence-main strong,.standard-portfolio .evidence-main small { display:block; margin:0; font-family:"Fira Code",monospace; }
+.standard-portfolio .evidence-main p { font-size:8px; letter-spacing:.08em; opacity:.75; }
+.standard-portfolio .evidence-main strong { margin-top:7px; color:#fff0d8; font-size:14px; line-height:1.35; }
+.standard-portfolio .evidence-main small { margin-top:10px; font-size:8px; opacity:.7; }
+.standard-portfolio .evidence-checks { display:flex; flex-wrap:wrap; gap:7px; padding:16px 24px; border-top:1px dashed currentColor; color:#ffcf91; font:8px "Fira Code",monospace; letter-spacing:.08em; }
+.standard-portfolio .evidence-checks span { padding:5px 7px; border:1px solid currentColor; }
+.standard-portfolio .artifact-packet { inset:14% 10%; color:#7ae2d5; background:#061418df; }
+.standard-portfolio .packet-header b { color:#b7f34a; font-weight:500; }
+.standard-portfolio .packet-lines { display:grid; gap:9px; padding:26px 22px 18px; }
+.standard-portfolio .packet-lines span { display:block; height:7px; background:linear-gradient(90deg,currentColor 0 12%,transparent 12% 16%,currentColor 16% 31%,transparent 31% 35%,currentColor 35% 75%,transparent 75% 79%,currentColor 79% 94%,transparent 94%); opacity:.7; animation:packet-shift 2.4s ease-in-out infinite alternate; }
+.standard-portfolio .packet-lines span:nth-child(2n) { width:82%; }
+.standard-portfolio .packet-lines span:nth-child(3n) { width:64%; animation-delay:.35s; }
+.standard-portfolio .packet-footer { display:flex; justify-content:space-between; gap:12px; padding:14px 22px; border-top:1px dashed currentColor; font:9px "Fira Code",monospace; }
+.standard-portfolio .packet-footer strong { color:#d9f7df; font-weight:500; }
+.standard-portfolio .packet-beacon { position:absolute; right:25px; top:48px; display:flex; gap:4px; align-items:flex-end; height:24px; }
+.standard-portfolio .packet-beacon i { display:block; width:3px; background:currentColor; animation:beacon-bounce 1s ease-in-out infinite alternate; }
+.standard-portfolio .packet-beacon i:nth-child(1) { height:9px; }
+.standard-portfolio .packet-beacon i:nth-child(2) { height:18px; animation-delay:.2s; }
+.standard-portfolio .packet-beacon i:nth-child(3) { height:13px; animation-delay:.4s; }
+
+/* World entry: a field console instead of a decorative planetary portal. */
+.standard-portfolio .island-invitation { border:1px solid #2d6047; background:#07100c; color:#e8f7ed; box-shadow:12px 12px 0 #0b2015; }
+.standard-portfolio .island-invitation>div:last-child { padding-right:72px; }
+.standard-portfolio .island-invitation .eyebrow { color:#b7f34a; }
+.standard-portfolio .island-invitation em { color:#b7f34a; }
+.standard-portfolio .island-invitation p:not(.eyebrow) { color:#9ab5a5; }
+.standard-portfolio .island-invitation .button.secondary { color:#e8f7ed; border-color:#b7f34a; }
+.standard-portfolio .island-invitation .button.secondary:hover { background:#b7f34a; color:#07100c; }
+.standard-portfolio .world-portal { background:#06110b; }
+.standard-portfolio .portal-sky { position:relative; min-height:500px; overflow:hidden; isolation:isolate; background:linear-gradient(110deg,#07120d,#0b1d14 54%,#07100c); }
+.standard-portfolio .portal-sky::before { content:""; position:absolute; inset:0; opacity:.12; background:repeating-linear-gradient(0deg,transparent 0 7px,#b7f34a 8px 9px); animation:artifact-scan 9s linear infinite; }
+.standard-portfolio .portal-sky::after { content:""; position:absolute; inset:18% 8%; border:1px solid #b7f34a2b; background:linear-gradient(90deg,transparent 49.8%,#b7f34a22 50%,transparent 50.2%),linear-gradient(0deg,transparent 49.8%,#b7f34a22 50%,transparent 50.2%); }
+.standard-portfolio .portal-terminal { position:absolute; z-index:1; left:11%; right:11%; top:18%; bottom:15%; border:1px solid #b7f34a9c; background:#06100dec; box-shadow:16px 16px 0 #00000038; animation:console-float 6s ease-in-out infinite; }
+.standard-portfolio .portal-terminal-top,.standard-portfolio .portal-terminal-foot { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 18px; color:#b7f34a; font:9px "Fira Code",monospace; letter-spacing:.08em; }
+.standard-portfolio .portal-terminal-top { border-bottom:1px solid #b7f34a52; }
+.standard-portfolio .portal-terminal-top b { color:#ff6256; font-weight:500; }
+.standard-portfolio .portal-led { width:7px; height:7px; margin-right:auto; border-radius:50%; background:#b7f34a; box-shadow:0 0 14px #b7f34a; animation:artifact-blink 1.5s steps(2,end) infinite; }
+.standard-portfolio .portal-terminal-body { display:grid; gap:19px; padding:30px 24px; }
+.standard-portfolio .portal-terminal-line { display:grid; grid-template-columns:26px 110px 1fr; gap:12px; color:#779589; font:11px/1.5 "Fira Code",monospace; }
+.standard-portfolio .portal-terminal-line>span { color:#4d6c5c; }
+.standard-portfolio .portal-terminal-line b { color:#d9f7df; font-weight:500; }
+.standard-portfolio .portal-terminal-line i { font-style:normal; }
+.standard-portfolio .portal-terminal-line.active i { color:#b7f34a; }
+.standard-portfolio .portal-terminal-foot { position:absolute; left:0; right:0; bottom:0; border-top:1px solid #b7f34a52; color:#7fa794; }
+.standard-portfolio .portal-terminal-foot strong { color:#d9f7df; font-weight:500; }
+.standard-portfolio .portal-data-stream { position:absolute; z-index:2; color:#b7f34a; font:9px "Fira Code",monospace; letter-spacing:.1em; opacity:.65; writing-mode:vertical-rl; animation:stream-drift 7s linear infinite; }
+.standard-portfolio .stream-one { top:16%; right:5%; }
+.standard-portfolio .stream-two { left:4%; bottom:23%; color:#ff6256; animation-delay:-3s; }
+.standard-portfolio .portal-evidence-tag { position:absolute; z-index:2; right:12%; bottom:10%; padding:9px 12px; border:1px solid #ff6256a8; color:#ff8c82; background:#290f0dd9; font:9px/1.4 "Fira Code",monospace; letter-spacing:.08em; transform:rotate(-5deg); animation:tag-wobble 4s ease-in-out infinite; }
+.standard-portfolio .portal-evidence-tag b { color:#fff0d8; font-weight:500; }
+.standard-portfolio .portal-meta { border-top:1px solid #2d6047; color:#9ab5a5; }
+.standard-portfolio .portal-meta b { color:#b7f34a; }
+
+@keyframes artifact-scan { from { background-position:0 0; } to { background-position:0 72px; } }
+@keyframes artifact-arrive { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+@keyframes artifact-blink { 50% { opacity:.2; } }
+@keyframes packet-shift { from { transform:translateX(-3%); opacity:.45; } to { transform:translateX(5%); opacity:1; } }
+@keyframes beacon-bounce { to { transform:scaleY(.45); opacity:.45; } }
+@keyframes console-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
+@keyframes stream-drift { from { transform:translateY(8%); opacity:0; } 18%,80% { opacity:.65; } to { transform:translateY(-22%); opacity:0; } }
+@keyframes tag-wobble { 0%,100% { transform:rotate(-5deg); } 50% { transform:rotate(-2deg) translateY(-4px); } }
+@media(max-width:900px) { .standard-portfolio .portal-terminal-line { grid-template-columns:20px 90px 1fr; gap:8px; font-size:10px; } .standard-portfolio .island-invitation>div:last-child { padding-right:32px; } }
+@media(max-width:640px) { .standard-portfolio .portal-terminal { left:7%; right:7%; top:12%; bottom:13%; } .standard-portfolio .portal-terminal-body { gap:13px; padding:20px 16px; } .standard-portfolio .portal-terminal-line { grid-template-columns:18px 1fr; gap:5px; font-size:9px; } .standard-portfolio .portal-terminal-line i { grid-column:2; } .standard-portfolio .portal-terminal-top,.standard-portfolio .portal-terminal-foot { padding:11px 12px; font-size:8px; } .standard-portfolio .portal-data-stream { display:none; } .standard-portfolio .portal-evidence-tag { right:8%; bottom:8%; } .standard-portfolio .artifact-terminal,.standard-portfolio .artifact-evidence,.standard-portfolio .artifact-packet { inset:12% 8%; } .standard-portfolio .artifact-terminal-body { padding:17px; gap:8px; font-size:9px; } .standard-portfolio .artifact-evidence { inset:16% 9%; } .standard-portfolio .evidence-main { gap:12px; padding:20px 16px 16px; } .standard-portfolio .evidence-id { width:52px; height:60px; } .standard-portfolio .evidence-main strong { font-size:11px; } }
+@media(max-width:640px) { .standard-portfolio .portfolio-strip>div { flex-wrap:wrap; gap:6px 14px; font-size:18px; line-height:1.25; } .standard-portfolio .hero h1 em { font-size:.82em; letter-spacing:-.08em; } }
+@media(prefers-reduced-motion:reduce) { .standard-portfolio .artifact-noise,.standard-portfolio .artifact-terminal,.standard-portfolio .artifact-evidence,.standard-portfolio .artifact-packet,.standard-portfolio .portal-sky::before,.standard-portfolio .portal-terminal,.standard-portfolio .portal-data-stream,.standard-portfolio .portal-evidence-tag,.standard-portfolio .artifact-cursor,.standard-portfolio .packet-lines span,.standard-portfolio .packet-beacon i { animation:none!important; } }

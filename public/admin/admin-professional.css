@@ -188,3 +188,65 @@ body { background-image:linear-gradient(#f1ece5f0,#f1ece5f0),linear-gradient(90d
 .topbar h2 { font-size:clamp(38px,4.5vw,62px); }
 .sidebar .brand { font-family:"Montserrat",sans-serif; }
 .modal { background:#0d0912d9; }
+
+/* Cyber operations console: a restrained command centre for maintaining the portfolio. */
+:root {
+  --bg:#eef6f1;
+  --panel:#fbfffc;
+  --panel2:#e2eee7;
+  --text:#10231b;
+  --muted:#5e766a;
+  --line:#c5d9cd;
+  --accent:#167a4a;
+  --accent2:#167a4a;
+  --danger:#c94b43;
+  --input:#ffffff;
+  --success:#217653;
+  --shadow:0 14px 34px #163b2512;
+}
+:root[data-theme="dark"] {
+  --bg:#070b09;
+  --panel:#0e1713;
+  --panel2:#14231d;
+  --text:#e8f7ed;
+  --muted:#91aa9c;
+  --line:#294238;
+  --accent:#b7f34a;
+  --accent2:#b7f34a;
+  --danger:#ff6256;
+  --input:#0a120e;
+  --success:#b7f34a;
+  --shadow:0 18px 45px #0000002b;
+}
+body { font-family:"Montserrat","Segoe UI",sans-serif; background-color:var(--bg); background-image:linear-gradient(90deg,#10231b08 1px,transparent 1px),linear-gradient(#10231b08 1px,transparent 1px); background-size:72px 72px; }
+:root[data-theme="dark"] body { background-image:linear-gradient(90deg,#e8f7ed08 1px,transparent 1px),linear-gradient(#e8f7ed08 1px,transparent 1px); }
+.sidebar { background:#08120d; border-right:1px solid #294238; }
+.sidebar .brand { color:#e8f7ed; font-family:"Share Tech Mono",monospace; }
+.sidebar .brand::before { color:#b7f34a; font-family:"Fira Code",monospace; }
+.nav-item { border-radius:2px; font-family:"Fira Code",monospace; }
+.nav-item.active { background:#14231d; color:#b7f34a; border-left-color:#b7f34a; }
+.nav-item:hover { background:#102018; color:#e8f7ed; }
+.side-bottom a,.side-bottom button { font-family:"Fira Code",monospace; }
+.main { position:relative; }
+.main::before { content:"SECURITY / PORTFOLIO CONTROL"; position:absolute; top:19px; right:48px; color:var(--muted); font:9px "Fira Code",monospace; letter-spacing:.12em; opacity:.72; }
+.topbar { border-bottom:1px solid var(--line); }
+.topbar h2,.login-card h1,.section-title h3,.analytics-toolbar h3,.world-admin-header h3,.modal-head h3 { font-family:"Montserrat","Segoe UI",sans-serif; font-weight:800; letter-spacing:-.06em; }
+.secure { color:var(--success); font-family:"Fira Code",monospace; }
+.stat { border-radius:2px; border-color:var(--line); border-top:2px solid var(--accent); box-shadow:none; }
+.stat small,.meta,.file-help,.visit-facts,.visit-time { font-family:"Fira Code",monospace; }
+.stat strong { color:var(--accent); font-family:"Share Tech Mono",monospace; }
+#dashboard .intro>div,.analytics-single-card,.project-row,.message,.certification-admin-card,.world-admin-header,.world-admin-grid article,#profile .intro { border-radius:2px; border-color:var(--line); box-shadow:none; }
+#dashboard .intro>div { border-top:2px solid var(--accent); }
+.section-title { border-top:1px solid var(--line); }
+.button,.small-btn { border-radius:2px; font-family:"Fira Code",monospace; }
+.button,.button.primary { color:var(--on-accent,#071008); background:var(--accent); border-color:var(--accent); box-shadow:4px 4px 0 var(--text); }
+.button:hover { transform:translate(2px,2px); filter:none; box-shadow:2px 2px 0 var(--text); }
+.analytics-single-card { border-top:2px solid var(--accent); }
+.analytics-toolbar { border-bottom:1px dashed var(--line); }
+.project-row,.message { border-left:3px solid var(--accent); }
+.certification-admin-card { border-top:2px solid var(--accent); }
+.world-admin-header,.world-admin-grid article { border-top:2px solid var(--accent); }
+.modal { background:#07100cdb; }
+.modal-panel { border-radius:2px; border:1px solid var(--line); box-shadow:10px 10px 0 var(--accent); }
+.modal-close { border-radius:2px; }
+@media(max-width:760px) { .main::before { display:none; } }

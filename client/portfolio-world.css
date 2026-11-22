@@ -184,3 +184,41 @@
 [data-theme="dark"] .world-contact-form input,
 [data-theme="dark"] .world-contact-form textarea,
 [data-theme="dark"] .world-privacy button { background:#120c17; border-color:#493b50; color:var(--ink); }
+
+/* Cyber observatory UI: evidence labels and telemetry surfaces keep the world connected to the main site. */
+.portfolio-world {
+  --ink:#10231b;
+  --paper:#f7fbf8;
+  --copper:#167a4a;
+  background:#eef6f1;
+  font-family:"Montserrat","Segoe UI",sans-serif;
+}
+.portfolio-world h1,.portfolio-world h2,.portfolio-world h3,.portfolio-world .world-brand,.portfolio-world .world-dialog h3,.portfolio-world .world-credential-list strong,.portfolio-world .world-timeline a,.portfolio-world .world-controls-list dt,.portfolio-world .world-privacy strong { font-family:"Montserrat","Segoe UI",sans-serif; font-weight:700; }
+.portfolio-world .world-brand small,.portfolio-world .world-header-links,.portfolio-world .world-kicker,.portfolio-world .world-footer,.portfolio-world .world-mode,.portfolio-world .world-destination-caption,.portfolio-world .world-marker,.portfolio-world .world-nearby,.portfolio-world .world-dialog-heading,.portfolio-world .world-credential-list small,.portfolio-world .world-credential-number { font-family:"Fira Code","DM Mono",Consolas,monospace; }
+.world-scene { background:linear-gradient(#dceee5,#8fbbaa); }
+.world-vignette { border-color:#b7f34a35; box-shadow:inset 0 0 120px #10231b22; }
+.world-intro .world-vignette { background:linear-gradient(90deg,#eef6f1ee 0%,#eef6f1b5 28%,transparent 56%); }
+.world-header-links>a,.world-footer button,.world-welcome-actions>a { border-color:#167a4a55; }
+.world-round,.world-mode,.world-marker,.world-destinations,.world-dpad button { border-color:#167a4a70; background:#f7fbf8e8; border-radius:2px; }
+.world-round:hover,.world-marker:hover,.world-destinations button:hover,.world-credential-list button:hover,.world-dpad button:active { background:#d9eee1; }
+.world-button,.world-mode button[aria-pressed=true],.world-privacy button:last-child { background:#167a4a; border-color:#167a4a; color:#f4fff8!important; border-radius:2px; }
+.world-button:hover { background:#0f613a; }
+.world-nearby { border-color:#b7f34a; background:#07100ced; color:#b7f34a; border-radius:2px; }
+.world-welcome h1 em,.world-handnote { color:#167a4a; }
+.world-marker>span,.world-facts dt,.world-credential-list small,.world-timeline time,.world-timeline span,.world-destination-caption { color:#167a4a; }
+.world-dialog,.world-fallback,.world-privacy { background:#f7fbf8; border-color:#c5d9cd; border-radius:2px; }
+.world-dialog-shade { background:#10231b55; }
+.world-contact-form input,.world-contact-form textarea { background:#ffffff; border-color:#c5d9cd; border-radius:2px; }
+.world-loading-line { background:linear-gradient(90deg,#167a4a,#b7f34a,#ff6256); }
+[data-theme="dark"] .portfolio-world { --ink:#e8f7ed; --paper:#0e1713; --copper:#b7f34a; background:#070b09; }
+[data-theme="dark"] .world-scene { background:linear-gradient(#07100c,#0d2b1c); }
+[data-theme="dark"] .world-vignette { border-color:#b7f34a24; box-shadow:inset 0 0 120px #00000080; }
+[data-theme="dark"] .world-intro .world-vignette { background:linear-gradient(90deg,#070b09f2 0%,#070b09b8 30%,transparent 57%); }
+[data-theme="dark"] :is(.world-round,.world-mode,.world-marker,.world-destinations,.world-dpad button,.world-privacy,.world-dialog,.world-fallback) { background:#0e1713ed; border-color:#294238; }
+[data-theme="dark"] :is(.world-round:hover,.world-marker:hover,.world-destinations button:hover,.world-credential-list button:hover,.world-dpad button:active) { background:#14231d; }
+[data-theme="dark"] .world-nearby { background:#08120dee; border-color:#b7f34a; color:#b7f34a; }
+[data-theme="dark"] :is(.world-button,.world-mode button[aria-pressed=true],.world-privacy button:last-child) { background:#b7f34a; border-color:#b7f34a; color:#071008!important; }
+[data-theme="dark"] .world-button:hover { background:#d1ff79; border-color:#d1ff79; }
+[data-theme="dark"] .world-welcome h1 em,.portfolio-world[data-theme="dark"] .world-handnote { color:#b7f34a; }
+[data-theme="dark"] .world-welcome-role,[data-theme="dark"] .world-dialog>p,[data-theme="dark"] .world-small,[data-theme="dark"] .world-project-list p,[data-theme="dark"] .world-controls-list dd,[data-theme="dark"] .world-privacy p { color:#91aa9c; }
+[data-theme="dark"] .world-contact-form input,[data-theme="dark"] .world-contact-form textarea,[data-theme="dark"] .world-privacy button { background:#0a120e; border-color:#294238; color:var(--ink); }

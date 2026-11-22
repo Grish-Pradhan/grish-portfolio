@@ -1,1 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="0" fill="#a36b18"/><text x="12" y="43" font-family="Georgia,serif" font-size="38" font-weight="700" letter-spacing="-6" fill="#fffaf2">gp.</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="2" fill="#07100c"/><path d="M8 16h48M8 48h48" stroke="#b7f34a" stroke-width="2"/><text x="11" y="39" font-family="monospace" font-size="26" font-weight="700" letter-spacing="-3" fill="#b7f34a">gp_</text></svg>

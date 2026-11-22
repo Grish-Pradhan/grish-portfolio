@@ -43,7 +43,7 @@ export function SiteHeader({ profile, route }) {
 }
 
 export function SiteFooter({ profile, onOpenPrivacy }) {
-  return <footer className="site-footer"><div className="footer-top"><a className="footer-name" href="/">{profile?.name || "Grish Pradhan"}<span>Always curious. Always building.</span></a><div className="footer-links"><a href="/world">Explore the island <Icon type="island" /></a>{profile?.github && <a href={safeUrl(profile.github)} target="_blank" rel="noreferrer">GitHub <Icon /></a>}{profile?.linkedin && <a href={safeUrl(profile.linkedin)} target="_blank" rel="noreferrer">LinkedIn <Icon /></a>}</div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} {profile?.name || "Grish Pradhan"}</span><span>{profile?.location || "Nepal"}</span><button type="button" onClick={onOpenPrivacy}>Privacy choices</button></div></footer>;
+  return <footer className="site-footer"><div className="footer-top"><a className="footer-name" href="/">{profile?.name || "Grish Pradhan"}<span>Always curious. Always building.</span></a><div className="footer-links"><a href="/world">Open the casefile <Icon type="island" /></a>{profile?.github && <a href={safeUrl(profile.github)} target="_blank" rel="noreferrer">GitHub <Icon /></a>}{profile?.linkedin && <a href={safeUrl(profile.linkedin)} target="_blank" rel="noreferrer">LinkedIn <Icon /></a>}</div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} {profile?.name || "Grish Pradhan"}</span><span>{profile?.location || "Nepal"}</span><button type="button" onClick={onOpenPrivacy}>Privacy choices</button></div></footer>;
 }
 
 function SectionHead({ number, label, title, href, action }) {
@@ -62,7 +62,29 @@ export function DataState({ loading, error, empty, children }) {
 }
 
 function ProjectArtwork({ index }) {
-  return <div className={`project-artwork artwork-${index % 3}`} aria-hidden="true"><svg viewBox="0 0 600 340" fill="none"><defs><pattern id={`grid-${index}`} width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" stroke="currentColor" opacity=".12" /></pattern></defs><rect width="600" height="340" fill={`url(#grid-${index})`} />{index % 3 === 0 ? <g transform="translate(300 168)"><circle r="105" stroke="currentColor" opacity=".2" /><circle r="75" stroke="currentColor" opacity=".4" /><path d="m0-56 48 18v37c0 32-48 58-48 58S-48 31-48-1v-37L0-56Z" stroke="currentColor" strokeWidth="1.6" /><path d="m-19 0 14 14L24-16" stroke="currentColor" strokeWidth="2" /><path d="M-150 0h45m210 0h45M0-140v35m0 210v35" stroke="currentColor" /></g> : index % 3 === 1 ? <g transform="translate(300 170)"><rect x="-145" y="-85" width="290" height="170" rx="8" stroke="currentColor" /><path d="M-145-50h290m-260 54 30 23-30 23m60 0h90" stroke="currentColor" strokeWidth="2" /><circle cx="-121" cy="-67" r="3" fill="currentColor" /><circle cx="-108" cy="-67" r="3" fill="currentColor" /></g> : <g transform="translate(300 170)"><ellipse rx="135" ry="50" stroke="currentColor" transform="rotate(-35)" /><ellipse rx="135" ry="50" stroke="currentColor" transform="rotate(35)" /><path d="M0-66 58-33v66L0 66l-58-33v-66L0-66Zm0 0v66m58-33L0 0l-58-33M0 0v66" stroke="currentColor" strokeWidth="1.5" /></g>}</svg><span>{["SECURITY / ENGINEERING", "SOFTWARE / SYSTEMS", "EXPERIMENT / EXPLORE"][index % 3]}</span></div>;
+  const artifact = index % 3;
+  return <div className={`project-artwork artifact-${artifact}`} aria-hidden="true">
+    <div className="artifact-noise" />
+    {artifact === 0 && <div className="artifact-terminal">
+      <div className="artifact-window-bar"><span /><span /><span /><b>CASEFILE / GP-{String(index + 1).padStart(2, "0")}</b></div>
+      <div className="artifact-terminal-body"><p><i>$</i> trace --target portfolio.local</p><p className="ok">[ok] trust boundary mapped</p><p><i>$</i> inspect --surface <b>web</b></p><p className="warn">[!] exposed signal: 03 findings</p><p><i>$</i> ship --with <b>care</b><span className="artifact-cursor" /></p></div>
+      <span className="artifact-stamp">LIVE TRACE</span>
+    </div>}
+    {artifact === 1 && <div className="artifact-evidence">
+      <div className="evidence-header"><b>INCIDENT / 0084</b><span>REVIEWED</span></div>
+      <div className="evidence-main"><div className="evidence-id">GP</div><div><p>IDENTITY / VERIFIED</p><strong>ATTACK SURFACE<br />REPORT</strong><small>hash 7e4c…a91f</small></div></div>
+      <div className="evidence-checks"><span>AUTH</span><span>INPUT</span><span>LOGGING</span><span>PATCHED</span></div>
+      <span className="artifact-stamp">EVIDENCE / 02</span>
+    </div>}
+    {artifact === 2 && <div className="artifact-packet">
+      <div className="packet-header"><span>PACKET CAPTURE</span><b>ENCRYPTED</b></div>
+      <div className="packet-lines"><span /><span /><span /><span /><span /><span /></div>
+      <div className="packet-footer"><strong>03:17:42</strong><span>TCP / TLS / DNS</span></div>
+      <div className="packet-beacon"><i /><i /><i /></div>
+      <span className="artifact-stamp">SIGNAL / CLEAN</span>
+    </div>}
+    <span className="artifact-label">{["SECURITY / ENGINEERING", "FORENSICS / ANALYSIS", "NETWORK / SIGNAL"][artifact]}</span>
+  </div>;
 }
 
 function ProjectCard({ project, index }) {
@@ -87,20 +109,20 @@ function ContactBlock({ profile, sendMessage, formStatus, standalone = false }) 
 
 function FocusAreas() {
   return <div className="focus-grid">{[
-    ["shield", "01", "Security research", "Understanding trust boundaries, questioning assumptions, and finding the details that matter."],
-    ["code", "02", "Software engineering", "Turning complex problems into useful tools, considered interfaces, and dependable systems."],
-    ["search", "03", "Continuous practice", "Learning through labs, certifications, and experiments. Keeping curiosity close to the work."]
+    ["shield", "01", "Threat research", "Reading systems like evidence: mapping trust boundaries, attack paths, and the details most people miss."],
+    ["code", "02", "Security tooling", "Building dependable software for the moment when a clean interface meets a messy real-world system."],
+    ["search", "03", "Continuous practice", "Labs, certifications, and experiments that turn curiosity into sharper instincts and better decisions."]
   ].map(([icon, number, title, copy]) => <article className="focus-card" key={number}><div><Icon type={icon} width="28" height="28" /><span className="mono">{number}</span></div><h3>{title}</h3><p>{copy}</p></article>)}</div>;
 }
 
 function HomePage({ profile, projects, certifications, loading, error, sendMessage, formStatus }) {
   return <>
     <section className="hero section"><div className="hero-copy"><p className="eyebrow"><span className="status-dot" /> {profile?.location || "Nepal"} / Independent portfolio</p><p className="hero-name">Hi, I’m {profile?.name || "Grish Pradhan"}.</p><h1>I build systems.<br /><em>I question everything.</em></h1><p className="hero-role">{profile?.role || "Security researcher & full-stack developer"}</p><p className="hero-summary">Security research, software, and ideas with sharp edges.</p><div className="actions"><a className="button primary" href="/projects">See the work <Icon /></a><a className="button secondary" href="/contact">Start a conversation <Icon type="mail" /></a></div><div className="hero-footnote"><span className="mono">SECURITY × SOFTWARE × CURIOSITY</span><a href="#selected-work">Scroll to discover <span aria-hidden="true">↓</span></a></div></div><aside className="hero-note" aria-label="Current focus"><div className="hero-note-label mono">CURRENT FOCUS</div><p className="hero-note-copy">I don’t chase trends. I build systems worth trusting.</p><div className="hero-note-list"><div><span className="mono">01</span><strong>Security research</strong></div><div><span className="mono">02</span><strong>Full-stack systems</strong></div><div><span className="mono">03</span><strong>{profile?.location || "Nepal"}</strong></div></div></aside></section>
-    <div className="portfolio-strip"><div><span>Research.</span><span>Build.</span><span>Understand.</span></div><a href="/world"><Icon type="island" /> A different way to explore <Icon /></a></div>
+    <div className="portfolio-strip"><div><span>Research.</span><span>Build.</span><span>Understand.</span></div><a href="/world"><Icon type="island" /> Open the casefile <Icon /></a></div>
     <section className="section about-section" id="about"><SectionHead number="01" label="A little context" title={<>Curiosity is the<br />starting point.</>} href="/about" action="More about me" /><div className="about-summary"><p>{profile?.bio || "I’m interested in the details behind the interface: how software works, where trust breaks down, and what we can do about it."}</p><div className="real-stats"><div><strong>{loading || error ? "—" : String(projects.length).padStart(2, "0")}</strong><span>Published projects</span></div><div><strong>{loading || error ? "—" : String(certifications.length).padStart(2, "0")}</strong><span>Earned credentials</span></div><div><strong><Icon type="code" width="34" height="34" /></strong><span>Security-minded engineering</span></div></div></div><FocusAreas /></section>
     <section className="section work-section" id="selected-work"><SectionHead number="02" label="Selected work" title={<>Ideas, made real.</>} href="/projects" action="All projects" /><DataState loading={loading} error={error} empty={!projects.length}><div className="projects">{sortProjects(projects).slice(0, 4).map((project, index) => <ProjectCard key={project.id} project={project} index={index} />)}</div></DataState></section>
     <section className="section credentials-section"><SectionHead number="03" label="Learning, documented" title={<>Practice with purpose.</>} href="/certifications" action="All credentials" /><DataState loading={loading} error={error} empty={!certifications.length}><div className="credential-grid">{[...certifications].sort((a, b) => String(b.issued_on || "").localeCompare(String(a.issued_on || ""))).slice(0, 3).map(certificate => <CertificateCard key={certificate.id} certificate={certificate} />)}</div></DataState></section>
-    <section className="section island-invitation"><div className="world-portal" aria-hidden="true"><div className="portal-sky"><span className="portal-orbit portal-orbit-one" /><span className="portal-orbit portal-orbit-two" /><span className="portal-orbit portal-orbit-three" /><span className="portal-planet"><span>GP</span></span><span className="portal-pulse" /><span className="portal-caption">WORLD / 01</span><span className="portal-coordinate">27.7172° N · 85.3240° E</span></div><div className="portal-meta"><span>WALKABLE ARCHIVE</span><span>OPEN THE WORLD <b>↗</b></span></div></div><div><p className="eyebrow"><span>04</span> The other entrance</p><h2>A portfolio you<br />can <em>wander through.</em></h2><p>The same work and credentials, in a living world. Take the scenic route.</p><a className="button secondary" href="/world">Enter the island <Icon type="island" /></a></div></section>
+    <section className="section island-invitation"><div className="world-portal" aria-hidden="true"><div className="portal-sky"><div className="portal-terminal"><div className="portal-terminal-top"><span className="portal-led" /><span>FIELD CONSOLE / GP-01</span><b>READ ONLY</b></div><div className="portal-terminal-body"><div className="portal-terminal-line"><span>01</span><b>observe</b><i>the system before touching it</i></div><div className="portal-terminal-line"><span>02</span><b>map</b><i>trust boundaries and weak signals</i></div><div className="portal-terminal-line"><span>03</span><b>build</b><i>tools that make the next decision clearer</i></div><div className="portal-terminal-line active"><span>04</span><b>enter_world</b><i>walkable archive <span className="artifact-cursor" /></i></div></div><div className="portal-terminal-foot"><span>STATUS / OBSERVING</span><strong>NEPAL · 27.7172° N</strong></div></div><span className="portal-data-stream stream-one">01001101 00110010 11001010</span><span className="portal-data-stream stream-two">AUTH / TRACE / VERIFY</span><span className="portal-evidence-tag">EVIDENCE<br /><b>GP / 01</b></span></div><div className="portal-meta"><span>WALKABLE ARCHIVE <b>·</b> LIVE CASEFILE</span><span>OPEN THE WORLD <b>↗</b></span></div></div><div><p className="eyebrow"><span>04</span> The other entrance</p><h2>A portfolio you<br />can <em>investigate.</em></h2><p>The same work and credentials, reframed as a living casefile. Move through the world, open the evidence, and follow the signal.</p><a className="button secondary" href="/world">Enter the world <Icon type="island" /></a></div></section>
     <ContactBlock profile={profile} sendMessage={sendMessage} formStatus={formStatus} />
   </>;
 }
