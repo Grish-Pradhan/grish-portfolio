@@ -304,3 +304,34 @@ body { margin:0; min-width:320px; background:var(--site-bg); }
 .standard-portfolio .privacy-consent { border:2px solid var(--text); border-radius:0; box-shadow:8px 8px 0 var(--accent); }
 @media(max-width:900px) { .standard-portfolio .nav { padding-inline:32px; } .standard-portfolio .hero { padding-inline:32px; min-height:640px; } .standard-portfolio .hero h1 { font-size:clamp(54px,8vw,88px); } }
 @media(max-width:640px) { .standard-portfolio .nav { padding-inline:22px; } .standard-portfolio .hero { padding-inline:22px; min-height:auto; } .standard-portfolio .hero h1 { font-size:clamp(50px,15vw,76px); } .standard-portfolio .hero-note { border-left:0; padding-left:0; } .standard-portfolio .hero-note-list { grid-template-columns:1fr; } .standard-portfolio .hero-note-list>div { display:flex; } .standard-portfolio .button.primary { box-shadow:4px 4px 0 var(--text); } .standard-portfolio .section-head h2 { font-size:42px; } }
+
+/* Majestic world gateway: layered geometry replaces the flat illustration. */
+.standard-portfolio .island-invitation { grid-template-columns:minmax(0,1.08fr) minmax(280px,.92fr); gap:72px; min-height:560px; padding:0; overflow:hidden; border:1px solid #6677b8; background:#080b16; color:#f3f5fa; box-shadow:12px 12px 0 var(--accent); }
+.standard-portfolio .island-invitation>div:last-child { padding:72px 72px 72px 0; align-self:center; }
+.standard-portfolio .island-invitation .eyebrow { color:#aebdff; }
+.standard-portfolio .island-invitation em { color:#9badff; }
+.standard-portfolio .island-invitation p:not(.eyebrow) { color:#bbc4d7; }
+.standard-portfolio .island-invitation .button.secondary { color:#f3f5fa; border-color:#b2beff; }
+.standard-portfolio .island-invitation .button.secondary:hover { background:#f3f5fa; color:#080b16; }
+.standard-portfolio .world-portal { align-self:stretch; min-height:560px; display:grid; grid-template-rows:1fr auto; overflow:hidden; background:radial-gradient(circle at 52% 46%,#344caa 0,#172454 23%,#0b1025 53%,#080b16 78%); }
+.standard-portfolio .portal-sky { position:relative; min-height:500px; overflow:hidden; isolation:isolate; background-image:radial-gradient(circle at 18% 22%,#ffffff 0 1px,transparent 1.5px),radial-gradient(circle at 74% 18%,#b9c8ff 0 1px,transparent 1.5px),radial-gradient(circle at 85% 74%,#ffffff 0 1px,transparent 1.5px),radial-gradient(circle at 20% 78%,#91a7ff 0 1px,transparent 1.5px); background-size:190px 170px,230px 220px,270px 260px,310px 280px; }
+.standard-portfolio .portal-sky::before { content:""; position:absolute; inset:16% 10%; border:1px solid #8596e866; border-radius:50%; transform:rotate(-28deg) scaleY(.36); box-shadow:0 0 70px #4c6eff22,0 0 140px #4c6eff18; }
+.standard-portfolio .portal-sky::after { content:""; position:absolute; width:42%; aspect-ratio:1; left:29%; top:24%; border-radius:50%; background:radial-gradient(circle,#ffffffb8 0 1%,#9badff33 14%,transparent 68%); filter:blur(12px); z-index:-1; }
+.standard-portfolio .portal-orbit { position:absolute; left:50%; top:50%; width:62%; height:62%; border:1px solid #a8b7ff88; border-radius:50%; transform:translate(-50%,-50%) rotate(30deg) scaleY(.38); box-shadow:0 0 24px #a8b7ff18; }
+.standard-portfolio .portal-orbit-one { animation:portal-drift 13s linear infinite; }
+.standard-portfolio .portal-orbit-two { width:78%; height:44%; transform:translate(-50%,-50%) rotate(-42deg) scaleY(.6); border-color:#667ed888; animation:portal-drift-reverse 17s linear infinite; }
+.standard-portfolio .portal-orbit-three { width:45%; height:86%; transform:translate(-50%,-50%) rotate(62deg) scaleY(.48); border-color:#d7deff55; animation:portal-drift 21s linear infinite; }
+.standard-portfolio .portal-planet { position:absolute; left:50%; top:50%; width:132px; aspect-ratio:1; display:grid; place-items:center; transform:translate(-50%,-50%); border:1px solid #ccd5ff; border-radius:50%; color:#080b16; background:radial-gradient(circle at 32% 25%,#ffffff 0 2%,#aebcff 10%,#5c74e7 42%,#223271 73%,#0b1028 100%); box-shadow:0 0 35px #8ea2ffb3,0 0 100px #496bff55, inset -20px -24px 35px #080b1666; }
+.standard-portfolio .portal-planet span { font:700 24px/1 "Space Grotesk",sans-serif; letter-spacing:-.1em; }
+.standard-portfolio .portal-pulse { position:absolute; left:50%; top:50%; width:190px; aspect-ratio:1; transform:translate(-50%,-50%); border:1px solid #b7c5ff66; border-radius:50%; animation:portal-pulse 3.8s ease-out infinite; }
+.standard-portfolio .portal-caption,.standard-portfolio .portal-coordinate { position:absolute; color:#dce3ff; font:10px/1.4 "DM Mono",Consolas,monospace; letter-spacing:.12em; }
+.standard-portfolio .portal-caption { top:28px; left:28px; }
+.standard-portfolio .portal-coordinate { right:28px; bottom:28px; color:#9eacd8; font-size:9px; letter-spacing:.04em; }
+.standard-portfolio .portal-meta { display:flex; justify-content:space-between; gap:20px; padding:20px 28px; border-top:1px solid #6e80c966; color:#b5c2f4; font:10px/1.4 "DM Mono",Consolas,monospace; letter-spacing:.08em; }
+.standard-portfolio .portal-meta b { color:#ffffff; font-size:16px; font-weight:400; }
+@keyframes portal-drift { from { transform:translate(-50%,-50%) rotate(30deg) scaleY(.38); } to { transform:translate(-50%,-50%) rotate(390deg) scaleY(.38); } }
+@keyframes portal-drift-reverse { from { transform:translate(-50%,-50%) rotate(-42deg) scaleY(.6); } to { transform:translate(-50%,-50%) rotate(-402deg) scaleY(.6); } }
+@keyframes portal-pulse { 0% { opacity:.7; transform:translate(-50%,-50%) scale(.72); } 70%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.55); } }
+@media(max-width:900px) { .standard-portfolio .island-invitation { grid-template-columns:1fr; gap:0; } .standard-portfolio .island-invitation>div:last-child { padding:42px 32px 52px; } .standard-portfolio .world-portal { min-height:440px; } .standard-portfolio .portal-sky { min-height:380px; } }
+@media(max-width:640px) { .standard-portfolio .island-invitation { box-shadow:6px 6px 0 var(--accent); } .standard-portfolio .island-invitation>div:last-child { padding:34px 22px 42px; } .standard-portfolio .world-portal { min-height:380px; } .standard-portfolio .portal-sky { min-height:320px; } .standard-portfolio .portal-planet { width:92px; } .standard-portfolio .portal-pulse { width:140px; } .standard-portfolio .portal-coordinate { right:16px; bottom:18px; font-size:8px; } .standard-portfolio .portal-caption { top:18px; left:18px; } .standard-portfolio .portal-meta { padding:16px 18px; font-size:8px; } }
+@media(prefers-reduced-motion:reduce) { .standard-portfolio .portal-orbit,.standard-portfolio .portal-pulse { animation:none; } }
