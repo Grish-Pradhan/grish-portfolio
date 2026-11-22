@@ -35,7 +35,7 @@ export function SiteHeader({ profile, route }) {
   return <>
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header className="nav">
-      <a className="brand" href="/" aria-label={`${profile?.name || "Grish Pradhan"} home`}><span className="brand-mark" aria-hidden="true">g<span>p.</span></span><span>{profile?.name || "Grish Pradhan"}<small>Security researcher & developer</small></span></a>
+      <a className="brand" href="/" aria-label={`${profile?.name || "Grish Pradhan"} home`}><span className="brand-logo-frame"><img className="brand-logo" src="/brand-logo.png" alt="Grish Pradhan logo" /></span><span className="brand-context">Security researcher & developer</span></a>
       <nav id="site-navigation" ref={menuRef} className={open ? "open" : ""} aria-label="Main navigation">{links.map(([name, href]) => <a key={href} href={href} aria-current={(href === "/" && ["/", "/portfolio"].includes(route)) || route === href || (href === "/certifications" && route.startsWith("/certificate/")) ? "page" : undefined}>{name}</a>)}</nav>
       <div className="nav-controls"><ThemeToggle /><button ref={toggleRef} className="menu" type="button" aria-label={open ? "Close navigation" : "Open navigation"} aria-controls="site-navigation" aria-expanded={open} onClick={() => setOpen(value => !value)}><Icon type={open ? "close" : "menu"} /></button></div>
     </header>

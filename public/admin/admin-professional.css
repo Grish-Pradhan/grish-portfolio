@@ -250,3 +250,8 @@ body { font-family:"Montserrat","Segoe UI",sans-serif; background-color:var(--bg
 .modal-panel { border-radius:2px; border:1px solid var(--line); box-shadow:10px 10px 0 var(--accent); }
 .modal-close { border-radius:2px; }
 @media(max-width:760px) { .main::before { display:none; } }
+
+.login-brand-logo { display:block; width:250px; height:100px; object-fit:cover; object-position:center 50%; border:1px solid var(--line); background:#07100c; margin-bottom:8px; }
+.sidebar .admin-brand { display:block; padding:0; }
+.sidebar .admin-brand img { display:block; width:184px; height:72px; object-fit:cover; object-position:center 50%; border:1px solid #294238; background:#07100c; }
+@media(max-width:760px) { .sidebar .admin-brand img { width:156px; height:62px; } }
