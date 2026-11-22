@@ -101,3 +101,86 @@
 [data-theme="dark"] .world-dialog-shade { background:#060f1d99; }
 [data-theme="dark"] .world-dialog { scrollbar-color:#536882 transparent; }
 @media(max-width:600px) { [data-theme="dark"] .world-intro .world-vignette { background:linear-gradient(0deg,#101c30 0%,#101c30ed 27%,transparent 64%); } }
+
+/* Royal world theme: the spatial portfolio should feel like the same brand as the main site. */
+.portfolio-world {
+  --ink:#241b28;
+  --paper:#fffaf2;
+  --copper:#a36b18;
+  background:#f7f3ed;
+  font-family:"Montserrat", "Segoe UI", sans-serif;
+}
+.portfolio-world h1,
+.portfolio-world h2,
+.portfolio-world h3,
+.portfolio-world .world-brand,
+.portfolio-world .world-dialog h3,
+.portfolio-world .world-credential-list strong,
+.portfolio-world .world-timeline a,
+.portfolio-world .world-controls-list dt,
+.portfolio-world .world-privacy strong {
+  font-family:"Cormorant Garamond", Georgia, serif;
+}
+.world-scene { background:radial-gradient(circle at 70% 30%, #fff3d6 0%, #ead8c6 34%, #c8a8a0 100%); }
+.world-vignette { border-color:#fffaf280; box-shadow:inset 0 0 120px #4a283018; }
+.world-intro .world-vignette { background:linear-gradient(90deg,#fffaf2ee 0%,#fffaf2b5 28%,transparent 56%); }
+.world-header-links>a,
+.world-welcome-actions>a,
+.world-footer button { border-color:#241b2840; }
+.world-round,
+.world-mode,
+.world-marker,
+.world-destinations,
+.world-dpad button { border-color:#a36b1848; background:#fffaf2df; }
+.world-round:hover,
+.world-marker:hover,
+.world-destinations button:hover,
+.world-credential-list button:hover,
+.world-dpad button:active { background:#f1e5d1; }
+.world-button,
+.world-mode button[aria-pressed=true],
+.world-privacy button:last-child { background:#68428f; border-color:#68428f; color:#fffaf2!important; }
+.world-button:hover { background:#7d55a4; }
+.world-nearby { border-color:#a36b1870; background:#68428fee; }
+.world-welcome h1 em,
+.world-handnote { color:#68428f; }
+.world-welcome-role,
+.world-dialog>p,
+.world-small,
+.world-project-list p,
+.world-controls-list dd,
+.world-privacy p { color:#6f6570; }
+.world-marker>span,
+.world-facts dt,
+.world-credential-list small,
+.world-timeline time,
+.world-timeline span,
+.world-destination-caption { color:#a36b18; }
+.world-dialog,
+.world-fallback,
+.world-privacy { background:#fffaf2; border-color:#d8cdc1; }
+.world-dialog-shade { background:#2c18314d; }
+.world-contact-form input,
+.world-contact-form textarea { background:#fffdf9; border-color:#d8cdc1; color:var(--ink); }
+.world-loading-line { background:linear-gradient(90deg,#a36b18,#68428f,#d8b36a); }
+
+[data-theme="dark"] .portfolio-world { --ink:#fbf5eb; --paper:#18121e; --copper:#d8b36a; background:#0d0912; }
+[data-theme="dark"] .world-scene { background:radial-gradient(circle at 70% 28%, #4d3062 0%, #21172c 40%, #0d0912 100%); }
+[data-theme="dark"] .world-vignette { border-color:#d8b36a24; box-shadow:inset 0 0 120px #00000070; }
+[data-theme="dark"] .world-intro .world-vignette { background:linear-gradient(90deg,#0d0912f2 0%,#0d0912b8 30%,transparent 57%); }
+[data-theme="dark"] :is(.world-round,.world-mode,.world-marker,.world-destinations,.world-dpad button,.world-privacy,.world-dialog,.world-fallback) { background:#18121eed; border-color:#493b50; }
+[data-theme="dark"] :is(.world-round:hover,.world-marker:hover,.world-destinations button:hover,.world-credential-list button:hover,.world-dpad button:active) { background:#241a2c; }
+[data-theme="dark"] .world-nearby { background:#68428fee; border-color:#c39ae966; }
+[data-theme="dark"] :is(.world-button,.world-mode button[aria-pressed=true],.world-privacy button:last-child) { background:#c39ae9; border-color:#c39ae9; color:#160e1c!important; }
+[data-theme="dark"] .world-button:hover { background:#d8b36a; border-color:#d8b36a; }
+[data-theme="dark"] .world-welcome h1 em,
+[data-theme="dark"] .world-handnote { color:#c39ae9; }
+[data-theme="dark"] .world-welcome-role,
+[data-theme="dark"] .world-dialog>p,
+[data-theme="dark"] .world-small,
+[data-theme="dark"] .world-project-list p,
+[data-theme="dark"] .world-controls-list dd,
+[data-theme="dark"] .world-privacy p { color:#c0b3c4; }
+[data-theme="dark"] .world-contact-form input,
+[data-theme="dark"] .world-contact-form textarea,
+[data-theme="dark"] .world-privacy button { background:#120c17; border-color:#493b50; color:var(--ink); }

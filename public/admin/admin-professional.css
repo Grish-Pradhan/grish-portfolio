@@ -1,9 +1,9 @@
 /* A single dashboard stylesheet, shared by every admin section. */
-:root { --bg:#eef0f4; --panel:#fff; --panel2:#e5e9f0; --text:#0d1017; --muted:#596273; --line:#cfd5df; --accent:#2457ff; --accent2:#2457ff; --danger:#c43d4d; --input:#fafbfc; --success:#257653; --shadow:0 10px 35px #10182712; }
-:root[data-theme="dark"] { --bg:#080a0f; --panel:#10141d; --panel2:#171c27; --text:#f3f5fa; --muted:#a5afc0; --line:#303847; --accent:#7f9bff; --accent2:#7f9bff; --danger:#ff9eaa; --input:#0c1018; --success:#8edbb8; --shadow:0 10px 35px #00000038; }
+:root { --bg:#f1ece5; --panel:#fffaf2; --panel2:#eee5da; --text:#1c1720; --muted:#6f6570; --line:#d8cdc1; --accent:#a36b18; --accent2:#a36b18; --danger:#b43f4d; --input:#fffdf9; --success:#397153; --shadow:0 10px 35px #38251512; }
+:root[data-theme="dark"] { --bg:#0d0912; --panel:#18121e; --panel2:#241a2c; --text:#fbf5eb; --muted:#c0b3c4; --line:#493b50; --accent:#d8b36a; --accent2:#d8b36a; --danger:#ff9eaa; --input:#120c17; --success:#9ad9b5; --shadow:0 10px 35px #00000042; }
 *, *::before, *::after { box-sizing:border-box; }
-body { min-width:320px; margin:0; background:var(--bg); color:var(--text); font:14px/1.65 "Inter","Aptos","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased; }
-h1,h2,h3,h4,.brand,.eyebrow,.button,.small-btn,.nav-item { font-family:"Space Grotesk","Inter","Aptos","Segoe UI",sans-serif; }
+body { min-width:320px; margin:0; background:var(--bg); color:var(--text); font:14px/1.65 "Montserrat","Aptos","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4,.brand,.eyebrow,.button,.small-btn,.nav-item { font-family:"Montserrat","Aptos","Segoe UI",sans-serif; }
 h1,h2,h3,h4,p { margin:0; }
 a { color:var(--accent); text-decoration:none; }
 button,input,textarea,select { font:inherit; }
@@ -180,3 +180,11 @@ body { background-color:var(--bg); background-image:linear-gradient(#0d101705,#0
 .modal-close { border-radius:0; }
 @media(max-width:1000px) { .sidebar { width:212px; } .main { margin-left:212px; } }
 @media(max-width:760px) { .sidebar { width:100%; padding:22px 20px 14px; background:var(--text); } .sidebar .brand::before { margin-bottom:18px; } .main { margin-left:0; padding:32px 20px 56px; } .topbar h2 { font-size:40px; } .stat { box-shadow:3px 3px 0 var(--line); } }
+
+/* Keep the admin surface on the same royal palette as the public portfolio. */
+body { background-image:linear-gradient(#f1ece5f0,#f1ece5f0),linear-gradient(90deg,#1c17200a 1px,transparent 1px),linear-gradient(#1c17200a 1px,transparent 1px); }
+:root[data-theme="dark"] body { background-image:linear-gradient(#0d0912f0,#0d0912f0),linear-gradient(90deg,#fbf5eb08 1px,transparent 1px),linear-gradient(#fbf5eb08 1px,transparent 1px); }
+.topbar h2,.login-card h1,.section-title h3,.analytics-toolbar h3,.world-admin-header h3,.modal-head h3 { font-family:"Cormorant Garamond",Georgia,serif; font-weight:600; letter-spacing:-.045em; }
+.topbar h2 { font-size:clamp(38px,4.5vw,62px); }
+.sidebar .brand { font-family:"Montserrat",sans-serif; }
+.modal { background:#0d0912d9; }

@@ -57,8 +57,8 @@ function VisitorChart({ title, field, visits }) {
     const panel = palette.getPropertyValue("--panel").trim();
     const textStrong = palette.getPropertyValue("--text").trim();
     const fill = context.createLinearGradient(0, 0, 450, 0);
-    fill.addColorStop(0, accent || "#2952cc");
-    fill.addColorStop(1, accent2 || "#6f8fff");
+    fill.addColorStop(0, accent || "#a36b18");
+    fill.addColorStop(1, accent2 || "#d8b36a");
     const chart = new Chart(canvasRef.current, {
       type: "bar",
       data: {
@@ -66,7 +66,7 @@ function VisitorChart({ title, field, visits }) {
         datasets: [{
           data: entries.map(([, count]) => count),
           backgroundColor: fill,
-          hoverBackgroundColor: accent2 || "#6f8fff",
+          hoverBackgroundColor: accent2 || "#d8b36a",
           borderWidth: 0,
           borderRadius: 5,
           maxBarThickness: 28,
@@ -81,7 +81,7 @@ function VisitorChart({ title, field, visits }) {
         animation: { duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450, easing: "easeOutQuart" },
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: panel || "#fff", titleColor: textStrong || "#101a2d", bodyColor: textStrong || "#101a2d", displayColors: false, padding: 12, cornerRadius: 8, callbacks: { label: (context) => ` ${context.raw} visitor${context.raw === 1 ? "" : "s"}` } }
+          tooltip: { backgroundColor: panel || "#fffaf2", titleColor: textStrong || "#1c1720", bodyColor: textStrong || "#1c1720", displayColors: false, padding: 12, cornerRadius: 8, callbacks: { label: (context) => ` ${context.raw} visitor${context.raw === 1 ? "" : "s"}` } }
         },
         scales: {
           x: { beginAtZero: true, border: { display: false }, ticks: { precision: 0, color: text, font: { size: 11 } }, grid: { color: grid } },

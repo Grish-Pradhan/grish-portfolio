@@ -1,10 +1,10 @@
 /* Grish Pradhan: one scoped design system for every public page. */
-:root { color-scheme:light; --site-bg:#f3f4f6; }
-:root[data-theme="dark"] { color-scheme:dark; --site-bg:#080a0f; }
+:root { color-scheme:light; --site-bg:#f7f3ed; }
+:root[data-theme="dark"] { color-scheme:dark; --site-bg:#0d0912; }
 html { scroll-behavior:smooth; scroll-padding-top:108px; }
 body { margin:0; min-width:320px; background:var(--site-bg); }
-.standard-portfolio { --bg:#f3f4f6; --panel:#fff; --soft:#e8ebf0; --text:#0d1017; --muted:#596273; --line:#cfd5df; --accent:#2457ff; --on-accent:#fff; --accent-soft:#e4e9ff; --hot:#ff6845; --max:1280px; background:var(--bg); color:var(--text); min-height:100dvh; font:16px/1.65 "Space Grotesk","Aptos","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased; }
-[data-theme="dark"] .standard-portfolio { --bg:#080a0f; --panel:#10141d; --soft:#171c27; --text:#f3f5fa; --muted:#a5afc0; --line:#303847; --accent:#7f9bff; --on-accent:#080a0f; --accent-soft:#1a2550; --hot:#ff7b5f; }
+.standard-portfolio { --bg:#f7f3ed; --panel:#fffaf2; --soft:#eee5da; --text:#1c1720; --muted:#6f6570; --line:#d8cdc1; --accent:#a36b18; --on-accent:#fffaf2; --accent-soft:#f1e5d1; --hot:#68428f; --max:1280px; background:var(--bg); color:var(--text); min-height:100dvh; font:16px/1.65 "Montserrat","Aptos","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased; }
+[data-theme="dark"] .standard-portfolio { --bg:#0d0912; --panel:#18121e; --soft:#241a2c; --text:#fbf5eb; --muted:#c0b3c4; --line:#493b50; --accent:#d8b36a; --on-accent:#160e1c; --accent-soft:#382a21; --hot:#c39ae9; }
 .standard-portfolio *, .standard-portfolio *::before,.standard-portfolio *::after { box-sizing:border-box; }
 .standard-portfolio :is(h1,h2,h3,p,figure,dl,dd) { margin:0; }
 .standard-portfolio :is(a,button,input,textarea,select):focus-visible { outline:3px solid var(--accent); outline-offset:5px; }
@@ -15,7 +15,7 @@ body { margin:0; min-width:320px; background:var(--site-bg); }
 .standard-portfolio button:disabled { cursor:wait; opacity:.6; }
 .standard-portfolio img { display:block; max-width:100%; }
 .standard-portfolio svg { flex:none; vertical-align:middle; }
-.standard-portfolio :is(h1,h2,h3,.brand,.button,.text-link) { font-family:"Space Grotesk","Inter","Aptos","Segoe UI",sans-serif; }
+.standard-portfolio :is(h1,h2,h3,.brand,.button,.text-link) { font-family:"Montserrat","Aptos","Segoe UI",sans-serif; }
 .standard-portfolio h1 { font-size:clamp(48px,5.65vw,80px); line-height:1.05; letter-spacing:-.062em; font-weight:500; text-wrap:balance; }
 .standard-portfolio h2 { font-size:clamp(34px,3.7vw,52px); line-height:1.13; letter-spacing:-.045em; font-weight:500; text-wrap:balance; }
 .standard-portfolio h3 { font-size:23px; line-height:1.3; letter-spacing:-.025em; font-weight:550; }
@@ -335,3 +335,34 @@ body { margin:0; min-width:320px; background:var(--site-bg); }
 @media(max-width:900px) { .standard-portfolio .island-invitation { grid-template-columns:1fr; gap:0; } .standard-portfolio .island-invitation>div:last-child { padding:42px 32px 52px; } .standard-portfolio .world-portal { min-height:440px; } .standard-portfolio .portal-sky { min-height:380px; } }
 @media(max-width:640px) { .standard-portfolio .island-invitation { box-shadow:6px 6px 0 var(--accent); } .standard-portfolio .island-invitation>div:last-child { padding:34px 22px 42px; } .standard-portfolio .world-portal { min-height:380px; } .standard-portfolio .portal-sky { min-height:320px; } .standard-portfolio .portal-planet { width:92px; } .standard-portfolio .portal-pulse { width:140px; } .standard-portfolio .portal-coordinate { right:16px; bottom:18px; font-size:8px; } .standard-portfolio .portal-caption { top:18px; left:18px; } .standard-portfolio .portal-meta { padding:16px 18px; font-size:8px; } }
 @media(prefers-reduced-motion:reduce) { .standard-portfolio .portal-orbit,.standard-portfolio .portal-pulse { animation:none; } }
+
+/* Royal theme: warm ivory, obsidian plum, champagne gold, and restrained violet. */
+.standard-portfolio { background-image:linear-gradient(#f7f3edef,#f7f3edef),linear-gradient(90deg,#1c17200a 1px,transparent 1px),linear-gradient(#1c17200a 1px,transparent 1px); }
+[data-theme="dark"] .standard-portfolio { background-image:linear-gradient(#0d0912f0,#0d0912f0),linear-gradient(90deg,#fbf5eb08 1px,transparent 1px),linear-gradient(#fbf5eb08 1px,transparent 1px); }
+.standard-portfolio :is(h1,h2,.contact-copy h2,.section-head h2) { font-family:"Cormorant Garamond",Georgia,serif; font-weight:600; letter-spacing:-.055em; }
+.standard-portfolio .hero h1 { letter-spacing:-.055em; }
+.standard-portfolio .hero h1 em { color:var(--hot); font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; font-weight:600; letter-spacing:-.055em; }
+.standard-portfolio .section-head h2,.standard-portfolio .contact-copy h2 { font-size:clamp(48px,5.4vw,80px); }
+.standard-portfolio .button.primary { color:var(--on-accent); }
+.standard-portfolio .portfolio-strip { background:var(--text); color:var(--bg); }
+.standard-portfolio .project-artwork { color:var(--hot); }
+.standard-portfolio .island-invitation { border-color:#8c6a40; background:#100b15; color:#fbf5eb; box-shadow:12px 12px 0 var(--accent); }
+.standard-portfolio .island-invitation .eyebrow { color:#dfbf83; }
+.standard-portfolio .island-invitation em { color:#d1a5ee; }
+.standard-portfolio .island-invitation p:not(.eyebrow) { color:#c7b9c9; }
+.standard-portfolio .island-invitation .button.secondary { color:#fbf5eb; border-color:#d8b36a; }
+.standard-portfolio .island-invitation .button.secondary:hover { background:#fbf5eb; color:#100b15; }
+.standard-portfolio .world-portal { background:radial-gradient(circle at 52% 46%,#6b4388 0,#321b45 23%,#180d24 53%,#100b15 78%); }
+.standard-portfolio .portal-sky { background-image:radial-gradient(circle at 18% 22%,#fff4d8 0 1px,transparent 1.5px),radial-gradient(circle at 74% 18%,#e1bd78 0 1px,transparent 1.5px),radial-gradient(circle at 85% 74%,#ffffff 0 1px,transparent 1.5px),radial-gradient(circle at 20% 78%,#d4a5ef 0 1px,transparent 1.5px); }
+.standard-portfolio .portal-sky::before { border-color:#d8b36a66; box-shadow:0 0 70px #d8b36a1f,0 0 140px #c39ae91c; }
+.standard-portfolio .portal-sky::after { background:radial-gradient(circle,#fff4d8b8 0 1%,#d8b36a33 14%,transparent 68%); }
+.standard-portfolio .portal-orbit { border-color:#d8b36a99; box-shadow:0 0 24px #d8b36a22; }
+.standard-portfolio .portal-orbit-two { border-color:#c39ae977; }
+.standard-portfolio .portal-orbit-three { border-color:#f7e7c655; }
+.standard-portfolio .portal-planet { border-color:#f7e7c6; color:#211329; background:radial-gradient(circle at 32% 25%,#fff9e7 0 2%,#e7c980 10%,#a8752e 42%,#5d3675 73%,#211329 100%); box-shadow:0 0 35px #d8b36ab3,0 0 100px #c39ae955,inset -20px -24px 35px #100b1566; }
+.standard-portfolio .portal-planet span { font-family:"Montserrat",sans-serif; }
+.standard-portfolio .portal-pulse { border-color:#f7e7c677; }
+.standard-portfolio .portal-caption,.standard-portfolio .portal-coordinate { color:#f7e7c6; }
+.standard-portfolio .portal-coordinate { color:#d6bd91; }
+.standard-portfolio .portal-meta { border-top-color:#a9824b99; color:#dfc993; }
+.standard-portfolio .portal-meta b { color:#fff4d8; }
