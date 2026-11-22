@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeToggle, useTheme } from "./theme";
 import { BarController, BarElement, CategoryScale, Chart, Legend, LinearScale, Tooltip } from "chart.js";
+import { projectImage } from "./portfolio-data";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 Chart.defaults.color = "#969ba7";
@@ -259,7 +260,7 @@ function AdminApp() {
   }
 
   function openProject(project = emptyProject()) {
-    setProjectDraft({ ...emptyProject(), ...project, featured: Boolean(project.featured) });
+    setProjectDraft({ ...emptyProject(), ...project, image: projectImage(project) || project.image || "", featured: Boolean(project.featured) });
     setProjectStatus("");
     setProjectModalOpen(true);
   }
@@ -515,10 +516,13 @@ function AdminApp() {
             <div className="project-list">
               {projects.length ? projects.map((project) => (
                 <article className="project-row" key={project.id}>
-                  <div>
+                  <div className="project-row-main">
+                    {projectImage(project) ? <img className="project-row-preview" src={projectImage(project)} alt="" onError={(event) => { event.currentTarget.hidden = true; }} /> : null}
+                    <div>
                     <h4>{project.title} {project.featured ? <span className="meta"> · FEATURED</span> : null}</h4>
                     <p>{project.description}</p>
                     <span className="meta">{project.tech || ""}</span>
+                    </div>
                   </div>
                   <div className="row-actions">
                     <button className="small-btn" onClick={() => openProject(project)}>Edit</button>
@@ -635,7 +639,7 @@ function AdminApp() {
               <label>Title<input name="title" value={projectDraft.title} onChange={updateProject} required /></label>
               <label className="modal-full">Description<textarea name="description" value={projectDraft.description} onChange={updateProject} rows="4" required /></label>
               <label>Technologies<input name="tech" value={projectDraft.tech} onChange={updateProject} placeholder="JavaScript, Node.js" /></label>
-              <label>Image URL<input name="image" type="url" value={projectDraft.image} onChange={updateProject} /></label>
+              <label>Image URL or local asset<input name="image" type="text" value={projectDraft.image} onChange={updateProject} placeholder="https://... or /projects/preview.webp" /></label>
               <label>Live project URL<input name="url" type="url" value={projectDraft.url} onChange={updateProject} /></label>
               <label>GitHub URL<input name="github" type="url" value={projectDraft.github} onChange={updateProject} /></label>
               <label className="featured-toggle"><input name="featured" type="checkbox" checked={projectDraft.featured} onChange={updateProject} /><span>Featured project</span></label>

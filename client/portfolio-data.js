@@ -6,6 +6,23 @@ export function safeUrl(value) {
   } catch { return "#"; }
 }
 
+// Older project records used browser-only `blob:` URLs. Keep those records
+// readable while the admin replaces them with a durable public asset.
+const projectPreviews = {
+  "frozen meat and food mart": "/projects/frozen-meat-food-mart.jpg",
+  "forge strength": "/projects/forge-strength.webp"
+};
+
+export function projectImage(project) {
+  const value = typeof project?.image === "string" ? project.image.trim() : "";
+  const title = String(project?.title || "").trim().toLowerCase();
+  const fallback = projectPreviews[title] || "";
+
+  if (!value || value.startsWith("blob:") || value.startsWith("data:")) return fallback;
+  if (value.startsWith("/") || /^https?:\/\//i.test(value)) return value;
+  return fallback;
+}
+
 export function credentialDate(value) {
   if (!value) return "Date not listed";
   const date = new Date(`${value}T00:00:00`);

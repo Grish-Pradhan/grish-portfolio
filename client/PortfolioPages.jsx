@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ThemeToggle } from "./theme";
-import { credentialDate, filterCredentials, safeUrl, sortProjects } from "./portfolio-data";
+import { credentialDate, filterCredentials, projectImage, safeUrl, sortProjects } from "./portfolio-data";
 
 export function Icon({ type = "arrow", ...props }) {
   const paths = {
@@ -88,8 +88,10 @@ function ProjectArtwork({ index }) {
 }
 
 function ProjectCard({ project, index }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = projectImage(project);
   return <article className={`project ${project.featured ? "featured" : ""}`}>
-    <div className="project-media">{project.image ? <img src={safeUrl(project.image)} alt={project.title} loading="lazy" width="600" height="340" /> : <ProjectArtwork index={index} />}</div>
+    <div className="project-media">{image && !imageFailed ? <img src={image} alt={`${project.title} preview`} loading="lazy" width="600" height="340" onError={() => setImageFailed(true)} /> : <ProjectArtwork index={index} />}</div>
     <div className="project-body"><div className="project-top"><span className="mono">PROJECT / {String(index + 1).padStart(2, "0")}</span>{project.featured && <span className="featured-label">Selected work</span>}</div><h3>{project.title}</h3><p>{project.description}</p><div className="tags">{(project.tech || "").split(",").map(item => item.trim()).filter(Boolean).map((tech, i) => <span key={`${tech}-${i}`}>{tech}</span>)}</div><div className="project-links">{project.url && <a href={safeUrl(project.url)} target="_blank" rel="noreferrer">Open project <Icon /></a>}{project.github && <a href={safeUrl(project.github)} target="_blank" rel="noreferrer">Source code <Icon type="code" /></a>}</div></div>
   </article>;
 }
