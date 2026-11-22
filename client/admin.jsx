@@ -459,7 +459,7 @@ function AdminApp() {
   }
 
   const sections = ["dashboard", "world", "projects", "certifications", "messages", "visits", "profile"];
-  const pageTitles = { dashboard: "Dashboard", world: "Portfolio world", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
+  const pageTitles = { dashboard: "Control room", world: "Portfolio world", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
 
   return (
     <div className="app">
@@ -477,7 +477,7 @@ function AdminApp() {
 
       <main className="main">
         <div className="topbar">
-          <div><p className="eyebrow">ADMIN DASHBOARD</p><h2>{pageTitles[activeSection]}</h2></div>
+          <div><p className="eyebrow">PRIVATE CONTROL ROOM</p><h2>{pageTitles[activeSection]}</h2></div>
           <div className="topbar-actions"><span className="secure">● Admin session</span><ThemeToggle /></div>
         </div>
         {dashboardError && <p className="status" role="alert">{dashboardError}</p>}
@@ -492,7 +492,7 @@ function AdminApp() {
               <div className="stat"><small>Recent Visits</small><strong>{visits.length}</strong></div>
             </div>
             <div className="intro">
-              <div><p className="eyebrow">CONTENT</p><h3>Your portfolio, up to date.</h3><p>Edit the content visitors see on the website and in the island.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("projects")}>Manage projects →</button><button className="small-btn" onClick={() => setActiveSection("certifications")}>Certificates →</button></div></div>
+              <div><p className="eyebrow">PUBLIC SIGNAL</p><h3>Make every detail count.</h3><p>Control the work, credentials, and profile that shape your public presence.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("projects")}>Manage projects →</button><button className="small-btn" onClick={() => setActiveSection("certifications")}>Certificates →</button></div></div>
               <div><p className="eyebrow">INBOX</p><h3>{messages.length ? `${messages.length} message${messages.length === 1 ? "" : "s"} in your inbox` : "Your inbox is clear."}</h3><p>Read visitor questions and collaboration requests.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("messages")}>Open messages →</button></div></div>
             </div>
             <VisitorAnalytics visits={visits} />
