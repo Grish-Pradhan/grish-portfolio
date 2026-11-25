@@ -41,4 +41,4 @@ export function filterCredentials(certificates, query, issuer = "all") {
   );
 }
 
-export const pageTitles = { "/": "Security & software", "/portfolio": "Security & software", "/about": "About", "/projects": "Projects", "/certifications": "Certifications", "/achievements": "Achievements", "/contact": "Contact", "/world": "Open the casefile" };
+export const pageTitles = { "/": "Security & software", "/portfolio": "Security & software", "/about": "About", "/projects": "Projects", "/photography": "Photography", "/certifications": "Certifications", "/achievements": "Achievements", "/contact": "Contact", "/world": "Open the casefile" };

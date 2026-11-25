@@ -5,6 +5,7 @@
     { "source": "/certifications", "destination": "/" },
     { "source": "/achievements", "destination": "/" },
     { "source": "/projects", "destination": "/" },
+    { "source": "/photography", "destination": "/" },
     { "source": "/about", "destination": "/" },
     { "source": "/contact", "destination": "/" },
     { "source": "/certificate/:id", "destination": "/" }

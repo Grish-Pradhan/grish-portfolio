@@ -54,6 +54,7 @@ function PortfolioApp() {
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  const [photography, setPhotography] = useState([]);
   const [portfolioReady, setPortfolioReady] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -79,6 +80,7 @@ function PortfolioApp() {
           setProfile(data.profile);
           setProjects(data.projects || []);
           setCertifications(data.certifications || []);
+          setPhotography(data.photography || []);
           setLoadError("");
           hasData.current = true;
         }
@@ -137,7 +139,7 @@ function PortfolioApp() {
 
   return <div className="standard-portfolio"><SiteHeader profile={profile} route={route} />
     {loadError && <div className="load-error" role="alert"><span>{loadError}</span><button type="button" onClick={() => { setPortfolioReady(false); setRetry(value => value + 1); }}>Retry connection</button></div>}
-    <main id="main-content" tabIndex="-1"><PortfolioPages route={route} profile={profile} projects={projects} certifications={certifications} loading={!portfolioReady} error={hasData.current ? "" : loadError} sendMessage={sendMessage} formStatus={formStatus} /></main>
+    <main id="main-content" tabIndex="-1"><PortfolioPages route={route} profile={profile} projects={projects} certifications={certifications} photography={photography} loading={!portfolioReady} error={hasData.current ? "" : loadError} sendMessage={sendMessage} formStatus={formStatus} /></main>
     <SiteFooter profile={profile} onOpenPrivacy={() => setPrivacyOpen(true)} />
     {privacyOpen && <aside className="privacy-consent" role="dialog" aria-label="Privacy and analytics choices"><h2>Your visit, your choice.</h2><p>{browserPrivacyOptOut() ? "Your browser privacy signal disables analytics. No visit data will be collected." : "Optional analytics help understand how the portfolio is used. With permission, we record page and referring-site information, browser and OS family, coarse device and performance groups, language, and timezone. No raw IP addresses, precise location, exact device models, or media-device details are stored. The site works equally well if you decline."}</p><div className="privacy-actions"><button className="button secondary" type="button" onClick={() => chooseAnalyticsConsent("declined")}>Decline</button>{!browserPrivacyOptOut() && <button className="button secondary" type="button" onClick={() => chooseAnalyticsConsent("accepted")}>Allow analytics</button>}</div></aside>}
   </div>;

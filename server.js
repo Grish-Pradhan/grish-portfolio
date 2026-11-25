@@ -145,6 +145,18 @@ async function getCertifications() {
   return data || [];
 }
 
+async function getPhotography(includeHidden = false) {
+  let query = supabase.from("photography").select("*");
+  if (!includeHidden) query = query.eq("visible", true);
+  const { data, error } = await query
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
 async function getMessages() {
   const { data, error } = await supabase
     .from("messages")
@@ -168,9 +180,9 @@ async function getVisits() {
 // Public portfolio data
 app.get("/api/site-data", async (req, res) => {
   try {
-    const [profile, projects, certifications] = await Promise.all([getProfile(), getProjects(), getCertifications()]);
+    const [profile, projects, certifications, photography] = await Promise.all([getProfile(), getProjects(), getCertifications(), getPhotography()]);
     res.set("Cache-Control", "no-store");
-    res.json({ profile, projects, certifications });
+    res.json({ profile, projects, certifications, photography });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -344,9 +356,9 @@ app.delete("/api/admin/messages/:id", checkAdminToken, async (req, res) => {
 
 app.get("/api/admin/dashboard", checkAdminToken, async (req, res) => {
   try {
-    const [projects, messages, profile, visits, certifications] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications()]);
+    const [projects, messages, profile, visits, certifications, photography] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications(), getPhotography(true)]);
     res.set("Cache-Control", "no-store");
-    res.json({ projects, messages, profile, visits, certifications });
+    res.json({ projects, messages, profile, visits, certifications, photography });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -364,7 +376,7 @@ app.delete("/api/admin/visits/:id", checkAdminToken, async (req, res) => {
 
 app.post("/api/admin/uploads", checkAdminToken, async (req, res) => {
   try {
-    const { fileName = "certificate", contentType = "", data = "" } = req.body || {};
+    const { fileName = "portfolio-image", folder = "certifications", contentType = "", data = "" } = req.body || {};
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "application/pdf"];
     const match = String(data).match(/^data:([^;]+);base64,([\s\S]+)$/);
     if (!allowedTypes.includes(contentType) || !match) {
@@ -376,7 +388,7 @@ app.post("/api/admin/uploads", checkAdminToken, async (req, res) => {
     }
     const extension = contentType.split("/")[1].replace("jpeg", "jpg");
     const safeName = String(fileName).replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
-    const objectPath = `certifications/${safeName}-${crypto.randomUUID()}.${extension}`;
+    const objectPath = `${folder === "photography" ? "photography" : "certifications"}/${safeName}-${crypto.randomUUID()}.${extension}`;
     const { error } = await supabase.storage.from("portfolio-assets").upload(objectPath, buffer, {
       contentType, cacheControl: "31536000", upsert: false
     });
@@ -416,6 +428,43 @@ app.put("/api/admin/certifications/:id", checkAdminToken, async (req, res) => {
 app.delete("/api/admin/certifications/:id", checkAdminToken, async (req, res) => {
   try {
     const { error } = await supabase.from("certifications").delete().eq("id", req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/admin/photography", checkAdminToken, async (req, res) => {
+  try {
+    const { title, image_url, alt_text = "", caption = "", location = "", taken_on = null, orientation = "landscape", tags = "", featured = false, visible = true, sort_order = 0 } = req.body || {};
+    if (!title || !image_url) return res.status(400).json({ error: "Title and image are required" });
+    const { data, error } = await supabase.from("photography").insert([{
+      title: String(title).trim(), image_url: String(image_url).trim(), alt_text: String(alt_text || title).trim(), caption: String(caption || "").trim(),
+      location: String(location || "").trim(), taken_on: taken_on || null, orientation: ["portrait", "landscape", "square"].includes(orientation) ? orientation : "landscape",
+      tags: String(tags || "").trim(), featured: Boolean(featured), visible: visible !== false, sort_order: Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0
+    }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/api/admin/photography/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { title, image_url, alt_text = "", caption = "", location = "", taken_on = null, orientation = "landscape", tags = "", featured = false, visible = true, sort_order = 0 } = req.body || {};
+    if (!title || !image_url) return res.status(400).json({ error: "Title and image are required" });
+    const { data, error } = await supabase.from("photography").update({
+      title: String(title).trim(), image_url: String(image_url).trim(), alt_text: String(alt_text || title).trim(), caption: String(caption || "").trim(),
+      location: String(location || "").trim(), taken_on: taken_on || null, orientation: ["portrait", "landscape", "square"].includes(orientation) ? orientation : "landscape",
+      tags: String(tags || "").trim(), featured: Boolean(featured), visible: visible !== false, sort_order: Number.isFinite(Number(sort_order)) ? Number(sort_order) : 0
+    }).eq("id", req.params.id).select().maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Photo not found" });
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/api/admin/photography/:id", checkAdminToken, async (req, res) => {
+  try {
+    const { error } = await supabase.from("photography").delete().eq("id", req.params.id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

@@ -31,6 +31,7 @@ async function api(path, token, options = {}) {
 const emptyProject = () => ({ id: "", title: "", description: "", tech: "", image: "", url: "", github: "", featured: false });
 const emptyMessage = () => ({ id: "", name: "", email: "", message: "" });
 const emptyCertification = () => ({ id: "", title: "", issuer: "", issued_on: "", credential_url: "", image_url: "", document_url: "", description: "", imageFile: null, imageName: "", documentFile: null, documentName: "" });
+const emptyPhoto = () => ({ id: "", title: "", image_url: "", alt_text: "", caption: "", location: "", taken_on: "", orientation: "landscape", tags: "", featured: false, visible: true, sort_order: 0, imageFile: null, imageName: "" });
 const profileFields = ["name", "role", "bio", "location", "email", "github", "linkedin", "website"];
 
 function VisitorChart({ title, field, visits }) {
@@ -135,6 +136,7 @@ function AdminApp() {
   const [messages, setMessages] = useState([]);
   const [visits, setVisits] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  const [photography, setPhotography] = useState([]);
   const [profile, setProfile] = useState({ name: "", role: "", bio: "", location: "", email: "", github: "", linkedin: "", website: "" });
   const [profileDirty, setProfileDirty] = useState(false);
   const [profileStatus, setProfileStatus] = useState("");
@@ -149,10 +151,13 @@ function AdminApp() {
   const [certificationModalOpen, setCertificationModalOpen] = useState(false);
   const [certificationDraft, setCertificationDraft] = useState(emptyCertification);
   const [certificationStatus, setCertificationStatus] = useState("");
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoDraft, setPhotoDraft] = useState(emptyPhoto);
+  const [photoStatus, setPhotoStatus] = useState("");
 
   // Keep keyboard navigation inside whichever editor is currently open.
   useEffect(() => {
-    if (!projectModalOpen && !messageModalOpen && !certificationModalOpen) return;
+    if (!projectModalOpen && !messageModalOpen && !certificationModalOpen && !photoModalOpen) return;
     const dialog = document.querySelector('.modal[role="dialog"]');
     if (!dialog) return;
     const previous = document.activeElement;
@@ -161,7 +166,7 @@ function AdminApp() {
     const onKeyDown = event => {
       if (event.key === "Escape") {
         event.preventDefault();
-        setProjectModalOpen(false); setMessageModalOpen(false); setCertificationModalOpen(false);
+        setProjectModalOpen(false); setMessageModalOpen(false); setCertificationModalOpen(false); setPhotoModalOpen(false);
       }
       if (event.key !== "Tab") return;
       const items = focusable(), first = items[0], last = items.at(-1);
@@ -172,7 +177,7 @@ function AdminApp() {
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { dialog.removeEventListener("keydown", onKeyDown); document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus({ preventScroll:true }); };
-  }, [projectModalOpen, messageModalOpen, certificationModalOpen]);
+  }, [projectModalOpen, messageModalOpen, certificationModalOpen, photoModalOpen]);
 
   async function refreshDashboard(currentToken = token) {
     const data = await api("/api/admin/dashboard", currentToken);
@@ -180,6 +185,7 @@ function AdminApp() {
     setMessages(data.messages || []);
     setVisits(data.visits || []);
     setCertifications(data.certifications || []);
+    setPhotography(data.photography || []);
     if (!profileDirty) setProfile(data.profile || {});
     setDashboardError("");
     setAuthenticated(true);
@@ -189,7 +195,7 @@ function AdminApp() {
     if (!token || !authenticated) return undefined;
     let active = true;
     const refresh = async () => {
-      if (!active || document.hidden || profileDirty || projectModalOpen || messageModalOpen || certificationModalOpen) return;
+      if (!active || document.hidden || profileDirty || projectModalOpen || messageModalOpen || certificationModalOpen || photoModalOpen) return;
       try {
         await refreshDashboard(token);
       } catch (error) {
@@ -209,7 +215,7 @@ function AdminApp() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [token, authenticated, profileDirty, projectModalOpen, messageModalOpen, certificationModalOpen]);
+  }, [token, authenticated, profileDirty, projectModalOpen, messageModalOpen, certificationModalOpen, photoModalOpen]);
 
   async function submitLogin(event) {
     event.preventDefault();
@@ -222,6 +228,7 @@ function AdminApp() {
       setMessages(data.messages || []);
       setVisits(data.visits || []);
       setCertifications(data.certifications || []);
+      setPhotography(data.photography || []);
       setProfile(data.profile || {});
       setAuthenticated(true);
     } catch (error) {
@@ -373,6 +380,57 @@ function AdminApp() {
     } catch (error) { setDashboardError(error.message); }
   }
 
+  function openPhoto(photo = emptyPhoto()) {
+    setPhotoDraft({ ...emptyPhoto(), ...photo, imageFile: null, imageName: "", featured: Boolean(photo.featured), visible: photo.visible !== false });
+    setPhotoStatus("");
+    setPhotoModalOpen(true);
+  }
+
+  function updatePhoto(event) {
+    const { name, value, checked, type, files } = event.target;
+    if (name === "imageFile") {
+      const file = files?.[0] || null;
+      setPhotoDraft(current => ({ ...current, imageFile: file, imageName: file?.name || "" }));
+      if (file) {
+        const preview = new Image();
+        preview.onload = () => setPhotoDraft(current => ({ ...current, orientation: preview.naturalHeight > preview.naturalWidth ? "portrait" : preview.naturalWidth === preview.naturalHeight ? "square" : "landscape" }));
+        preview.src = URL.createObjectURL(file);
+      }
+      return;
+    }
+    setPhotoDraft(current => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    setPhotoStatus("");
+  }
+
+  async function savePhoto(event) {
+    event.preventDefault();
+    try {
+      let imageUrl = photoDraft.image_url || "";
+      if (photoDraft.imageFile) {
+        if (!photoDraft.imageFile.type.startsWith("image/")) throw new Error("Choose an image file.");
+        if (photoDraft.imageFile.size > 10 * 1024 * 1024) throw new Error("Images must be smaller than 10 MB.");
+        const data = await fileAsDataUrl(photoDraft.imageFile);
+        const upload = await api("/api/admin/uploads", token, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder: "photography", fileName: photoDraft.imageFile.name, contentType: photoDraft.imageFile.type, data })
+        });
+        imageUrl = upload.url;
+      }
+      if (!imageUrl) throw new Error("Choose a photograph before saving.");
+      const body = { title: photoDraft.title, image_url: imageUrl, alt_text: photoDraft.alt_text, caption: photoDraft.caption, location: photoDraft.location, taken_on: photoDraft.taken_on || null, orientation: photoDraft.orientation, tags: photoDraft.tags, featured: Boolean(photoDraft.featured), visible: Boolean(photoDraft.visible), sort_order: Number(photoDraft.sort_order) || 0 };
+      const isEdit = Boolean(photoDraft.id);
+      await api(`/api/admin/photography${isEdit ? `/${photoDraft.id}` : ""}`, token, { method: isEdit ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      setPhotoModalOpen(false);
+      await refreshDashboard(token);
+    } catch (error) { setPhotoStatus(error.message); }
+  }
+
+  async function deletePhoto(id) {
+    if (!window.confirm("Remove this photograph from the archive?")) return;
+    try { await api(`/api/admin/photography/${id}`, token, { method: "DELETE" }); await refreshDashboard(token); }
+    catch (error) { setDashboardError(error.message); }
+  }
+
   function openMessage(message) {
     setMessageDraft({ ...message });
     setMessageStatus("");
@@ -430,6 +488,7 @@ function AdminApp() {
         setMessages(data.messages || []);
         setVisits(data.visits || []);
         setCertifications(data.certifications || []);
+        setPhotography(data.photography || []);
         setProfile(data.profile || {});
         setAuthenticated(true);
       })
@@ -459,8 +518,8 @@ function AdminApp() {
     );
   }
 
-  const sections = ["dashboard", "world", "projects", "certifications", "messages", "visits", "profile"];
-  const pageTitles = { dashboard: "Control room", world: "Portfolio world", projects: "Projects", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
+  const sections = ["dashboard", "world", "projects", "photography", "certifications", "messages", "visits", "profile"];
+  const pageTitles = { dashboard: "Control room", world: "Portfolio world", projects: "Projects", photography: "Photography", certifications: "Certifications", messages: "Messages", visits: "Visitors", profile: "Profile" };
 
   return (
     <div className="app">
@@ -490,10 +549,11 @@ function AdminApp() {
               <div className="stat"><small>Messages</small><strong>{messages.length}</strong></div>
               <div className="stat"><small>Featured</small><strong>{projects.filter((project) => project.featured).length}</strong></div>
               <div className="stat"><small>Certifications</small><strong>{certifications.length}</strong></div>
+              <div className="stat"><small>Photographs</small><strong>{photography.length}</strong></div>
               <div className="stat"><small>Recent Visits</small><strong>{visits.length}</strong></div>
             </div>
             <div className="intro">
-              <div><p className="eyebrow">PUBLIC SIGNAL</p><h3>Make every detail count.</h3><p>Control the work, credentials, and profile that shape your public presence.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("projects")}>Manage projects →</button><button className="small-btn" onClick={() => setActiveSection("certifications")}>Certificates →</button></div></div>
+              <div><p className="eyebrow">PUBLIC SIGNAL</p><h3>Make every detail count.</h3><p>Control the work, credentials, photography, and profile that shape your public presence.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("projects")}>Manage projects →</button><button className="small-btn" onClick={() => setActiveSection("photography")}>Photography →</button></div></div>
               <div><p className="eyebrow">INBOX</p><h3>{messages.length ? `${messages.length} message${messages.length === 1 ? "" : "s"} in your inbox` : "Your inbox is clear."}</h3><p>Read visitor questions and collaboration requests.</p><div className="dashboard-shortcuts"><button className="small-btn" onClick={() => setActiveSection("messages")}>Open messages →</button></div></div>
             </div>
             <VisitorAnalytics visits={visits} />
@@ -504,7 +564,7 @@ function AdminApp() {
           <section className="page active world-admin">
             <div className="world-admin-header"><div><p className="eyebrow">YOUR LIVE EXHIBITS</p><h3>A portfolio, not a second database.</h3><p>The casefile uses the same saved profile, projects, and certificates as your regular website. Published changes refresh in the world within 15 seconds while the visitor’s tab is open.</p></div><a className="small-btn" href="/world" target="_blank" rel="noreferrer">Preview casefile ↗</a></div>
             <div className="world-admin-grid">
-              {[{ number: "01", title: "Identity vault", description: "Your name, role, biography, location, and social links.", section: "profile", action: "Edit profile" }, { number: "02", title: "Threat lab", description: `${projects.length} projects. Titles, descriptions, artwork, technology, and project links are editable here.`, section: "projects", action: "Manage projects" }, { number: "03", title: "Evidence vault", description: `${certifications.length} certificates. Manage previews, original PDFs, dates, and verification links.`, section: "certifications", action: "Manage certificates" }, { number: "04", title: "Signal log", description: "A timeline drawn from the certificate library, ordered by issue date.", section: "certifications", action: "Edit milestones" }, { number: "05", title: "Contact beacon", description: "The casefile contact form sends notes to your existing inbox.", section: "messages", action: "Open inbox" }].map(exhibit => <article key={exhibit.number}><span>{exhibit.number}</span><h4>{exhibit.title}</h4><p>{exhibit.description}</p><button className="small-btn" type="button" onClick={() => setActiveSection(exhibit.section)}>{exhibit.action} →</button></article>)}
+              {[{ number: "01", title: "Identity vault", description: "Your name, role, biography, location, and social links.", section: "profile", action: "Edit profile" }, { number: "02", title: "Threat lab", description: `${projects.length} projects. Titles, descriptions, artwork, technology, and project links are editable here.`, section: "projects", action: "Manage projects" }, { number: "03", title: "Frame archive", description: `${photography.length} photographs. Upload portrait and landscape frames with captions, tags, and visibility controls.`, section: "photography", action: "Manage photography" }, { number: "04", title: "Evidence vault", description: `${certifications.length} certificates. Manage previews, original PDFs, dates, and verification links.`, section: "certifications", action: "Manage certificates" }, { number: "05", title: "Signal log", description: "A timeline drawn from the certificate library, ordered by issue date.", section: "certifications", action: "Edit milestones" }, { number: "06", title: "Contact beacon", description: "The casefile contact form sends notes to your existing inbox.", section: "messages", action: "Open inbox" }].map(exhibit => <article key={exhibit.number}><span>{exhibit.number}</span><h4>{exhibit.title}</h4><p>{exhibit.description}</p><button className="small-btn" type="button" onClick={() => setActiveSection(exhibit.section)}>{exhibit.action} →</button></article>)}
             </div>
             <p className="world-admin-note">The observatory’s architecture and walking paths are part of the website design. This panel controls the portfolio content displayed inside it.</p>
           </section>
@@ -532,6 +592,21 @@ function AdminApp() {
               )) : <div className="panel" style={{ padding: 25, color: "#969ba7" }}>No projects yet.</div>}
             </div>
             <button type="button" className="button primary" style={{ marginTop: 20, width: "100%" }} onClick={() => openProject()}>Add New Project</button>
+          </section>
+        )}
+
+        {activeSection === "photography" && (
+          <section id="photography" className="page active">
+            <div className="section-title"><div><h3>Photography archive</h3><p>Upload portraits and landscapes; the public gallery keeps each frame’s natural shape.</p></div></div>
+            <div className="photography-admin-grid">
+              {photography.length ? photography.map(photo => (
+                <article className={`photography-admin-card photo-${photo.orientation || "landscape"}`} key={photo.id}>
+                  <div className="photography-admin-media">{photo.image_url ? <img src={photo.image_url} alt={photo.alt_text || photo.title} loading="lazy" /> : <span>NO PREVIEW</span>}</div>
+                  <div className="photography-admin-copy"><div><span className="meta">{photo.visible ? "PUBLISHED" : "HIDDEN"} · {photo.orientation || "landscape"}</span>{photo.featured ? <span className="meta"> · FEATURED</span> : null}</div><h4>{photo.title}</h4><p>{photo.caption || photo.location || "No caption yet."}</p><div className="row-actions"><button className="small-btn" onClick={() => openPhoto(photo)}>Edit</button><button className="small-btn delete" onClick={() => deletePhoto(photo.id)}>Delete</button></div></div>
+                </article>
+              )) : <div className="panel photography-empty"><strong>Your archive is ready.</strong><p>Add a portrait or landscape frame to start the photography page.</p></div>}
+            </div>
+            <button type="button" className="button primary" style={{ marginTop: 20, width: "100%" }} onClick={() => openPhoto()}>Add Photograph</button>
           </section>
         )}
 
@@ -648,6 +723,30 @@ function AdminApp() {
                 <button className="small-btn" type="button" onClick={() => setProjectModalOpen(false)}>Cancel</button>
                 <button className="button primary" type="submit">Save project</button>
               </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {photoModalOpen && (
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle" onMouseDown={(event) => { if (event.target === event.currentTarget) setPhotoModalOpen(false); }}>
+          <section className="modal-panel">
+            <div className="modal-head"><div><p className="eyebrow">FRAME EDITOR</p><h3 id="photoModalTitle">{photoDraft.id ? "Edit photograph" : "Add photograph"}</h3></div><button className="modal-close" type="button" aria-label="Close photograph editor" onClick={() => setPhotoModalOpen(false)}>×</button></div>
+            <form id="photoForm" onSubmit={savePhoto}>
+              <label>Title<input name="title" value={photoDraft.title} onChange={updatePhoto} placeholder="Night signal" required /></label>
+              <label>Orientation<select name="orientation" value={photoDraft.orientation} onChange={updatePhoto}><option value="landscape">Landscape</option><option value="portrait">Portrait</option><option value="square">Square</option></select></label>
+              <label className="modal-full">Photograph<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={updatePhoto} /><span className="file-help">JPG, PNG, WEBP, or AVIF · max 10 MB {photoDraft.imageName ? `· ${photoDraft.imageName}` : photoDraft.image_url ? "· Existing image kept" : ""}</span></label>
+              <label className="modal-full">Alt text<input name="alt_text" value={photoDraft.alt_text} onChange={updatePhoto} placeholder="A quiet street under blue light" /></label>
+              <label className="modal-full">Caption<textarea name="caption" value={photoDraft.caption} onChange={updatePhoto} rows="3" placeholder="A short note about the frame..." /></label>
+              <label>Location<input name="location" value={photoDraft.location} onChange={updatePhoto} placeholder="Lalitpur, Nepal" /></label>
+              <label>Date taken<input name="taken_on" type="date" value={photoDraft.taken_on || ""} onChange={updatePhoto} /></label>
+              <label>Tags<input name="tags" value={photoDraft.tags} onChange={updatePhoto} placeholder="street, night, city" /></label>
+              <label>Order<input name="sort_order" type="number" min="0" value={photoDraft.sort_order} onChange={updatePhoto} /></label>
+              <label className="featured-toggle"><input name="featured" type="checkbox" checked={photoDraft.featured} onChange={updatePhoto} /><span>Feature this frame</span></label>
+              <label className="featured-toggle"><input name="visible" type="checkbox" checked={photoDraft.visible} onChange={updatePhoto} /><span>Publish to photography page</span></label>
+              {photoDraft.image_url ? <img className="photography-admin-preview" src={photoDraft.image_url} alt="Current photograph" /> : null}
+              <p className="status modal-full" role="status">{photoStatus}</p>
+              <div className="modal-actions modal-full"><button className="small-btn" type="button" onClick={() => setPhotoModalOpen(false)}>Cancel</button><button className="button primary" type="submit">Save photograph</button></div>
             </form>
           </section>
         </div>

@@ -67,6 +67,18 @@ async function getCertifications() {
   return data || [];
 }
 
+async function getPhotography(includeHidden = false) {
+  let query = supabase!.from("photography").select("*");
+  if (!includeHidden) query = query.eq("visible", true);
+  const { data, error } = await query
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error?.code === "PGRST205" || error?.code === "42P01") return [];
+  if (error) throw error;
+  return data || [];
+}
+
 async function getMessages() {
   const { data, error } = await supabase!.from("messages").select("*").order("created_at", { ascending: false });
   if (error) throw error;
@@ -104,8 +116,8 @@ Deno.serve(async (request: Request) => {
 
   try {
     if (method === "GET" && path === "/api/site-data") {
-      const [profile, projects, certifications] = await Promise.all([getProfile(), getProjects(), getCertifications()]);
-      return json({ profile, projects, certifications });
+      const [profile, projects, certifications, photography] = await Promise.all([getProfile(), getProjects(), getCertifications(), getPhotography()]);
+      return json({ profile, projects, certifications, photography });
     }
 
     if (method === "GET" && path === "/api/profile") {
@@ -213,8 +225,8 @@ Deno.serve(async (request: Request) => {
     }
 
     if (method === "GET" && path === "/api/admin/dashboard") {
-      const [projects, messages, profile, visits, certifications] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications()]);
-      return json({ projects, messages, profile, visits, certifications });
+      const [projects, messages, profile, visits, certifications, photography] = await Promise.all([getProjects(), getMessages(), getProfile(), getVisits(), getCertifications(), getPhotography(true)]);
+      return json({ projects, messages, profile, visits, certifications, photography });
     }
 
     const adminVisitPath = path.match(/^\/api\/admin\/visits\/(\d+)$/);
@@ -252,7 +264,8 @@ Deno.serve(async (request: Request) => {
 
     if (method === "POST" && path === "/api/admin/uploads") {
       const body = await bodyJson(request);
-      const fileName = String(body?.fileName || "certificate");
+      const fileName = String(body?.fileName || "portfolio-image");
+      const folder = body?.folder === "photography" ? "photography" : "certifications";
       const contentType = String(body?.contentType || "");
       const rawData = String(body?.data || "");
       const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif", "application/pdf"];
@@ -262,7 +275,7 @@ Deno.serve(async (request: Request) => {
       if (!binary.length || binary.length > 10 * 1024 * 1024) return json({ error: "Uploads must be smaller than 10 MB." }, 400);
       const extension = contentType.split("/")[1].replace("jpeg", "jpg");
       const safeName = fileName.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "certificate";
-      const objectPath = `certifications/${safeName}-${crypto.randomUUID()}.${extension}`;
+      const objectPath = `${folder}/${safeName}-${crypto.randomUUID()}.${extension}`;
       const { error } = await supabase.storage.from("portfolio-assets").upload(objectPath, binary, { contentType, cacheControl: "31536000", upsert: false });
       if (error) return json({ error: error.message }, 500);
       const { data: publicData } = supabase.storage.from("portfolio-assets").getPublicUrl(objectPath);
@@ -295,6 +308,40 @@ Deno.serve(async (request: Request) => {
 
     if (adminCertificationPath && method === "DELETE") {
       const { error } = await supabase.from("certifications").delete().eq("id", adminCertificationPath[1]);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true });
+    }
+
+    if (method === "POST" && path === "/api/admin/photography") {
+      const body = await bodyJson(request);
+      if (!body?.title || !body?.image_url) return json({ error: "Title and image are required" }, 400);
+      const { data, error } = await supabase.from("photography").insert([{
+        title: String(body.title).trim(), image_url: String(body.image_url).trim(), alt_text: String(body.alt_text || body.title).trim(),
+        caption: String(body.caption || "").trim(), location: String(body.location || "").trim(), taken_on: body.taken_on || null,
+        orientation: ["portrait", "landscape", "square"].includes(body.orientation) ? body.orientation : "landscape",
+        tags: String(body.tags || "").trim(), featured: Boolean(body.featured), visible: body.visible !== false, sort_order: Number.isFinite(Number(body.sort_order)) ? Number(body.sort_order) : 0
+      }]).select().single();
+      if (error) return json({ error: error.message }, 500);
+      return json(data, 201);
+    }
+
+    const adminPhotographyPath = path.match(/^\/api\/admin\/photography\/(\d+)$/);
+    if (adminPhotographyPath && method === "PUT") {
+      const body = await bodyJson(request);
+      if (!body?.title || !body?.image_url) return json({ error: "Title and image are required" }, 400);
+      const { data, error } = await supabase.from("photography").update({
+        title: String(body.title).trim(), image_url: String(body.image_url).trim(), alt_text: String(body.alt_text || body.title).trim(),
+        caption: String(body.caption || "").trim(), location: String(body.location || "").trim(), taken_on: body.taken_on || null,
+        orientation: ["portrait", "landscape", "square"].includes(body.orientation) ? body.orientation : "landscape",
+        tags: String(body.tags || "").trim(), featured: Boolean(body.featured), visible: body.visible !== false, sort_order: Number.isFinite(Number(body.sort_order)) ? Number(body.sort_order) : 0
+      }).eq("id", adminPhotographyPath[1]).select().maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (!data) return json({ error: "Photo not found" }, 404);
+      return json(data);
+    }
+
+    if (adminPhotographyPath && method === "DELETE") {
+      const { error } = await supabase.from("photography").delete().eq("id", adminPhotographyPath[1]);
       if (error) return json({ error: error.message }, 500);
       return json({ success: true });
     }

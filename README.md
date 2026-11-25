@@ -15,7 +15,7 @@ Open `http://localhost:5173`. Express runs on port `3000`; Vite proxies `/api` r
 
 ## Explorable portfolio
 
-The homepage (`/`, also `/world`) is a procedural Three.js island. `/portfolio` retains the standard website, and the dedicated `/about`, `/projects`, `/certifications`, `/achievements`, `/contact`, and `/certificate/:id` routes remain available.
+The homepage (`/`, also `/world`) is a procedural Three.js island. `/portfolio` retains the standard website, and the dedicated `/about`, `/projects`, `/photography`, `/certifications`, `/achievements`, `/contact`, and `/certificate/:id` routes remain available.
 
 Visitors can orbit the island, switch to walking (WASD/arrows, drag to look, Q/E to turn), use touch direction buttons, and travel directly to five exhibits. Buildings and floating labels open keyboard-accessible reading panels. Certificates enlarge without cropping, with original document and verification links where available. Reduced-motion preferences disable decorative movement and travel animation. Unsupported WebGL browsers receive direct links to the standard pages.
 
@@ -42,7 +42,7 @@ Express serves the generated files from `dist/` on port `3000`. `start-server.ba
 
 Run `supabase/setup.sql` in the Supabase SQL Editor. It creates the tables and policies and can be rerun safely.
 
-The same setup now creates the `certifications` table and the public `portfolio-assets` Storage bucket used for certificate artwork. Admin uploads are handled server-side with the Supabase secret; keep that secret out of `public/config.js`.
+The same setup now creates the `certifications` and `photography` tables and the public `portfolio-assets` Storage bucket used for certificate artwork and photography uploads. Admin uploads are handled server-side with the Supabase secret; keep that secret out of `public/config.js`.
 
 For local Express development, set these values in the ignored `.env` file:
 
