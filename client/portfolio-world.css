@@ -225,6 +225,7 @@
 
 .portfolio-world .world-brand { gap:10px; }
 .portfolio-world .world-brand-logo { display:block; width:154px; height:55px; object-fit:cover; object-position:center 50%; border:0; background:transparent; filter:none; mix-blend-mode:screen; }
+[data-theme="light"] .portfolio-world .world-brand-logo { filter:brightness(.28) saturate(1.35); mix-blend-mode:normal; }
 .portfolio-world .world-brand>span { display:block; }
 .portfolio-world .world-brand small { white-space:nowrap; }
 @media(max-width:600px) { .portfolio-world .world-brand-logo { width:118px; height:44px; } }

@@ -504,7 +504,7 @@ function AdminApp() {
       <div className="login-wrap">
         <div className="login-theme"><ThemeToggle /></div>
         <div className="login-card">
-          <img className="login-brand-logo" src="/brand-logo.png" alt="Grish Pradhan logo" />
+          <img className="login-brand-logo" src="/brand-logo-clean.png" alt="Grish Pradhan logo" />
           <h1>Admin Login</h1>
           <p>Secure dashboard access</p>
           <form onSubmit={submitLogin}>
@@ -524,7 +524,7 @@ function AdminApp() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="brand admin-brand"><img src="/brand-logo.png" alt="Grish Pradhan logo" /></div>
+        <div className="brand admin-brand"><img src="/brand-logo-clean.png" alt="Grish Pradhan logo" /></div>
         <nav>
           {sections.map((section) => (
             <button key={section} aria-current={activeSection === section ? "page" : undefined} className={`nav-item ${activeSection === section ? "active" : ""}`} onClick={() => setActiveSection(section)}>
